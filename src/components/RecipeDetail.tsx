@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { Clock, Download, Flame, Heart, X } from "lucide-react";
+import { Clock, Download, Flame, Heart, Languages, Users, X } from "lucide-react";
 import { RecipeVisual } from "./RecipeVisual";
 import { useI18n } from "../lib/i18n";
-import type { Recipe } from "../lib/recipeTypes";
+import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 type RecipeDetailProps = {
-  readonly recipe: Recipe | null;
+  readonly recipe: PublicRecipeRecord | null;
   readonly onClose: () => void;
 };
 
@@ -49,7 +49,7 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
 
         <div className="detail-body">
           <span className="brand-badge">
-            {countryLabel(recipe.country)} · {labelFor(recipe.cuisineRegion)}
+            {formatRegion(recipe, countryLabel)} · {labelFor(recipe.cuisineRegion)}
           </span>
           <h2>{recipe.title}</h2>
           <p className="detail-description">{recipe.description}</p>
@@ -64,10 +64,28 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
               {labelFor(recipe.difficulty)}
             </span>
             <span>
+              <Users size={16} aria-hidden="true" />
+              {recipe.servings}
+            </span>
+            <span>
               <Heart size={16} aria-hidden="true" />
-              {recipe.likes}
+              {recipe.likeCount}
+            </span>
+            <span>
+              <Languages size={16} aria-hidden="true" />
+              {recipe.isTranslated ? labelFor(recipe.writtenLang) : labelFor("original")}
             </span>
             <span className="badge badge--brand">{labelFor(recipe.category)}</span>
+          </div>
+
+          <div className="detail-chips">
+            {[recipe.recipeType, recipe.cookingMethod, recipe.technique, recipe.dietaryGoal, recipe.requiredTool]
+              .filter((value) => value.length > 0 && value !== "unknown")
+              .map((value) => (
+                <span className="badge badge--muted" key={value}>
+                  {labelFor(value)}
+                </span>
+              ))}
           </div>
 
           {recipe.cookingTip.length > 0 ? (
@@ -130,4 +148,14 @@ function formatAmount(quantity: number | null, unit: string | null, fallback: st
 
 function stopPropagation(event: React.MouseEvent): void {
   event.stopPropagation();
+}
+
+function formatRegion(
+  recipe: PublicRecipeRecord,
+  countryLabel: (country: string) => string,
+): string {
+  const parts = [countryLabel(recipe.country), recipe.city, recipe.district].filter(
+    (value): value is string => value !== null && value.length > 0,
+  );
+  return parts.join(" · ");
 }

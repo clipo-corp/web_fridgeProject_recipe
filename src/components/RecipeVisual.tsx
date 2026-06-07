@@ -17,12 +17,12 @@ import type { LucideIcon } from "lucide-react";
 import type { CSSProperties } from "react";
 import { recipeInitial } from "../lib/recipeLabels";
 import { useI18n } from "../lib/i18n";
-import type { Recipe } from "../lib/recipeTypes";
+import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 type RecipeVisualSize = "card" | "spotlight" | "detail" | "thumb";
 
 type RecipeVisualProps = {
-  readonly recipe: Recipe;
+  readonly recipe: PublicRecipeRecord;
   readonly size?: RecipeVisualSize;
 };
 
@@ -79,11 +79,11 @@ const ingredientIcons: Record<string, LucideIcon> = {
 
 const fallbackTheme: VisualTheme = { tint: "#c2c2f0" };
 
-function pickTheme(recipe: Recipe): VisualTheme {
+function pickTheme(recipe: PublicRecipeRecord): VisualTheme {
   return regionThemes[recipe.cuisineRegion] ?? fallbackTheme;
 }
 
-function pickIcon(recipe: Recipe): LucideIcon {
+function pickIcon(recipe: PublicRecipeRecord): LucideIcon {
   return (
     categoryIcons[recipe.category] ??
     ingredientIcons[recipe.primaryIngredient] ??
@@ -101,10 +101,10 @@ const iconSizes: Record<RecipeVisualSize, number> = {
 export function RecipeVisual({ recipe, size = "card" }: RecipeVisualProps): JSX.Element {
   const { countryLabel, labelFor } = useI18n();
 
-  if (recipe.imageUrl !== null) {
+  if (recipe.titleImageUrl !== null) {
     return (
       <div className={`recipe-visual recipe-visual--${size} recipe-visual--photo`}>
-        <img src={recipe.imageUrl} alt="" loading="lazy" />
+        <img src={recipe.titleImageUrl} alt="" loading="lazy" />
       </div>
     );
   }

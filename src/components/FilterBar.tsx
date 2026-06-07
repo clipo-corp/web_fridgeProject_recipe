@@ -1,29 +1,25 @@
 import { useState } from "react";
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+import { makeRegionOptions, parseRegion } from "./FilterRegionOptions";
+import { SelectorCard } from "./FilterSelector";
+import type { Option } from "./FilterSelector";
 import { useI18n } from "../lib/i18n";
 import { emojiFor, orderDifficulty, orderTime } from "../lib/recipeFilterMeta";
-import type { RecipeFilters, RecipeSort } from "../lib/recipeTypes";
+import { regionToSelectValue } from "../lib/recipeCatalogRegion";
+import type {
+  CatalogFilterOptions,
+} from "../lib/recipeCatalogMock";
+import type {
+  PublicRecipeCatalogFilters,
+  RecipeSearchSort,
+} from "../lib/recipeCatalogTypes";
 
-export type FilterOptions = {
-  readonly region: readonly string[];
-  readonly country: readonly string[];
-  readonly time: readonly string[];
-  readonly difficulty: readonly string[];
-  readonly recipeType: readonly string[];
-  readonly category: readonly string[];
-  readonly ingredient: readonly string[];
-};
+export type FilterOptions = CatalogFilterOptions;
 
 type FilterBarProps = {
-  readonly filters: RecipeFilters;
+  readonly filters: PublicRecipeCatalogFilters;
   readonly options: FilterOptions;
-  readonly onChange: (patch: Partial<RecipeFilters>) => void;
-};
-
-type Option = {
-  readonly value: string;
-  readonly label: string;
-  readonly emoji: string;
+  readonly onChange: (patch: Partial<PublicRecipeCatalogFilters>) => void;
 };
 
 export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.Element {
@@ -38,10 +34,19 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
     values.map((value) => ({ value, label: format(value), emoji: emojiFor(value) }));
 
   const sortOptions: readonly Option[] = [
-    { value: "recommended", label: t("sort.recommended"), emoji: "" },
-    { value: "popular", label: t("sort.popular"), emoji: "" },
     { value: "latest", label: t("sort.latest"), emoji: "" },
+    { value: "popular", label: t("sort.popular"), emoji: "" },
+    { value: "hot_month", label: t("sort.hotMonth"), emoji: "" },
   ];
+  const langOptions: readonly Option[] = [
+    { value: "ko", label: t("filters.langKo"), emoji: "" },
+    { value: "en", label: t("filters.langEn"), emoji: "" },
+  ];
+  const localDataOptions: readonly Option[] = [
+    { value: "local", label: t("filters.localData"), emoji: "" },
+    { value: "original", label: t("filters.originalData"), emoji: "" },
+  ];
+  const regionOptions = makeRegionOptions(options, countryLabel);
 
   return (
     <div className="filter-panel">
@@ -64,36 +69,45 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
       <div className="filter-cards">
         <SelectorCard
           label={t("filters.sort")}
-          value={filters.sort ?? "recommended"}
+          value={filters.sort}
           options={sortOptions}
           allLabel={allLabel}
           includeAll={false}
-          onChange={(value) => onChange({ sort: value as RecipeSort })}
+          onChange={(value) => onChange({ sort: parseSort(value) })}
         />
         <SelectorCard
-          label={t("filters.region")}
-          value={filters.region ?? "all"}
-          options={toOptions(options.region, labelFor)}
+          label={t("filters.location")}
+          value={regionToSelectValue(filters.region)}
+          options={regionOptions}
           allLabel={allLabel}
-          onChange={(value) => onChange({ region: value })}
+          onChange={(value) => onChange({ region: parseRegion(value, options) })}
         />
         <SelectorCard
-          label={t("filters.country")}
-          value={filters.country}
-          options={toOptions(options.country, countryLabel)}
+          label={t("filters.writtenLang")}
+          value={filters.writtenLang}
+          options={langOptions}
           allLabel={allLabel}
-          onChange={(value) => onChange({ country: value })}
+          onChange={(value) => onChange({ writtenLang: value === "en" ? "en" : value === "ko" ? "ko" : "all" })}
+        />
+        <SelectorCard
+          label={t("filters.localMode")}
+          value={filters.isUseLocalData}
+          options={localDataOptions}
+          allLabel={allLabel}
+          onChange={(value) =>
+            onChange({ isUseLocalData: value === "local" ? "local" : value === "original" ? "original" : "all" })
+          }
         />
         <SelectorCard
           label={t("filters.time")}
-          value={filters.time ?? "all"}
-          options={toOptions(orderTime(options.time), timeLabel)}
+          value={filters.cookingTime}
+          options={toOptions(orderTime(options.cookingTime), timeLabel)}
           allLabel={allLabel}
-          onChange={(value) => onChange({ time: value })}
+          onChange={(value) => onChange({ cookingTime: value })}
         />
         <SelectorCard
           label={t("filters.difficulty")}
-          value={filters.difficulty ?? "all"}
+          value={filters.difficulty}
           options={toOptions(orderDifficulty(options.difficulty), labelFor)}
           allLabel={allLabel}
           onChange={(value) => onChange({ difficulty: value })}
@@ -104,7 +118,7 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
         <div className="filter-cards filter-cards--advanced">
           <SelectorCard
             label={t("filters.recipeType")}
-            value={filters.recipeType ?? "all"}
+            value={filters.recipeType}
             options={toOptions(options.recipeType, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ recipeType: value })}
@@ -118,10 +132,66 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
           />
           <SelectorCard
             label={t("filters.ingredient")}
-            value={filters.ingredient ?? "all"}
-            options={toOptions(options.ingredient, labelFor)}
+            value={filters.primaryIngredient}
+            options={toOptions(options.primaryIngredient, labelFor)}
             allLabel={allLabel}
-            onChange={(value) => onChange({ ingredient: value })}
+            onChange={(value) => onChange({ primaryIngredient: value })}
+          />
+          <SelectorCard
+            label={t("filters.cookingMethod")}
+            value={filters.cookingMethod}
+            options={toOptions(options.cookingMethod, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ cookingMethod: value })}
+          />
+          <SelectorCard
+            label={t("filters.technique")}
+            value={filters.technique}
+            options={toOptions(options.technique, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ technique: value })}
+          />
+          <SelectorCard
+            label={t("filters.dietaryGoal")}
+            value={filters.dietaryGoal}
+            options={toOptions(options.dietaryGoal, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ dietaryGoal: value })}
+          />
+          <SelectorCard
+            label={t("filters.dietaryRestriction")}
+            value={filters.dietaryRestriction}
+            options={toOptions(options.dietaryRestriction, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ dietaryRestriction: value })}
+          />
+          <SelectorCard
+            label={t("filters.occasion")}
+            value={filters.occasion}
+            options={toOptions(options.occasion, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ occasion: value })}
+          />
+          <SelectorCard
+            label={t("filters.servings")}
+            value={filters.servings}
+            options={toOptions(options.servings, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ servings: value })}
+          />
+          <SelectorCard
+            label={t("filters.requiredTool")}
+            value={filters.requiredTool}
+            options={toOptions(options.requiredTool, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ requiredTool: value })}
+          />
+          <SelectorCard
+            label={t("filters.cuisineRegion")}
+            value={filters.cuisineRegion}
+            options={toOptions(options.cuisineRegion, labelFor)}
+            allLabel={allLabel}
+            onChange={(value) => onChange({ cuisineRegion: value })}
           />
         </div>
       ) : null}
@@ -129,37 +199,9 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
   );
 }
 
-type SelectorCardProps = {
-  readonly label: string;
-  readonly value: string;
-  readonly options: readonly Option[];
-  readonly allLabel: string;
-  readonly includeAll?: boolean;
-  readonly onChange: (value: string) => void;
-};
-
-function SelectorCard({
-  label,
-  value,
-  options,
-  allLabel,
-  includeAll = true,
-  onChange,
-}: SelectorCardProps): JSX.Element {
-  return (
-    <label className="selector-card">
-      <span className="selector-card__label">{label}</span>
-      <span className="selector-card__control">
-        <select value={value} aria-label={label} onChange={(event) => onChange(event.target.value)}>
-          {includeAll ? <option value="all">{allLabel}</option> : null}
-          {options.map((option) => (
-            <option value={option.value} key={option.value}>
-              {option.emoji.length > 0 ? `${option.emoji} ${option.label}` : option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown size={16} aria-hidden="true" />
-      </span>
-    </label>
-  );
+function parseSort(value: string): RecipeSearchSort {
+  if (value === "popular" || value === "hot_month") {
+    return value;
+  }
+  return "latest";
 }

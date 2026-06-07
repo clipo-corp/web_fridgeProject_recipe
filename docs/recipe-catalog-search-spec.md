@@ -7,57 +7,61 @@ This document describes the current frontend-only search behavior for
 
 - Route: `/recipe-catalog`
 - Data source: bundled mock seed at `src/data/recipe_seed_mock_100.json`
-- Runtime loader: `loadMockRecipes()` in `src/lib/recipeMockData.ts`
-- Search/filter engine: `filterRecipes()` in `src/lib/recipeMockData.ts`
-- UI entry points:
-  - hero search box
-  - category rail
-  - country chips
-  - ingredient chips
-  - detailed filter panel
-  - active filter chips
+- Runtime loader: `loadPublicMockRecipes()` in `src/lib/recipeCatalogMock.ts`
+- Search/filter engine: `filterPublicRecipes()` in `src/lib/recipeCatalogMock.ts`
+- Request mapper: `toPublicRecipeSearchRequest()` in `src/lib/recipeCatalogRequest.ts`
 
 The page is public, read-only, and frontend-only. It does not perform login,
-signup, save, or backend search requests.
+signup, save, fridge inventory, or backend search requests. The mock contract is
+shaped to mirror the native public recipe search payload so the web UI can move
+to a real public API later with minimal UI changes.
 
-## Normalized Recipe Shape
+## Canonical Record Shape
 
-Seed entries are parsed through `seedFileSchema` and normalized into `Recipe`.
+Seed entries are parsed through `seedFileSchema` and normalized into
+`PublicRecipeRecord`.
 
-Required frontend fields after normalization:
+Important fields after normalization:
 
 | Field | Meaning | Fallback |
 | --- | --- | --- |
-| `id` | Stable card/detail key | `importSource.sourceId` or `mock-{index}` |
-| `title` | Recipe title | required by schema |
-| `imageUrl` | Card/detail image URL | `null` |
-| `description` | Card/detail summary | FreshKeeper mock fallback text |
-| `cookingTip` | Searchable tip text | `""` |
-| `category` | Category filter value | `_mockMeta.category` or `everyday` |
-| `cuisineRegion` | Region filter value | `global` |
-| `country` | Country filter value | `_mockMeta.country` or `Global` |
-| `cookingTime` | Time filter value | `30min` |
-| `difficulty` | Difficulty filter value | `beginner` |
-| `recipeType` | Recipe type filter value | `everyday` |
-| `primaryIngredient` | Ingredient filter value | `ingredient` |
-| `likes` | Mock popularity metric | `24 + index * 3` |
-| `views` | Mock view metric | `320 + index * 17` |
+| `recipeId` | Stable card/detail key | `importSource.sourceId` or `mock-{index}` |
+| `titleImageUrl` | Card/detail image URL | `null` |
+| `writtenLang` | Original recipe language | `ko` |
+| `displayLang` | Current display language | `ko-KR` |
+| `translationStatus` | `original` or `translated` display state | derived from `writtenLang` |
+| `visibility` | Public/private/shared state | coerced to `public` unless seed says otherwise |
+| `isUseLocalData` | Local ingredient-name mode | `true` |
+| `likeCount` | Mock popularity metric | `24 + index * 3` |
+| `viewCount` | Mock hot-month metric | `320 + index * 17` |
+| `createdAt` | Mock latest metric | deterministic descending 2026 date |
+| `country/city/district` | Region hierarchy | country from `_mockMeta`, city/district synthesized from seed metadata |
+| 13 filter fields | Native filter schema | seed value or stable fallback |
 
 ## Filter State
 
-`RecipeFilters` is the canonical UI filter state.
+`PublicRecipeCatalogFilters` is the canonical UI filter state.
 
 ```ts
-type RecipeFilters = {
+type PublicRecipeCatalogFilters = {
   readonly query: string;
+  readonly sort: "latest" | "popular" | "hot_month";
+  readonly writtenLang: "all" | "ko" | "en";
+  readonly region: RecipeCatalogRegion;
+  readonly isUseLocalData: "all" | "local" | "original";
+  readonly recipeType: string;
+  readonly cookingMethod: string;
+  readonly technique: string;
+  readonly dietaryGoal: string;
+  readonly dietaryRestriction: string;
+  readonly primaryIngredient: string;
   readonly category: string;
-  readonly country: string;
-  readonly region?: string;
-  readonly time?: string;
-  readonly difficulty?: string;
-  readonly recipeType?: string;
-  readonly ingredient?: string;
-  readonly sort?: "recommended" | "popular" | "latest";
+  readonly occasion: string;
+  readonly difficulty: string;
+  readonly cookingTime: string;
+  readonly cuisineRegion: string;
+  readonly servings: string;
+  readonly requiredTool: string;
 };
 ```
 
@@ -66,18 +70,42 @@ Initial state:
 ```ts
 {
   query: "",
-  category: "all",
-  country: "all",
-  region: "all",
-  time: "all",
-  difficulty: "all",
+  sort: "latest",
+  writtenLang: "all",
+  region: { scope: "none" },
+  isUseLocalData: "all",
   recipeType: "all",
-  ingredient: "all",
-  sort: "recommended"
+  cookingMethod: "all",
+  technique: "all",
+  dietaryGoal: "all",
+  dietaryRestriction: "all",
+  primaryIngredient: "all",
+  category: "all",
+  occasion: "all",
+  difficulty: "all",
+  cookingTime: "all",
+  cuisineRegion: "all",
+  servings: "all",
+  requiredTool: "all"
 }
 ```
 
-`undefined`, `""`, and `"all"` mean no filter for optional/select fields.
+`"all"` means no filter for select fields.
+
+## Native Request Mapping
+
+`toPublicRecipeSearchRequest(filters, pageNumber, displayLang)` maps UI filters
+to a native-shaped public payload.
+
+- `query.trim() === ""` maps to `searchValue: null`
+- `"all"` select filters map to `null`
+- `recipeVisibility` is always `"public"`
+- `isUseLocalData` maps as:
+  - `"all"` -> `null`
+  - `"local"` -> `true`
+  - `"original"` -> `false`
+- `region.scope` maps to `regionScope`, `countryCode`, `country`, `city`,
+  `district`, `cityKey`, and `districtKey`
 
 ## Query Search
 
@@ -92,26 +120,38 @@ The query matches if it is included in any of:
 - recipe title
 - recipe description
 - recipe cooking tip
-- joined ingredient names
+- ingredient names
+- ingredient descriptions
 
 Search is substring-based. It is not tokenized, ranked, fuzzy, typo-tolerant, or
 server-backed.
 
 ## Exact-Match Filters
 
-All non-query filters are exact string matches against normalized recipe fields.
-
-| UI label | Filter key | Recipe field |
-| --- | --- | --- |
-| Category rail | `category` | `recipe.category` |
-| Country | `country` | `recipe.country` |
-| Cuisine region | `region` | `recipe.cuisineRegion` |
-| Cooking time | `time` | `recipe.cookingTime` |
-| Difficulty | `difficulty` | `recipe.difficulty` |
-| Recipe type | `recipeType` | `recipe.recipeType` |
-| Main ingredient | `ingredient` | `recipe.primaryIngredient` |
-
+All non-query filters are exact string matches against normalized record fields.
 Multiple active filters are combined with AND semantics.
+
+The native filter keys are:
+
+- `recipeType`
+- `cookingMethod`
+- `technique`
+- `dietaryGoal`
+- `dietaryRestriction`
+- `primaryIngredient`
+- `category`
+- `occasion`
+- `difficulty`
+- `cookingTime`
+- `cuisineRegion`
+- `servings`
+- `requiredTool`
+
+Additional exact filters:
+
+- `writtenLang`
+- `isUseLocalData`
+- `region` at country, city, or district scope
 
 ## Sorting
 
@@ -119,69 +159,49 @@ Sorting runs after filtering.
 
 | Sort | Behavior |
 | --- | --- |
-| `recommended` | Keep current mock order |
-| `popular` | Sort by `likes` descending |
-| `latest` | Reverse current mock order |
+| `latest` | Sort by `createdAt` descending |
+| `popular` | Sort by `likeCount` descending |
+| `hot_month` | Sort by `viewCount` descending |
 
-There is no date-based sort in the current frontend mock implementation.
+There is no web-only `recommended` sort.
 
 ## Browsing vs Results Mode
 
-The page shows curated browsing sections when all of the following are true:
+The page shows curated browsing sections when all filters are default:
 
-- `query` is empty after trim
-- `category`, `country`, `region`, `time`, `difficulty`, `recipeType`,
-  `ingredient` are inactive
-- `sort` is `undefined` or `recommended`
-
-Browsing mode sections:
-
-- featured recipes: top 6 from `popularRecipes(recipes)`
-- quick meals: top 10 from `quickRecipes(recipes)`
-- country chips: all collected countries
-- ingredient chips: top 9 primary ingredients by count
-- popular mock recipes: top 8 from `popularRecipes(recipes)`
+- query is empty
+- sort is `latest`
+- written language is `all`
+- region scope is `none`
+- local-data mode is `all`
+- all native filter keys are `all`
 
 Any active query, filter, or non-default sort switches to results mode.
 
 ## Active Filter Chips
 
-Results mode shows active filter chips for:
-
-- query
-- region
-- country
-- time
-- difficulty
-- recipe type
-- category
-- ingredient
+Results mode shows active filter chips for query, sort, language, region,
+local-data mode, and all native filter keys.
 
 Clicking an active chip clears only that filter:
 
 - query clears to `""`
+- sort clears to `latest`
+- region clears to `{ scope: "none" }`
 - select filters clear to `"all"`
 
 The "전체 보기" / "Clear all" button resets the full filter state to the initial
 state.
 
-## Empty State
+## UI Metadata
 
-If `filterRecipes()` returns an empty array in results mode:
+Cards and detail views read directly from `PublicRecipeRecord`.
 
-- show the friendly empty state
-- keep the detailed filter panel available
-- provide a reset button that restores the initial filter state
-
-## Localization
-
-Visible labels are localized through `I18nProvider`.
-
-- Korean is the default language.
-- English is available through the header language toggle.
-- Filter values are translated by `labelFor`, `countryLabel`, and `timeLabel`.
-- Emojis and display ordering for time/difficulty come from
-  `src/lib/recipeFilterMeta.ts`.
+- Cards show title, visual/photo fallback, category, country, time, difficulty,
+  servings, like count, and translation language chip when translated.
+- Detail shows region hierarchy, time, difficulty, servings, like count,
+  translation/original state, representative filter chips, ingredients, steps,
+  and the app install CTA.
 
 ## Current Limitations
 
@@ -189,8 +209,9 @@ Visible labels are localized through `I18nProvider`.
 - No backend API request is made.
 - No pagination or infinite loading.
 - No fuzzy matching, stemming, synonym expansion, typo correction, or ranking.
-- `latest` is mock reverse order, not true created-at order.
 - Current seed has no real image URLs; cards use `RecipeVisual` placeholders.
+- Current seed has no real city/district fields, so mock city/district options
+  are synthesized from `_mockMeta.category` and `_mockMeta.dishSlug`.
 - Detailed filter options are derived only from values present in the loaded
   seed.
 
@@ -202,15 +223,16 @@ Run these after changing search behavior:
 npm test
 npm run build
 npm audit --audit-level=moderate
+git diff --check
 ```
 
 Manual QA:
 
 - `/recipe-catalog` loads 100 mock recipes.
-- Searching `두유` returns "기본 두유 음료".
-- Category rail switches into results mode.
-- Country and ingredient chips apply exact filters.
-- Detailed filter selects apply exact filters.
-- Active filter chips clear one filter at a time.
-- "전체 보기" resets all filters.
-- Empty state appears for a query with no matches.
+- Searching `두유` switches to results mode.
+- Sort options are `latest`, `popular`, and `hot_month`.
+- Language, local-data, country/city/district, and all 13 native filters render.
+- Selecting `조리법=boil` narrows results.
+- Opening a recipe detail shows servings, translation/original state, region,
+  filter chips, ingredients, steps, and install CTA.
+- Mobile viewport has no horizontal overflow and keeps the sticky app CTA.

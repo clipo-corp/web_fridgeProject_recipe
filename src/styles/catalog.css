@@ -820,6 +820,13 @@ main {
   color: var(--text-tertiary);
 }
 
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: calc(-1 * var(--space-sm)) 0 var(--space-lg);
+}
+
 .detail-tip {
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-sm);
