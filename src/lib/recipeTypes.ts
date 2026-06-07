@@ -5,6 +5,8 @@ export type RecipeDifficulty =
   | "advanced"
   | "master";
 
+export type RecipeSort = "recommended" | "popular" | "latest";
+
 export type Recipe = {
   readonly id: string;
   readonly title: string;
@@ -42,4 +44,10 @@ export type RecipeFilters = {
   readonly query: string;
   readonly category: string;
   readonly country: string;
+  readonly region?: string;
+  readonly time?: string;
+  readonly difficulty?: string;
+  readonly recipeType?: string;
+  readonly ingredient?: string;
+  readonly sort?: RecipeSort;
 };

@@ -1,0 +1,176 @@
+export type Lang = "ko" | "en";
+
+const ko = {
+  "header.tag": "레시피",
+  "header.install": "앱 설치하기",
+  "header.browse": "레시피",
+  "header.why": "앱 소개",
+  "header.langAria": "언어 선택",
+  "header.toEn": "English",
+  "header.toKo": "한국어",
+  "header.themeToDark": "다크 모드로 전환",
+  "header.themeToLight": "라이트 모드로 전환",
+
+  "hero.badge": "FreshKeeper 공개 레시피",
+  "hero.title1": "오늘 냉장고 재료로",
+  "hero.title2": "뭐 해 먹지?",
+  "hero.subtitle":
+    "전 세계 {count}개 레시피를 가볍게 둘러보세요. 저장과 맞춤 추천은 앱에서 이어집니다.",
+  "hero.searchPlaceholder": "두부, 김치, 파스타, 닭고기 검색...",
+  "hero.searchAria": "레시피 검색",
+  "hero.stat1": "로그인 없이 읽기 전용",
+  "hero.stat2": "나라별 · 카테고리별 탐색",
+  "hero.stat3": "매일 보는 mock 레시피",
+
+  "rail.all": "전체",
+  "rail.aria": "레시피 카테고리",
+
+  "section.featured.eyebrow": "오늘 뭐 먹지?",
+  "section.featured.title": "지금 둘러보기 좋은 레시피",
+  "section.quick.eyebrow": "바쁜 날에도",
+  "section.quick.title": "빠르게 만드는 한 끼",
+  "section.country.eyebrow": "입맛 따라",
+  "section.country.title": "나라별 레시피",
+  "section.ingredient.eyebrow": "냉장고 재료로 시작하기",
+  "section.ingredient.title": "지금 있는 재료부터 골라보세요",
+  "section.ingredient.note":
+    "재료를 누르면 관련 레시피만 모아 보여드려요. 내 냉장고 재료 기반 맞춤 추천은 앱에서.",
+  "section.popular.eyebrow": "많이 찾는",
+  "section.popular.title": "인기 mock 레시피",
+
+  "results.eyebrow": "검색 결과",
+  "results.count": "{count}개 레시피",
+  "results.reset": "전체 보기",
+  "results.all": "전체 레시피",
+
+  "empty.title": "조건에 맞는 레시피가 없어요",
+  "empty.body": "검색어나 필터를 바꿔보세요.",
+  "empty.cta": "전체 레시피 보기",
+
+  "filters.title": "상세 필터",
+  "filters.subtitle": "원하는 조건을 골라 레시피를 좁혀보세요.",
+  "filters.sort": "정렬",
+  "filters.region": "요리 지역",
+  "filters.country": "나라",
+  "filters.time": "조리 시간",
+  "filters.difficulty": "난이도",
+  "filters.recipeType": "레시피 종류",
+  "filters.category": "카테고리",
+  "filters.ingredient": "주재료",
+  "filters.all": "전체",
+  "filters.more": "상세 조건 더보기",
+  "filters.less": "상세 조건 접기",
+  "filters.clearOne": "필터 제거",
+
+  "sort.recommended": "추천순",
+  "sort.popular": "인기순",
+  "sort.latest": "최신순",
+
+  "detail.ingredients": "재료",
+  "detail.steps": "만드는 법",
+  "detail.toTaste": "적당량",
+  "detail.close": "닫기",
+  "detail.install": "앱에서 저장하고 냉장고 재료로 추천받기",
+
+  "installBand.title": "내 냉장고 재료 기반 추천은 앱에서",
+  "installBand.body": "저장 · 재료관리 · 맞춤추천은 FreshKeeper 앱에서 이어집니다.",
+  "installBand.cta": "앱 설치하기",
+  "mobileCta": "앱에서 저장하고 추천받기",
+} as const;
+
+export type TranslationKey = keyof typeof ko;
+
+const en: Record<TranslationKey, string> = {
+  "header.tag": "Recipes",
+  "header.install": "Get the app",
+  "header.browse": "Recipes",
+  "header.why": "Why the app",
+  "header.langAria": "Select language",
+  "header.toEn": "English",
+  "header.toKo": "한국어",
+  "header.themeToDark": "Switch to dark mode",
+  "header.themeToLight": "Switch to light mode",
+
+  "hero.badge": "FreshKeeper public recipes",
+  "hero.title1": "What can you cook",
+  "hero.title2": "with your fridge today?",
+  "hero.subtitle":
+    "Browse {count} recipes from around the world. Saving and personalized picks continue in the app.",
+  "hero.searchPlaceholder": "Search tofu, kimchi, pasta, chicken...",
+  "hero.searchAria": "Search recipes",
+  "hero.stat1": "Read-only, no login",
+  "hero.stat2": "Browse by country & category",
+  "hero.stat3": "Fresh mock recipes daily",
+
+  "rail.all": "All",
+  "rail.aria": "Recipe categories",
+
+  "section.featured.eyebrow": "What's for today?",
+  "section.featured.title": "Great recipes to browse now",
+  "section.quick.eyebrow": "Even on busy days",
+  "section.quick.title": "Quick one-dish meals",
+  "section.country.eyebrow": "By taste",
+  "section.country.title": "Recipes by country",
+  "section.ingredient.eyebrow": "Start from fridge ingredients",
+  "section.ingredient.title": "Pick from what you already have",
+  "section.ingredient.note":
+    "Tap an ingredient to gather matching recipes. Fridge-based personalized picks live in the app.",
+  "section.popular.eyebrow": "Most loved",
+  "section.popular.title": "Popular mock recipes",
+
+  "results.eyebrow": "Search results",
+  "results.count": "{count} recipes",
+  "results.reset": "Clear all",
+  "results.all": "All recipes",
+
+  "empty.title": "No recipes match your filters",
+  "empty.body": "Try changing your search or filters.",
+  "empty.cta": "View all recipes",
+
+  "filters.title": "Detailed filters",
+  "filters.subtitle": "Narrow recipes by the options you want.",
+  "filters.sort": "Sort",
+  "filters.region": "Cuisine region",
+  "filters.country": "Country",
+  "filters.time": "Cooking time",
+  "filters.difficulty": "Difficulty",
+  "filters.recipeType": "Recipe type",
+  "filters.category": "Category",
+  "filters.ingredient": "Main ingredient",
+  "filters.all": "All",
+  "filters.more": "More filters",
+  "filters.less": "Hide filters",
+  "filters.clearOne": "Remove filter",
+
+  "sort.recommended": "Recommended",
+  "sort.popular": "Most popular",
+  "sort.latest": "Latest",
+
+  "detail.ingredients": "Ingredients",
+  "detail.steps": "Steps",
+  "detail.toTaste": "To taste",
+  "detail.close": "Close",
+  "detail.install": "Save in the app & get fridge-based picks",
+
+  "installBand.title": "Fridge-based recommendations live in the app",
+  "installBand.body":
+    "Saving, inventory, and personalized picks continue in the FreshKeeper app.",
+  "installBand.cta": "Get the app",
+  "mobileCta": "Save & get picks in the app",
+};
+
+const dictionaries: Record<Lang, Record<TranslationKey, string>> = { ko, en };
+
+export function translate(
+  lang: Lang,
+  key: TranslationKey,
+  params?: Readonly<Record<string, string | number>>,
+): string {
+  let value = dictionaries[lang][key];
+  if (params !== undefined) {
+    for (const [name, replacement] of Object.entries(params)) {
+      value = value.replace(`{${name}}`, String(replacement));
+    }
+  }
+  return value;
+}

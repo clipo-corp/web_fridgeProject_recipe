@@ -1,5 +1,28 @@
 import { seedFileSchema, type SeedEntry } from "./recipeMockSchema";
-import type { Recipe, RecipeDifficulty, RecipeFilters } from "./recipeTypes";
+import type { Recipe, RecipeDifficulty, RecipeFilters, RecipeSort } from "./recipeTypes";
+
+type StringRecipeKey =
+  | "category"
+  | "country"
+  | "cuisineRegion"
+  | "cookingTime"
+  | "difficulty"
+  | "recipeType"
+  | "primaryIngredient";
+
+function passes(selected: string | undefined, actual: string): boolean {
+  return selected === undefined || selected === "" || selected === "all" || selected === actual;
+}
+
+function sortRecipes(recipes: readonly Recipe[], sort: RecipeSort | undefined): readonly Recipe[] {
+  if (sort === "popular") {
+    return [...recipes].sort((a, b) => b.likes - a.likes);
+  }
+  if (sort === "latest") {
+    return [...recipes].reverse();
+  }
+  return recipes;
+}
 
 const difficultyValues = ["easy", "beginner", "intermediate", "advanced", "master"] as const;
 
@@ -16,7 +39,7 @@ export function filterRecipes(
 ): readonly Recipe[] {
   const query = filters.query.trim().toLocaleLowerCase("ko-KR");
 
-  return recipes.filter((recipe) => {
+  const filtered = recipes.filter((recipe) => {
     const searchable = [
       recipe.title,
       recipe.description,
@@ -28,14 +51,53 @@ export function filterRecipes(
 
     return (
       (query.length === 0 || searchable.includes(query)) &&
-      (filters.category === "all" || recipe.category === filters.category) &&
-      (filters.country === "all" || recipe.country === filters.country)
+      passes(filters.category, recipe.category) &&
+      passes(filters.country, recipe.country) &&
+      passes(filters.region, recipe.cuisineRegion) &&
+      passes(filters.time, recipe.cookingTime) &&
+      passes(filters.difficulty, recipe.difficulty) &&
+      passes(filters.recipeType, recipe.recipeType) &&
+      passes(filters.ingredient, recipe.primaryIngredient)
     );
   });
+
+  return sortRecipes(filtered, filters.sort);
 }
 
-export function collectOptions(recipes: readonly Recipe[], key: "category" | "country"): readonly string[] {
+export function collectOptions(recipes: readonly Recipe[], key: StringRecipeKey): readonly string[] {
   return Array.from(new Set(recipes.map((recipe) => recipe[key]).filter(Boolean))).sort();
+}
+
+const quickTimes = new Set(["5min", "10min", "20min"]);
+
+export function quickRecipes(recipes: readonly Recipe[]): readonly Recipe[] {
+  return recipes.filter(
+    (recipe) => quickTimes.has(recipe.cookingTime) || recipe.recipeType === "quick",
+  );
+}
+
+export function popularRecipes(recipes: readonly Recipe[]): readonly Recipe[] {
+  return [...recipes].sort((a, b) => b.likes - a.likes);
+}
+
+export function topIngredients(
+  recipes: readonly Recipe[],
+  limit: number,
+): readonly string[] {
+  const counts = new Map<string, number>();
+
+  for (const recipe of recipes) {
+    const key = recipe.primaryIngredient;
+    if (key.length === 0) {
+      continue;
+    }
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name]) => name);
 }
 
 function toRecipe(entry: SeedEntry, index: number): Recipe {

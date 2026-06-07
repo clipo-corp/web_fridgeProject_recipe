@@ -1,25 +1,33 @@
 import { Download, Refrigerator, Sparkles } from "lucide-react";
+import { useI18n } from "../lib/i18n";
 
-export function AppInstallCta(): JSX.Element {
+export function InstallBand(): JSX.Element {
+  const { t } = useI18n();
+
   return (
-    <>
-      <aside className="install-card" aria-label="FreshKeeper 앱 설치">
-        <div className="install-icon">
-          <Refrigerator size={22} aria-hidden="true" />
-        </div>
-        <div>
-          <strong>앱에서 냉장고 재료로 추천받기</strong>
-          <p>저장, 재료 관리, 맞춤 추천은 FreshKeeper 앱에서 이어집니다.</p>
-        </div>
-        <a className="install-button" href="#app-download">
-          <Download size={18} aria-hidden="true" />
-          앱 설치
-        </a>
-      </aside>
-      <a className="mobile-install" href="#app-download">
-        <Sparkles size={18} aria-hidden="true" />
-        앱에서 저장하고 추천받기
+    <section className="install-band" id="app-download" aria-label={t("installBand.title")}>
+      <div className="install-band__icon">
+        <Refrigerator size={26} aria-hidden="true" />
+      </div>
+      <div className="install-band__copy">
+        <strong>{t("installBand.title")}</strong>
+        <p>{t("installBand.body")}</p>
+      </div>
+      <a className="btn btn--primary install-band__cta" href="#app-download">
+        <Download size={18} aria-hidden="true" />
+        {t("installBand.cta")}
       </a>
-    </>
+    </section>
+  );
+}
+
+export function MobileInstallCta(): JSX.Element {
+  const { t } = useI18n();
+
+  return (
+    <a className="mobile-install" href="#app-download">
+      <Sparkles size={18} aria-hidden="true" />
+      {t("mobileCta")}
+    </a>
   );
 }

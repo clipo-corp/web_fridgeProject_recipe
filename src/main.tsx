@@ -1,11 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { RecipeCatalogPage } from "./components/RecipeCatalogPage";
+import { App } from "./components/App";
+import { applyStoredTheme } from "./lib/theme";
 import "./styles/base.css";
 import "./styles/catalog.css";
 
+applyStoredTheme();
+
 ReactDOM.createRoot(document.getElementById("root") ?? document.body).render(
   <React.StrictMode>
-    <RecipeCatalogPage />
+    <App />
   </React.StrictMode>,
 );

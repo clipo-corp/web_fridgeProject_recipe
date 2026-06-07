@@ -1,46 +1,51 @@
-import { Clock, Eye, Heart } from "lucide-react";
-import { labelFor, recipeInitial } from "../lib/recipeLabels";
+import { Clock, Flame, Heart } from "lucide-react";
+import { RecipeVisual } from "./RecipeVisual";
+import { useI18n } from "../lib/i18n";
 import type { Recipe } from "../lib/recipeTypes";
 
 type RecipeCardProps = {
   readonly recipe: Recipe;
-  readonly index: number;
   readonly onOpen: (recipe: Recipe) => void;
+  readonly variant?: "grid" | "rail";
 };
 
-export function RecipeCard({ recipe, index, onOpen }: RecipeCardProps): JSX.Element {
-  const colorIndex = index % 6;
+export function RecipeCard({ recipe, onOpen, variant = "grid" }: RecipeCardProps): JSX.Element {
+  const { labelFor, countryLabel, timeLabel } = useI18n();
+  const ingredientPreview = recipe.ingredients
+    .slice(0, 3)
+    .map((ingredient) => ingredient.name)
+    .filter(Boolean);
 
   return (
-    <article className="recipe-card">
+    <article className={`recipe-card recipe-card--${variant}`}>
       <button type="button" onClick={() => onOpen(recipe)}>
-        {recipe.imageUrl === null ? (
-          <div className={`recipe-visual recipe-visual-${colorIndex}`}>
-            <span>{recipeInitial(recipe.title)}</span>
-          </div>
-        ) : (
-          <img className="recipe-photo" src={recipe.imageUrl} alt="" loading="lazy" />
-        )}
-        <div className="recipe-card-body">
-          <div className="badge-row">
-            <span>{labelFor(recipe.category)}</span>
-            <span>{recipe.country}</span>
+        <RecipeVisual recipe={recipe} size={variant === "rail" ? "card" : "card"} />
+        <div className="recipe-card__body">
+          <div className="recipe-card__badges">
+            <span className="badge badge--brand">{labelFor(recipe.category)}</span>
+            <span className="badge badge--muted">{countryLabel(recipe.country)}</span>
           </div>
           <h3>{recipe.title}</h3>
           <p>{recipe.description}</p>
-          <div className="recipe-meta">
+          {ingredientPreview.length > 0 ? (
+            <div className="recipe-card__ingredients">
+              {ingredientPreview.map((name) => (
+                <span key={name}>{name}</span>
+              ))}
+            </div>
+          ) : null}
+          <div className="recipe-card__meta">
             <span>
               <Clock size={15} aria-hidden="true" />
-              {recipe.cookingTime}
+              {timeLabel(recipe.cookingTime)}
             </span>
-            <span>{labelFor(recipe.difficulty)}</span>
+            <span>
+              <Flame size={15} aria-hidden="true" />
+              {labelFor(recipe.difficulty)}
+            </span>
             <span>
               <Heart size={15} aria-hidden="true" />
               {recipe.likes}
-            </span>
-            <span>
-              <Eye size={15} aria-hidden="true" />
-              {recipe.views}
             </span>
           </div>
         </div>

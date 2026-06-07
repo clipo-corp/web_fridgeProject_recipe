@@ -22,6 +22,25 @@ const recipes: readonly Recipe[] = [
     ingredients: [{ name: "대두", quantity: 200, unit: "g", description: "불린 콩" }],
     steps: [{ stepNumber: 1, way: "콩을 불립니다.", cookingTip: null }],
   },
+  {
+    id: "two",
+    title: "빠른 샐러드",
+    imageUrl: null,
+    description: "채소로 바로 만드는 한 끼",
+    cookingTip: "",
+    category: "salad",
+    cuisineRegion: "global",
+    country: "Global",
+    cookingTime: "10min",
+    difficulty: "easy",
+    recipeType: "quick",
+    primaryIngredient: "vegetable",
+    sourceName: "curated",
+    views: 200,
+    likes: 50,
+    ingredients: [{ name: "상추", quantity: null, unit: null, description: "잎채소" }],
+    steps: [{ stepNumber: 1, way: "채소를 버무립니다.", cookingTip: null }],
+  },
 ];
 
 describe("filterRecipes", () => {
@@ -41,5 +60,29 @@ describe("filterRecipes", () => {
     const result = filterRecipes(recipes, { query: "", category: "dessert", country: "China" });
 
     expect(result[0]?.title).toBe("기본 두유 음료");
+  });
+
+  it("filters recipes by detailed options", () => {
+    const result = filterRecipes(recipes, {
+      query: "",
+      category: "all",
+      country: "all",
+      time: "10min",
+      ingredient: "vegetable",
+      recipeType: "quick",
+    });
+
+    expect(result[0]?.title).toBe("빠른 샐러드");
+  });
+
+  it("sorts recipes by popularity", () => {
+    const result = filterRecipes(recipes, {
+      query: "",
+      category: "all",
+      country: "all",
+      sort: "popular",
+    });
+
+    expect(result[0]?.id).toBe("two");
   });
 });

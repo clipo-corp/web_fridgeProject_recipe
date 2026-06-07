@@ -1,4 +1,4 @@
-import { labelFor } from "../lib/recipeLabels";
+import { useI18n } from "../lib/i18n";
 
 type CategoryRailProps = {
   readonly categories: readonly string[];
@@ -11,25 +11,29 @@ export function CategoryRail({
   selectedCategory,
   onSelectCategory,
 }: CategoryRailProps): JSX.Element {
+  const { t, labelFor } = useI18n();
+
   return (
-    <nav className="category-rail" aria-label="레시피 카테고리">
-      <button
-        className={selectedCategory === "all" ? "is-active" : ""}
-        type="button"
-        onClick={() => onSelectCategory("all")}
-      >
-        전체
-      </button>
-      {categories.slice(0, 12).map((category) => (
+    <nav className="category-rail" aria-label={t("rail.aria")}>
+      <div className="category-rail__track">
         <button
-          className={selectedCategory === category ? "is-active" : ""}
-          key={category}
+          className={`chip ${selectedCategory === "all" ? "chip--active" : ""}`}
           type="button"
-          onClick={() => onSelectCategory(category)}
+          onClick={() => onSelectCategory("all")}
         >
-          {labelFor(category)}
+          {t("rail.all")}
         </button>
-      ))}
+        {categories.map((category) => (
+          <button
+            className={`chip ${selectedCategory === category ? "chip--active" : ""}`}
+            key={category}
+            type="button"
+            onClick={() => onSelectCategory(category)}
+          >
+            {labelFor(category)}
+          </button>
+        ))}
+      </div>
     </nav>
   );
 }
