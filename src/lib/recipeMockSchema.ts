@@ -11,6 +11,7 @@ const stepSchema = z.object({
   stepNumber: z.number(),
   way: z.string(),
   cookingTip: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 const recipeSchema = z.object({

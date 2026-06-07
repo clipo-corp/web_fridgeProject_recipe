@@ -102,7 +102,12 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
               {recipe.ingredients.map((ingredient, index) => (
                 <li key={`${ingredient.name}-${index}`}>
                   <span className="ingredient-list__check" aria-hidden="true" />
-                  <span className="ingredient-list__name">{ingredient.name}</span>
+                  <span className="ingredient-list__copy">
+                    <span className="ingredient-list__name">{ingredient.name}</span>
+                    {ingredient.description.length > 0 ? (
+                      <small>{ingredient.description}</small>
+                    ) : null}
+                  </span>
                   <span className="ingredient-list__amount">
                     {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
                   </span>
@@ -115,8 +120,14 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
             <h2>{t("detail.steps")}</h2>
             <ol className="step-list">
               {recipe.steps.map((step) => (
-                <li key={step.stepNumber}>
+                <li
+                  key={step.stepNumber}
+                  className={step.imageUrl === null ? "step-list__item" : "step-list__item step-list__item--media"}
+                >
                   <span className="step-list__num">{step.stepNumber}</span>
+                  {step.imageUrl !== null ? (
+                    <img className="step-list__image" src={step.imageUrl} alt="" loading="lazy" />
+                  ) : null}
                   <div>
                     <p>{step.way}</p>
                     {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}

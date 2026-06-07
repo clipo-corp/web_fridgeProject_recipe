@@ -130,6 +130,7 @@ function toRecipe(entry: SeedEntry, index: number): Recipe {
       stepNumber: step.stepNumber,
       way: step.way,
       cookingTip: step.cookingTip ?? null,
+      imageUrl: step.imageUrl ?? null,
     })),
   };
 }

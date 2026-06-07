@@ -199,6 +199,10 @@ Required detail fields:
 - region fields
 - filter metadata fields
 
+`steps[]` may include optional `imageUrl` values. The UI supports mixed steps:
+some steps can render with an image thumbnail, and other steps can remain
+text-only.
+
 If a field is unavailable, return `null` only where the type allows it. For
 string filter fields, return stable fallback values rather than missing keys.
 

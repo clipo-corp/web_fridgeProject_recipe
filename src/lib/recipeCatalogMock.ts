@@ -10,6 +10,7 @@ import {
   toPublicRecipeSearchRequest,
 } from "./recipeCatalogRequest";
 import { recipeFilterKeys } from "./recipeCatalogTypes";
+import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
 import type {
   PublicRecipeCatalogFilters,
   PublicRecipeRecord,
@@ -109,7 +110,7 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
   const districtKey = makeRegionKey(countryCode, city, district);
   const writtenLang = parseWrittenLang(recipe.writtenLang);
 
-  return {
+  return withCatalogDemoMedia({
     recipeId: entry.importSource?.sourceId ?? `mock-${index}`,
     title: recipe.title,
     titleImageUrl: recipe.titleImageUrl ?? null,
@@ -157,8 +158,9 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
       stepNumber: step.stepNumber,
       way: step.way,
       cookingTip: step.cookingTip ?? null,
+      imageUrl: step.imageUrl ?? null,
     })),
-  };
+  });
 }
 
 function passesQuery(recipe: PublicRecipeRecord, query: string): boolean {

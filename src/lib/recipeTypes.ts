@@ -38,6 +38,7 @@ export type RecipeStep = {
   readonly stepNumber: number;
   readonly way: string;
   readonly cookingTip: string | null;
+  readonly imageUrl: string | null;
 };
 
 export type RecipeFilters = {

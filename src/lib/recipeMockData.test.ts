@@ -20,7 +20,7 @@ const recipes: readonly Recipe[] = [
     views: 100,
     likes: 10,
     ingredients: [{ name: "대두", quantity: 200, unit: "g", description: "불린 콩" }],
-    steps: [{ stepNumber: 1, way: "콩을 불립니다.", cookingTip: null }],
+    steps: [{ stepNumber: 1, way: "콩을 불립니다.", cookingTip: null, imageUrl: null }],
   },
   {
     id: "two",
@@ -39,7 +39,7 @@ const recipes: readonly Recipe[] = [
     views: 200,
     likes: 50,
     ingredients: [{ name: "상추", quantity: null, unit: null, description: "잎채소" }],
-    steps: [{ stepNumber: 1, way: "채소를 버무립니다.", cookingTip: null }],
+    steps: [{ stepNumber: 1, way: "채소를 버무립니다.", cookingTip: null, imageUrl: null }],
   },
 ];
 
