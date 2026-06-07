@@ -224,8 +224,11 @@ main {
 
 /* ---------- Hero ---------- */
 .hero {
+  display: flex;
+  align-items: center;
+  min-height: clamp(460px, 56vh, 620px);
   background:
-    radial-gradient(1200px 380px at 78% -10%, var(--green-50), transparent 60%),
+    radial-gradient(1320px 460px at 78% -10%, var(--green-50), transparent 62%),
     var(--bg-app);
   border-bottom: 1px solid var(--border);
 }
@@ -233,14 +236,14 @@ main {
 .hero__inner {
   width: min(1180px, calc(100% - 2 * var(--space-2xl)));
   margin: 0 auto;
-  padding: var(--space-5xl) 0 var(--space-4xl);
-  max-width: 760px;
+  padding: 72px 0 76px;
+  max-width: 860px;
 }
 
 .hero h1 {
   margin: var(--space-lg) 0 var(--space-md);
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  line-height: 1.1;
+  font-size: clamp(2.9rem, 6.2vw, 4.8rem);
+  line-height: 1.04;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--text);
@@ -249,8 +252,8 @@ main {
 .hero p {
   max-width: 56ch;
   color: var(--text-secondary);
-  font-size: var(--type-body-size);
-  line-height: 1.6;
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  line-height: 1.65;
 }
 
 .hero__search-wrap {
@@ -262,7 +265,7 @@ main {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  height: var(--h-input-large);
+  height: 66px;
   padding: 0 var(--space-xl);
   border-radius: var(--radius-pill);
   background: var(--bg-card);
@@ -287,7 +290,7 @@ main {
   outline: 0;
   background: transparent;
   color: var(--text);
-  font-size: var(--type-body-size);
+  font-size: 17px;
 }
 
 .hero__search-clear {
@@ -307,8 +310,8 @@ main {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  height: 38px;
-  padding: 0 var(--space-lg);
+  height: 46px;
+  padding: 0 var(--space-xl);
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--primary);
