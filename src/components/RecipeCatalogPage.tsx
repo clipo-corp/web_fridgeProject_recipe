@@ -10,8 +10,7 @@ import {
   describeFilters,
   isBrowsingFilters,
 } from "./RecipeCatalogFilters";
-import { RecipeDetail } from "./RecipeDetail";
-import { SearchHero } from "./SearchHero";
+import { SearchHero, type SearchSuggestion } from "./SearchHero";
 import {
   collectCatalogOptions,
   filterPublicRecipes,
@@ -29,7 +28,6 @@ export function RecipeCatalogPage(): JSX.Element {
   const { t, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
-  const [selectedRecipe, setSelectedRecipe] = useState<PublicRecipeRecord | null>(null);
 
   useEffect(() => {
     void loadPublicMockRecipes().then(setRecipes);
@@ -46,6 +44,10 @@ export function RecipeCatalogPage(): JSX.Element {
   const quick = useMemo(() => quickPublicRecipes(recipes).slice(0, 10), [recipes]);
   const popular = useMemo(() => popularPublicRecipes(recipes).slice(0, 8), [recipes]);
   const ingredients = useMemo(() => topPublicIngredients(recipes, 9), [recipes]);
+  const suggestions = useMemo<readonly SearchSuggestion[]>(
+    () => buildSuggestions(recipes, labelFor, countryLabel),
+    [recipes, labelFor, countryLabel],
+  );
 
   const isBrowsing = isBrowsingFilters(filters);
 
@@ -61,7 +63,9 @@ export function RecipeCatalogPage(): JSX.Element {
         <SearchHero
           query={filters.query}
           recipeCount={recipes.length}
+          suggestions={suggestions}
           onQueryChange={(query) => patchFilters({ query })}
+          onSuggestionSelect={(suggestion) => patchFilters(suggestion.patch)}
         />
         <CategoryRail
           categories={categories}
@@ -74,7 +78,7 @@ export function RecipeCatalogPage(): JSX.Element {
             <Section eyebrow={t("section.featured.eyebrow")} title={t("section.featured.title")}>
               <div className="grid grid--spotlight">
                 {featured.map((recipe) => (
-                  <RecipeCard key={recipe.recipeId} recipe={recipe} onOpen={setSelectedRecipe} />
+                  <RecipeCard key={recipe.recipeId} recipe={recipe} />
                 ))}
               </div>
             </Section>
@@ -85,7 +89,6 @@ export function RecipeCatalogPage(): JSX.Element {
                   <RecipeCard
                     key={recipe.recipeId}
                     recipe={recipe}
-                    onOpen={setSelectedRecipe}
                     variant="rail"
                   />
                 ))}
@@ -142,7 +145,7 @@ export function RecipeCatalogPage(): JSX.Element {
             <Section eyebrow={t("section.popular.eyebrow")} title={t("section.popular.title")}>
               <div className="grid grid--feed">
                 {popular.map((recipe) => (
-                  <RecipeCard key={recipe.recipeId} recipe={recipe} onOpen={setSelectedRecipe} />
+                  <RecipeCard key={recipe.recipeId} recipe={recipe} />
                 ))}
               </div>
             </Section>
@@ -195,7 +198,7 @@ export function RecipeCatalogPage(): JSX.Element {
             ) : (
               <div className="grid grid--feed">
                 {visibleRecipes.map((recipe) => (
-                  <RecipeCard key={recipe.recipeId} recipe={recipe} onOpen={setSelectedRecipe} />
+                  <RecipeCard key={recipe.recipeId} recipe={recipe} />
                 ))}
               </div>
             )}
@@ -206,7 +209,6 @@ export function RecipeCatalogPage(): JSX.Element {
       </main>
 
       <MobileInstallCta />
-      <RecipeDetail recipe={selectedRecipe} onClose={() => setSelectedRecipe(null)} />
     </>
   );
 }
@@ -229,4 +231,36 @@ function Section({ eyebrow, title, note, children }: SectionProps): JSX.Element 
       {children}
     </section>
   );
+}
+
+function buildSuggestions(
+  recipes: readonly PublicRecipeRecord[],
+  labelFor: (value: string) => string,
+  countryLabel: (value: string) => string,
+): readonly SearchSuggestion[] {
+  const primaryIngredients = Array.from(new Set(recipes.map((recipe) => recipe.primaryIngredient)));
+  const countries = Array.from(new Map(recipes.map((recipe) => [recipe.countryCode, recipe])).values());
+  const ingredientSuggestions = primaryIngredients.slice(0, 3).map((ingredient) => ({
+    id: `ingredient-${ingredient}`,
+    label: labelFor(ingredient),
+    note: "주재료",
+    patch: { query: labelFor(ingredient), primaryIngredient: ingredient },
+  }));
+  const countrySuggestions = countries.slice(0, 2).map((recipe) => ({
+    id: `country-${recipe.countryCode}`,
+    label: `${countryLabel(recipe.country)} 레시피`,
+    note: "지역",
+    patch: {
+      query: "",
+      region: { scope: "country", countryCode: recipe.countryCode, country: recipe.country },
+    },
+  }));
+  const recipeSuggestions = recipes.slice(0, 2).map((recipe) => ({
+    id: `recipe-${recipe.recipeId}`,
+    label: recipe.title,
+    note: countryLabel(recipe.country),
+    patch: { query: recipe.title },
+  }));
+
+  return [...ingredientSuggestions, ...recipeSuggestions];
 }

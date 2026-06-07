@@ -249,11 +249,15 @@ main {
   line-height: 1.6;
 }
 
+.hero__search-wrap {
+  position: relative;
+  margin-top: var(--space-2xl);
+}
+
 .hero__search {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  margin-top: var(--space-2xl);
   height: var(--h-input-large);
   padding: 0 var(--space-xl);
   border-radius: var(--radius-pill);
@@ -280,6 +284,74 @@ main {
   background: transparent;
   color: var(--text);
   font-size: var(--type-body-size);
+}
+
+.hero__search-clear {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card-alt);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.hero-suggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: none;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-pop);
+}
+
+.hero__search-wrap:focus-within .hero-suggestions {
+  display: block;
+}
+
+.hero-suggestions__eyebrow,
+.hero-suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.hero-suggestions__eyebrow {
+  margin-bottom: 6px;
+  color: var(--primary-pressed);
+  font-size: var(--type-caption-size);
+  font-weight: 800;
+}
+
+.hero-suggestion {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 var(--space-md);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--type-body-size);
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hero-suggestion:hover {
+  background: var(--bg-card-alt);
+}
+
+.hero-suggestion small {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: var(--type-caption-size);
 }
 
 .hero__stats {
@@ -383,7 +455,7 @@ main {
   height: 100%;
 }
 
-.recipe-card button {
+.recipe-card__link {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -396,13 +468,14 @@ main {
   cursor: pointer;
   padding: 0;
   text-align: left;
+  text-decoration: none;
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
     border-color 160ms ease;
 }
 
-.recipe-card button:hover {
+.recipe-card__link:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
   border-color: var(--border-hover);
@@ -651,6 +724,93 @@ main {
 
 .install-band__cta:hover {
   background: var(--green-50);
+}
+
+.install-page {
+  width: min(1080px, calc(100% - 2 * var(--space-2xl)));
+  margin: 0 auto;
+  padding: var(--space-5xl) 0;
+}
+
+.install-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.7fr);
+  gap: var(--space-3xl);
+  align-items: center;
+}
+
+.install-hero__copy h1 {
+  margin: var(--space-lg) 0 var(--space-md);
+  max-width: 13ch;
+  color: var(--text);
+  font-size: clamp(2.2rem, 6vw, 4.2rem);
+  line-height: 1.04;
+  font-weight: 800;
+}
+
+.install-hero__copy p {
+  max-width: 52ch;
+  color: var(--text-secondary);
+  font-size: var(--type-body-size);
+  line-height: 1.7;
+}
+
+.install-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-2xl);
+}
+
+.install-phone {
+  min-height: 420px;
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: 36px;
+  background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+  box-shadow: var(--shadow-pop);
+}
+
+.install-phone__bar {
+  width: 86px;
+  height: 8px;
+  margin: 0 auto var(--space-2xl);
+  border-radius: var(--radius-pill);
+  background: var(--border);
+}
+
+.install-phone__screen {
+  display: grid;
+  gap: var(--space-md);
+  place-items: center;
+  min-height: 300px;
+  border-radius: 24px;
+  background: var(--badge-brand-bg);
+  color: var(--badge-brand-text);
+  text-align: center;
+  padding: var(--space-2xl);
+}
+
+.install-phone__screen strong {
+  font-size: var(--type-h2-size);
+}
+
+.install-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-3xl);
+}
+
+.install-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
 }
 
 /* ---------- Results view ---------- */
@@ -927,6 +1087,53 @@ main {
   margin-top: var(--space-2xl);
 }
 
+.detail-page {
+  padding-top: var(--space-2xl);
+  padding-bottom: var(--space-5xl);
+}
+
+.detail-page__back {
+  margin-bottom: var(--space-lg);
+}
+
+.detail-page__layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1fr);
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+.detail-page__visual {
+  position: sticky;
+  top: 88px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.detail-page__body {
+  padding: var(--space-xl);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.detail-page__body h1 {
+  margin: var(--space-md) 0 var(--space-sm);
+  color: var(--text);
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  line-height: 1.12;
+  font-weight: 800;
+}
+
+.detail-page__body > p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
 /* ---------- Mobile sticky CTA ---------- */
 .mobile-install {
   position: fixed;
@@ -1094,9 +1301,9 @@ main {
 /* ---------- Detailed filter panel ---------- */
 .filter-panel {
   margin: var(--space-md) 0 var(--space-xl);
-  padding: var(--space-xl);
+  padding: var(--space-md);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
 }
@@ -1107,7 +1314,7 @@ main {
   justify-content: space-between;
   gap: var(--space-md);
   flex-wrap: wrap;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
 }
 
 .filter-panel__subtitle {
@@ -1140,9 +1347,11 @@ main {
 }
 
 .filter-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-md);
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
 }
 
 .filter-cards--advanced {
@@ -1152,6 +1361,7 @@ main {
 }
 
 .selector-card {
+  flex: 0 0 154px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1247,5 +1457,32 @@ main {
     width: var(--h-input);
     padding: 0;
     justify-content: center;
+  }
+
+  .install-page {
+    width: calc(100% - 2 * var(--space-lg));
+    padding-top: var(--space-3xl);
+  }
+
+  .install-hero,
+  .install-feature-grid,
+  .detail-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .install-phone {
+    min-height: 320px;
+  }
+
+  .detail-page__visual {
+    position: static;
+  }
+
+  .detail-page__body {
+    padding: var(--space-lg);
+  }
+
+  .hero-suggestions {
+    border-radius: var(--radius-md);
   }
 }

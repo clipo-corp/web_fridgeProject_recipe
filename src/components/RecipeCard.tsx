@@ -1,15 +1,15 @@
 import { Clock, Flame, Heart, Languages, Users } from "lucide-react";
 import { RecipeVisual } from "./RecipeVisual";
 import { useI18n } from "../lib/i18n";
+import { detailPathForRecipe } from "../lib/routes";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 type RecipeCardProps = {
   readonly recipe: PublicRecipeRecord;
-  readonly onOpen: (recipe: PublicRecipeRecord) => void;
   readonly variant?: "grid" | "rail";
 };
 
-export function RecipeCard({ recipe, onOpen, variant = "grid" }: RecipeCardProps): JSX.Element {
+export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.Element {
   const { labelFor, countryLabel, timeLabel } = useI18n();
   const ingredientPreview = recipe.ingredients
     .slice(0, 3)
@@ -18,7 +18,7 @@ export function RecipeCard({ recipe, onOpen, variant = "grid" }: RecipeCardProps
 
   return (
     <article className={`recipe-card recipe-card--${variant}`}>
-      <button type="button" onClick={() => onOpen(recipe)}>
+      <a className="recipe-card__link" href={detailPathForRecipe(recipe.recipeId)}>
         <RecipeVisual recipe={recipe} size={variant === "rail" ? "card" : "card"} />
         <div className="recipe-card__body">
           <div className="recipe-card__badges">
@@ -59,7 +59,7 @@ export function RecipeCard({ recipe, onOpen, variant = "grid" }: RecipeCardProps
             </span>
           </div>
         </div>
-      </button>
+      </a>
     </article>
   );
 }

@@ -7,23 +7,11 @@ export function makeRegionOptions(
   options: FilterOptions,
   countryLabel: (value: string) => string,
 ): readonly Option[] {
-  return [
-    ...options.region.countries.map((option) => ({
-      value: `country:${option.countryCode}`,
-      label: countryLabel(option.country),
-      emoji: emojiFor(option.country),
-    })),
-    ...options.region.cities.map((option) => ({
-      value: `city:${option.cityKey}`,
-      label: `${countryLabel(option.country)} · ${option.city}`,
-      emoji: emojiFor(option.country),
-    })),
-    ...options.region.districts.map((option) => ({
-      value: `district:${option.districtKey}`,
-      label: `${countryLabel(option.country)} · ${option.city} · ${option.district}`,
-      emoji: emojiFor(option.country),
-    })),
-  ];
+  return options.region.countries.map((option) => ({
+    value: `country:${option.countryCode}`,
+    label: countryLabel(option.country),
+    emoji: emojiFor(option.country),
+  }));
 }
 
 export function parseRegion(value: string, options: FilterOptions): RecipeCatalogRegion {

@@ -13,7 +13,7 @@ export function InstallBand(): JSX.Element {
         <strong>{t("installBand.title")}</strong>
         <p>{t("installBand.body")}</p>
       </div>
-      <a className="btn btn--primary install-band__cta" href="#app-download">
+      <a className="btn btn--primary install-band__cta" href="/install">
         <Download size={18} aria-hidden="true" />
         {t("installBand.cta")}
       </a>
@@ -25,7 +25,7 @@ export function MobileInstallCta(): JSX.Element {
   const { t } = useI18n();
 
   return (
-    <a className="mobile-install" href="#app-download">
+    <a className="mobile-install" href="/install">
       <Sparkles size={18} aria-hidden="true" />
       {t("mobileCta")}
     </a>

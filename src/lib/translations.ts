@@ -18,6 +18,8 @@ const ko = {
     "전 세계 {count}개 레시피를 가볍게 둘러보세요. 저장과 맞춤 추천은 앱에서 이어집니다.",
   "hero.searchPlaceholder": "두부, 김치, 파스타, 닭고기 검색...",
   "hero.searchAria": "레시피 검색",
+  "hero.clearSearch": "검색어 지우기",
+  "hero.suggestions": "바로 찾아보기",
   "hero.stat1": "로그인 없이 읽기 전용",
   "hero.stat2": "나라별 · 카테고리별 탐색",
   "hero.stat3": "매일 보는 mock 레시피",
@@ -86,12 +88,28 @@ const ko = {
   "detail.steps": "만드는 법",
   "detail.toTaste": "적당량",
   "detail.close": "닫기",
+  "detail.loading": "레시피를 불러오는 중입니다.",
+  "detail.back": "레시피로 돌아가기",
+  "detail.notFound": "레시피를 찾을 수 없어요.",
   "detail.install": "앱에서 저장하고 냉장고 재료로 추천받기",
 
   "installBand.title": "내 냉장고 재료 기반 추천은 앱에서",
   "installBand.body": "저장 · 재료관리 · 맞춤추천은 FreshKeeper 앱에서 이어집니다.",
   "installBand.cta": "앱 설치하기",
   "mobileCta": "앱에서 저장하고 추천받기",
+
+  "installPage.badge": "FreshKeeper 앱",
+  "installPage.title": "저장하고, 냉장고 재료로 다시 추천받기",
+  "installPage.body":
+    "웹에서는 레시피를 빠르게 둘러보고, 앱에서는 내 재료 기반 추천과 저장 목록을 이어갑니다.",
+  "installPage.primary": "앱 설치하기",
+  "installPage.secondary": "레시피 더 보기",
+  "installPage.phoneTitle": "내 냉장고 맞춤 추천",
+  "installPage.phoneBody": "저장 · 재료관리 · 추천을 한 번에",
+  "installPage.features": "앱 주요 기능",
+  "installPage.feature1": "냉장고 재료 관리",
+  "installPage.feature2": "레시피 저장",
+  "installPage.feature3": "개인화 추천",
 } as const;
 
 export type TranslationKey = keyof typeof ko;
@@ -114,6 +132,8 @@ const en: Record<TranslationKey, string> = {
     "Browse {count} recipes from around the world. Saving and personalized picks continue in the app.",
   "hero.searchPlaceholder": "Search tofu, kimchi, pasta, chicken...",
   "hero.searchAria": "Search recipes",
+  "hero.clearSearch": "Clear search",
+  "hero.suggestions": "Quick picks",
   "hero.stat1": "Read-only, no login",
   "hero.stat2": "Browse by country & category",
   "hero.stat3": "Fresh mock recipes daily",
@@ -182,6 +202,9 @@ const en: Record<TranslationKey, string> = {
   "detail.steps": "Steps",
   "detail.toTaste": "To taste",
   "detail.close": "Close",
+  "detail.loading": "Loading recipe.",
+  "detail.back": "Back to recipes",
+  "detail.notFound": "Recipe not found.",
   "detail.install": "Save in the app & get fridge-based picks",
 
   "installBand.title": "Fridge-based recommendations live in the app",
@@ -189,6 +212,19 @@ const en: Record<TranslationKey, string> = {
     "Saving, inventory, and personalized picks continue in the FreshKeeper app.",
   "installBand.cta": "Get the app",
   "mobileCta": "Save & get picks in the app",
+
+  "installPage.badge": "FreshKeeper app",
+  "installPage.title": "Save recipes and get fridge-based picks",
+  "installPage.body":
+    "Browse quickly on the web, then continue with saved recipes and ingredient-based recommendations in the app.",
+  "installPage.primary": "Get the app",
+  "installPage.secondary": "Browse recipes",
+  "installPage.phoneTitle": "Personal fridge picks",
+  "installPage.phoneBody": "Save, manage ingredients, and get recommendations",
+  "installPage.features": "App features",
+  "installPage.feature1": "Fridge inventory",
+  "installPage.feature2": "Saved recipes",
+  "installPage.feature3": "Personalized picks",
 };
 
 const dictionaries: Record<Lang, Record<TranslationKey, string>> = { ko, en };
