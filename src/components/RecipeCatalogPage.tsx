@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowRight, Refrigerator, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import { InstallBand, MobileInstallCta } from "./AppInstallCta";
-import { CategoryRail } from "./CategoryRail";
 import { FilterBar, type FilterOptions } from "./FilterBar";
 import { RecipeCard } from "./RecipeCard";
 import {
@@ -17,23 +16,20 @@ import {
   initialCatalogFilters,
   loadPublicMockRecipes,
   popularPublicRecipes,
-  quickPublicRecipes,
-  topPublicIngredients,
 } from "../lib/recipeCatalogMock";
 import { useI18n } from "../lib/i18n";
-import { emojiFor } from "../lib/recipeFilterMeta";
 import type { PublicRecipeCatalogFilters, PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 export function RecipeCatalogPage(): JSX.Element {
   const { t, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
+  const [draftQuery, setDraftQuery] = useState("");
 
   useEffect(() => {
     void loadPublicMockRecipes().then(setRecipes);
   }, []);
 
-  const categories = useMemo(() => collectCatalogOptions(recipes).category, [recipes]);
   const filterOptions = useMemo<FilterOptions>(
     () => collectCatalogOptions(recipes),
     [recipes],
@@ -41,9 +37,6 @@ export function RecipeCatalogPage(): JSX.Element {
   const visibleRecipes = useMemo(() => filterPublicRecipes(recipes, filters), [recipes, filters]);
 
   const featured = useMemo(() => popularPublicRecipes(recipes).slice(0, 6), [recipes]);
-  const quick = useMemo(() => quickPublicRecipes(recipes).slice(0, 10), [recipes]);
-  const popular = useMemo(() => popularPublicRecipes(recipes).slice(0, 8), [recipes]);
-  const ingredients = useMemo(() => topPublicIngredients(recipes, 9), [recipes]);
   const suggestions = useMemo<readonly SearchSuggestion[]>(
     () => buildSuggestions(recipes, labelFor, countryLabel),
     [recipes, labelFor, countryLabel],
@@ -53,7 +46,19 @@ export function RecipeCatalogPage(): JSX.Element {
 
   const patchFilters = (patch: Partial<PublicRecipeCatalogFilters>): void =>
     setFilters((current) => ({ ...current, ...patch }));
-  const resetFilters = (): void => setFilters(initialCatalogFilters);
+  const runSearch = (): void => {
+    const query = draftQuery.trim();
+    setFilters({ ...initialCatalogFilters, query });
+  };
+  const resetFilters = (): void => {
+    setDraftQuery("");
+    setFilters(initialCatalogFilters);
+  };
+  const selectSuggestion = (suggestion: SearchSuggestion): void => {
+    const nextQuery = suggestion.patch.query ?? suggestion.label;
+    setDraftQuery(nextQuery);
+    setFilters({ ...initialCatalogFilters, ...suggestion.patch, query: nextQuery });
+  };
 
   const activeChips = buildActiveChips(filters, { labelFor, countryLabel, timeLabel });
 
@@ -61,90 +66,19 @@ export function RecipeCatalogPage(): JSX.Element {
     <>
       <main>
         <SearchHero
-          query={filters.query}
+          query={draftQuery}
           recipeCount={recipes.length}
           suggestions={suggestions}
-          onQueryChange={(query) => patchFilters({ query })}
-          onSuggestionSelect={(suggestion) => patchFilters(suggestion.patch)}
-        />
-        <CategoryRail
-          categories={categories}
-          selectedCategory={filters.category}
-          onSelectCategory={(category) => patchFilters({ category })}
+          onQueryChange={setDraftQuery}
+          onSearchSubmit={runSearch}
+          onSuggestionSelect={selectSuggestion}
         />
 
         {isBrowsing ? (
           <div className="page">
-            <Section eyebrow={t("section.featured.eyebrow")} title={t("section.featured.title")}>
+            <Section eyebrow={t("section.featured.eyebrow")} title={t("section.trending.title")}>
               <div className="grid grid--spotlight">
                 {featured.map((recipe) => (
-                  <RecipeCard key={recipe.recipeId} recipe={recipe} />
-                ))}
-              </div>
-            </Section>
-
-            <Section eyebrow={t("section.quick.eyebrow")} title={t("section.quick.title")}>
-              <div className="rail">
-                {quick.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.recipeId}
-                    recipe={recipe}
-                    variant="rail"
-                  />
-                ))}
-              </div>
-            </Section>
-
-            <Section eyebrow={t("section.country.eyebrow")} title={t("section.country.title")}>
-              <div className="country-chips">
-                {filterOptions.region.countries.map((country) => (
-                  <button
-                    key={country.countryCode}
-                    type="button"
-                    className="chip chip--country"
-                    onClick={() =>
-                      setFilters({
-                        ...initialCatalogFilters,
-                        region: {
-                          scope: "country",
-                          countryCode: country.countryCode,
-                          country: country.country,
-                        },
-                      })
-                    }
-                  >
-                    {emojiFor(country.country)} {countryLabel(country.country)}
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            </Section>
-
-            <InstallBand />
-
-            <Section
-              eyebrow={t("section.ingredient.eyebrow")}
-              title={t("section.ingredient.title")}
-              note={t("section.ingredient.note")}
-            >
-              <div className="ingredient-chips">
-                {ingredients.map((ingredient) => (
-                  <button
-                    key={ingredient}
-                    type="button"
-                    className="chip chip--ingredient"
-                    onClick={() => setFilters({ ...initialCatalogFilters, primaryIngredient: ingredient })}
-                  >
-                    <Refrigerator size={15} aria-hidden="true" />
-                    {labelFor(ingredient)}
-                  </button>
-                ))}
-              </div>
-            </Section>
-
-            <Section eyebrow={t("section.popular.eyebrow")} title={t("section.popular.title")}>
-              <div className="grid grid--feed">
-                {popular.map((recipe) => (
                   <RecipeCard key={recipe.recipeId} recipe={recipe} />
                 ))}
               </div>

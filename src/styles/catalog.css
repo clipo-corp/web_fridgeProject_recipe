@@ -298,6 +298,26 @@ main {
   cursor: pointer;
 }
 
+.hero__search-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 var(--space-lg);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--text-on-green);
+  font-size: var(--type-small-size);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.hero__search-submit:hover {
+  background: var(--primary-pressed);
+}
+
 .hero-suggestions {
   position: absolute;
   top: calc(100% + 8px);
@@ -1484,5 +1504,18 @@ main {
 
   .hero-suggestions {
     border-radius: var(--radius-md);
+  }
+
+  .hero__search {
+    padding-right: var(--space-sm);
+  }
+
+  .hero__search-submit {
+    width: 38px;
+    padding: 0;
+  }
+
+  .hero__search-submit {
+    font-size: 0;
   }
 }

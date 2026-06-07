@@ -1,4 +1,4 @@
-import { Clock3, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Clock3, Search, Sparkles, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 import type { PublicRecipeCatalogFilters } from "../lib/recipeCatalogTypes";
 
@@ -14,6 +14,7 @@ type SearchHeroProps = {
   readonly recipeCount: number;
   readonly suggestions: readonly SearchSuggestion[];
   readonly onQueryChange: (query: string) => void;
+  readonly onSearchSubmit: () => void;
   readonly onSuggestionSelect: (suggestion: SearchSuggestion) => void;
 };
 
@@ -22,6 +23,7 @@ export function SearchHero({
   recipeCount,
   suggestions,
   onQueryChange,
+  onSearchSubmit,
   onSuggestionSelect,
 }: SearchHeroProps): JSX.Element {
   const { t } = useI18n();
@@ -39,7 +41,14 @@ export function SearchHero({
         </h1>
         <p>{t("hero.subtitle", { count: recipeCount })}</p>
         <div className="hero__search-wrap">
-          <form className="hero__search" role="search" onSubmit={(event) => event.preventDefault()}>
+          <form
+            className="hero__search"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onSearchSubmit();
+            }}
+          >
             <Search size={20} aria-hidden="true" />
             <input
               id="recipe-search"
@@ -60,6 +69,10 @@ export function SearchHero({
                 <X size={16} aria-hidden="true" />
               </button>
             ) : null}
+            <button type="submit" className="hero__search-submit">
+              {t("hero.searchSubmit")}
+              <ArrowRight size={16} aria-hidden="true" />
+            </button>
           </form>
 
           {showSuggestions ? (

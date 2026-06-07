@@ -19,6 +19,7 @@ const ko = {
   "hero.searchPlaceholder": "두부, 김치, 파스타, 닭고기 검색...",
   "hero.searchAria": "레시피 검색",
   "hero.clearSearch": "검색어 지우기",
+  "hero.searchSubmit": "검색",
   "hero.suggestions": "바로 찾아보기",
   "hero.stat1": "로그인 없이 읽기 전용",
   "hero.stat2": "나라별 · 카테고리별 탐색",
@@ -29,6 +30,7 @@ const ko = {
 
   "section.featured.eyebrow": "오늘 뭐 먹지?",
   "section.featured.title": "지금 둘러보기 좋은 레시피",
+  "section.trending.title": "지금 뜨는 레시피",
   "section.quick.eyebrow": "바쁜 날에도",
   "section.quick.title": "빠르게 만드는 한 끼",
   "section.country.eyebrow": "입맛 따라",
@@ -133,6 +135,7 @@ const en: Record<TranslationKey, string> = {
   "hero.searchPlaceholder": "Search tofu, kimchi, pasta, chicken...",
   "hero.searchAria": "Search recipes",
   "hero.clearSearch": "Clear search",
+  "hero.searchSubmit": "Search",
   "hero.suggestions": "Quick picks",
   "hero.stat1": "Read-only, no login",
   "hero.stat2": "Browse by country & category",
@@ -143,6 +146,7 @@ const en: Record<TranslationKey, string> = {
 
   "section.featured.eyebrow": "What's for today?",
   "section.featured.title": "Great recipes to browse now",
+  "section.trending.title": "Trending recipes now",
   "section.quick.eyebrow": "Even on busy days",
   "section.quick.title": "Quick one-dish meals",
   "section.country.eyebrow": "By taste",
