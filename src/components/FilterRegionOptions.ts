@@ -1,6 +1,6 @@
 import { emojiFor } from "../lib/recipeFilterMeta";
 import type { FilterOptions } from "./FilterBar";
-import type { Option } from "./FilterSelector";
+import type { Option } from "./FilterOption";
 import type { RecipeCatalogRegion } from "../lib/recipeCatalogTypes";
 
 export function makeRegionOptions(

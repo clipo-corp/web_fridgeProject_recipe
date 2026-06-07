@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { makeRegionOptions, parseRegion } from "./FilterRegionOptions";
-import { SelectorCard } from "./FilterSelector";
-import type { Option } from "./FilterSelector";
+import type { Option } from "./FilterOption";
 import { useI18n } from "../lib/i18n";
 import { emojiFor, orderDifficulty, orderTime } from "../lib/recipeFilterMeta";
 import { regionToSelectValue } from "../lib/recipeCatalogRegion";
@@ -66,8 +65,8 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
         </button>
       </div>
 
-      <div className="filter-cards">
-        <SelectorCard
+      <div className="filter-chip-groups">
+        <ChipGroup
           label={t("filters.sort")}
           value={filters.sort}
           options={sortOptions}
@@ -75,21 +74,21 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
           includeAll={false}
           onChange={(value) => onChange({ sort: parseSort(value) })}
         />
-        <SelectorCard
+        <ChipGroup
           label={t("filters.location")}
           value={regionToSelectValue(filters.region)}
           options={regionOptions}
           allLabel={allLabel}
           onChange={(value) => onChange({ region: parseRegion(value, options) })}
         />
-        <SelectorCard
+        <ChipGroup
           label={t("filters.writtenLang")}
           value={filters.writtenLang}
           options={langOptions}
           allLabel={allLabel}
           onChange={(value) => onChange({ writtenLang: value === "en" ? "en" : value === "ko" ? "ko" : "all" })}
         />
-        <SelectorCard
+        <ChipGroup
           label={t("filters.localMode")}
           value={filters.isUseLocalData}
           options={localDataOptions}
@@ -98,14 +97,14 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
             onChange({ isUseLocalData: value === "local" ? "local" : value === "original" ? "original" : "all" })
           }
         />
-        <SelectorCard
+        <ChipGroup
           label={t("filters.time")}
           value={filters.cookingTime}
           options={toOptions(orderTime(options.cookingTime), timeLabel)}
           allLabel={allLabel}
           onChange={(value) => onChange({ cookingTime: value })}
         />
-        <SelectorCard
+        <ChipGroup
           label={t("filters.difficulty")}
           value={filters.difficulty}
           options={toOptions(orderDifficulty(options.difficulty), labelFor)}
@@ -115,78 +114,78 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
       </div>
 
       {open ? (
-        <div className="filter-cards filter-cards--advanced">
-          <SelectorCard
+        <div className="filter-chip-groups filter-chip-groups--advanced">
+          <ChipGroup
             label={t("filters.recipeType")}
             value={filters.recipeType}
             options={toOptions(options.recipeType, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ recipeType: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.category")}
             value={filters.category}
             options={toOptions(options.category, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ category: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.ingredient")}
             value={filters.primaryIngredient}
             options={toOptions(options.primaryIngredient, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ primaryIngredient: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.cookingMethod")}
             value={filters.cookingMethod}
             options={toOptions(options.cookingMethod, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ cookingMethod: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.technique")}
             value={filters.technique}
             options={toOptions(options.technique, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ technique: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.dietaryGoal")}
             value={filters.dietaryGoal}
             options={toOptions(options.dietaryGoal, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ dietaryGoal: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.dietaryRestriction")}
             value={filters.dietaryRestriction}
             options={toOptions(options.dietaryRestriction, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ dietaryRestriction: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.occasion")}
             value={filters.occasion}
             options={toOptions(options.occasion, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ occasion: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.servings")}
             value={filters.servings}
             options={toOptions(options.servings, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ servings: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.requiredTool")}
             value={filters.requiredTool}
             options={toOptions(options.requiredTool, labelFor)}
             allLabel={allLabel}
             onChange={(value) => onChange({ requiredTool: value })}
           />
-          <SelectorCard
+          <ChipGroup
             label={t("filters.cuisineRegion")}
             value={filters.cuisineRegion}
             options={toOptions(options.cuisineRegion, labelFor)}
@@ -196,6 +195,52 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
         </div>
       ) : null}
     </div>
+  );
+}
+
+type ChipGroupProps = {
+  readonly label: string;
+  readonly value: string;
+  readonly options: readonly Option[];
+  readonly allLabel: string;
+  readonly includeAll?: boolean;
+  readonly onChange: (value: string) => void;
+};
+
+function ChipGroup({
+  label,
+  value,
+  options,
+  allLabel,
+  includeAll = true,
+  onChange,
+}: ChipGroupProps): JSX.Element {
+  const chipOptions = includeAll
+    ? [{ value: "all", label: allLabel, emoji: "" }, ...options]
+    : options;
+
+  return (
+    <section className="filter-chip-group" aria-label={label}>
+      <span className="filter-chip-group__label">{label}</span>
+      <div className="filter-chip-group__rail">
+        {chipOptions.map((option) => {
+          const selected = option.value === value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              className={selected ? "filter-chip filter-chip--selected" : "filter-chip"}
+              aria-pressed={selected}
+              onClick={() => onChange(option.value)}
+            >
+              {option.emoji.length > 0 ? <span aria-hidden="true">{option.emoji}</span> : null}
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
