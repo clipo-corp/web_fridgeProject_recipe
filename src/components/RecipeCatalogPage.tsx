@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Sparkles, X } from "lucide-react";
 import { InstallBand, MobileInstallCta } from "./AppInstallCta";
+import { FeaturedRecipeCarousel } from "./FeaturedRecipeCarousel";
 import { FilterBar, type FilterOptions } from "./FilterBar";
 import { RecipeCard } from "./RecipeCard";
 import {
@@ -150,11 +151,7 @@ export function RecipeCatalogPage(): JSX.Element {
         {showBrowsing ? (
           <div className="page">
             <Section eyebrow={t("section.featured.eyebrow")} title={t("section.trending.title")}>
-              <div className="grid grid--spotlight">
-                {featured.map((recipe) => (
-                  <RecipeCard key={recipe.recipeId} recipe={recipe} />
-                ))}
-              </div>
+              <FeaturedRecipeCarousel recipes={featured} />
             </Section>
           </div>
         ) : (

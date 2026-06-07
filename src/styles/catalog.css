@@ -699,6 +699,48 @@ main {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.featured-carousel {
+  position: relative;
+}
+
+.featured-carousel__controls {
+  position: absolute;
+  right: 0;
+  top: calc(-1 * (var(--space-lg) + var(--h-button)));
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.featured-carousel__arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+.featured-carousel__arrow:hover {
+  border-color: var(--primary);
+  background: var(--bg-card-alt);
+  transform: translateY(-1px);
+}
+
+.featured-carousel__page {
+  color: var(--text-secondary);
+  font-size: var(--type-caption-size);
+  font-weight: 800;
+}
+
 .grid--feed {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -746,6 +788,30 @@ main {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
   border-color: var(--border-hover);
+}
+
+.recipe-card--spotlight .recipe-card__link {
+  height: clamp(360px, 31vw, 460px);
+}
+
+.recipe-card--spotlight .recipe-visual {
+  flex: 0 0 70%;
+  aspect-ratio: auto;
+}
+
+.recipe-card--spotlight .recipe-card__body {
+  flex: 0 0 30%;
+  min-height: 0;
+  gap: 5px;
+}
+
+.recipe-card--spotlight .recipe-card__ingredients {
+  display: none;
+}
+
+.recipe-card--spotlight p {
+  min-height: 0;
+  -webkit-line-clamp: 1;
 }
 
 .recipe-card__body {
@@ -1530,12 +1596,22 @@ main {
 @media (max-width: 560px) {
   .grid--feed,
   .grid--spotlight {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: var(--space-md);
+  }
+
+  .featured-carousel__controls {
+    position: static;
+    justify-content: flex-end;
+    margin: calc(-1 * var(--space-sm)) 0 var(--space-md);
   }
 
   .recipe-card__body {
     padding: var(--space-md);
+  }
+
+  .recipe-card--spotlight .recipe-card__link {
+    height: 390px;
   }
 
   .rail .recipe-card--rail {

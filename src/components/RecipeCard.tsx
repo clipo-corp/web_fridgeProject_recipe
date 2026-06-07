@@ -6,7 +6,7 @@ import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 type RecipeCardProps = {
   readonly recipe: PublicRecipeRecord;
-  readonly variant?: "grid" | "rail";
+  readonly variant?: "grid" | "rail" | "spotlight";
 };
 
 export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.Element {
@@ -19,7 +19,7 @@ export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.E
   return (
     <article className={`recipe-card recipe-card--${variant}`}>
       <a className="recipe-card__link" href={detailPathForRecipe(recipe.recipeId)}>
-        <RecipeVisual recipe={recipe} size={variant === "rail" ? "card" : "card"} />
+        <RecipeVisual recipe={recipe} size={variant === "spotlight" ? "spotlight" : "card"} />
         <div className="recipe-card__body">
           <div className="recipe-card__badges">
             <span className="badge badge--brand">{labelFor(recipe.category)}</span>
