@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Sparkles, X } from "lucide-react";
 import { InstallBand, MobileInstallCta } from "./AppInstallCta";
@@ -10,6 +10,8 @@ import {
   isBrowsingFilters,
 } from "./RecipeCatalogFilters";
 import { SearchHero, type SearchSuggestion } from "./SearchHero";
+import { SearchProgress } from "./SearchProgress";
+import { ResultsSearchBar } from "./ResultsSearchBar";
 import {
   collectCatalogOptions,
   filterPublicRecipes,
@@ -25,9 +27,19 @@ export function RecipeCatalogPage(): JSX.Element {
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
   const [draftQuery, setDraftQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const searchTimer = useRef<number | null>(null);
 
   useEffect(() => {
     void loadPublicMockRecipes().then(setRecipes);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current !== null) {
+        window.clearTimeout(searchTimer.current);
+      }
+    };
   }, []);
 
   const filterOptions = useMemo<FilterOptions>(
@@ -43,21 +55,56 @@ export function RecipeCatalogPage(): JSX.Element {
   );
 
   const isBrowsing = isBrowsingFilters(filters);
+  const showBrowsing = isBrowsing && !searching;
 
   const patchFilters = (patch: Partial<PublicRecipeCatalogFilters>): void =>
     setFilters((current) => ({ ...current, ...patch }));
   const runSearch = (): void => {
     const query = draftQuery.trim();
-    setFilters({ ...initialCatalogFilters, query });
+    if (query.length === 0) {
+      resetFilters();
+      return;
+    }
+    startSearch({ ...initialCatalogFilters, query });
   };
   const resetFilters = (): void => {
+    stopSearching();
     setDraftQuery("");
     setFilters(initialCatalogFilters);
   };
   const selectSuggestion = (suggestion: SearchSuggestion): void => {
-    const nextQuery = suggestion.patch.query ?? suggestion.label;
-    setDraftQuery(nextQuery);
-    setFilters({ ...initialCatalogFilters, ...suggestion.patch, query: nextQuery });
+    const nextDraftQuery = suggestion.label;
+    const nextFilterQuery =
+      "primaryIngredient" in suggestion.patch || "region" in suggestion.patch
+        ? ""
+        : suggestion.patch.query ?? suggestion.label;
+
+    setDraftQuery(nextDraftQuery);
+    startSearch({ ...initialCatalogFilters, ...suggestion.patch, query: nextFilterQuery });
+  };
+  const clearActiveChip = (clear: Partial<PublicRecipeCatalogFilters>): void => {
+    if (clear.query === "") {
+      setDraftQuery("");
+    }
+    patchFilters(clear);
+  };
+  const startSearch = (nextFilters: PublicRecipeCatalogFilters): void => {
+    if (searchTimer.current !== null) {
+      window.clearTimeout(searchTimer.current);
+    }
+    setFilters(nextFilters);
+    setSearching(true);
+    searchTimer.current = window.setTimeout(() => {
+      setSearching(false);
+      searchTimer.current = null;
+    }, 420);
+  };
+  const stopSearching = (): void => {
+    if (searchTimer.current !== null) {
+      window.clearTimeout(searchTimer.current);
+      searchTimer.current = null;
+    }
+    setSearching(false);
   };
 
   const activeChips = buildActiveChips(filters, { labelFor, countryLabel, timeLabel });
@@ -65,16 +112,24 @@ export function RecipeCatalogPage(): JSX.Element {
   return (
     <>
       <main>
-        <SearchHero
-          query={draftQuery}
-          recipeCount={recipes.length}
-          suggestions={suggestions}
-          onQueryChange={setDraftQuery}
-          onSearchSubmit={runSearch}
-          onSuggestionSelect={selectSuggestion}
-        />
+        {showBrowsing ? (
+          <SearchHero
+            query={draftQuery}
+            recipeCount={recipes.length}
+            suggestions={suggestions}
+            onQueryChange={setDraftQuery}
+            onSearchSubmit={runSearch}
+            onSuggestionSelect={selectSuggestion}
+          />
+        ) : (
+          <ResultsSearchBar
+            query={draftQuery}
+            onQueryChange={setDraftQuery}
+            onSearchSubmit={runSearch}
+          />
+        )}
 
-        {isBrowsing ? (
+        {showBrowsing ? (
           <div className="page">
             <Section eyebrow={t("section.featured.eyebrow")} title={t("section.trending.title")}>
               <div className="grid grid--spotlight">
@@ -86,7 +141,10 @@ export function RecipeCatalogPage(): JSX.Element {
           </div>
         ) : (
           <div className="page">
-            <div className="results-head">
+            {searching ? <SearchProgress /> : null}
+
+            <div className={searching ? "results-content results-content--loading" : "results-content"}>
+              <div className="results-head">
               <div>
                 <span className="eyebrow">{t("results.eyebrow")}</span>
                 <h2>{describeFilters(filters, { t, labelFor, countryLabel, timeLabel })}</h2>
@@ -98,7 +156,7 @@ export function RecipeCatalogPage(): JSX.Element {
                 <X size={16} aria-hidden="true" />
                 {t("results.reset")}
               </button>
-            </div>
+              </div>
 
             {activeChips.length > 0 ? (
               <div className="active-filters">
@@ -108,7 +166,7 @@ export function RecipeCatalogPage(): JSX.Element {
                     type="button"
                     className="active-filter"
                     aria-label={t("filters.clearOne")}
-                    onClick={() => patchFilters(chip.clear)}
+                    onClick={() => clearActiveChip(chip.clear)}
                   >
                     {chip.emoji.length > 0 ? <span aria-hidden="true">{chip.emoji}</span> : null}
                     {chip.text}
@@ -138,6 +196,7 @@ export function RecipeCatalogPage(): JSX.Element {
             )}
 
             <InstallBand />
+            </div>
           </div>
         )}
       </main>

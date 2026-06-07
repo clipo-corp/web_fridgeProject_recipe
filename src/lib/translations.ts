@@ -47,6 +47,9 @@ const ko = {
   "results.reset": "전체 보기",
   "results.all": "전체 레시피",
 
+  "searchProgress.eyebrow": "레시피 검색 중",
+  "searchProgress.title": "재료와 조건에 맞는 레시피를 고르는 중이에요",
+
   "empty.title": "조건에 맞는 레시피가 없어요",
   "empty.body": "검색어나 필터를 바꿔보세요.",
   "empty.cta": "전체 레시피 보기",
@@ -162,6 +165,9 @@ const en: Record<TranslationKey, string> = {
   "results.count": "{count} recipes",
   "results.reset": "Clear all",
   "results.all": "All recipes",
+
+  "searchProgress.eyebrow": "Searching recipes",
+  "searchProgress.title": "Finding recipes that match your ingredients",
 
   "empty.title": "No recipes match your filters",
   "empty.body": "Try changing your search or filters.",
