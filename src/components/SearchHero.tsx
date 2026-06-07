@@ -1,13 +1,6 @@
 import { ArrowRight, Clock3, Search, Sparkles, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
-import type { PublicRecipeCatalogFilters } from "../lib/recipeCatalogTypes";
-
-export type SearchSuggestion = {
-  readonly id: string;
-  readonly label: string;
-  readonly note: string;
-  readonly patch: Partial<PublicRecipeCatalogFilters>;
-};
+import type { SearchSuggestion } from "../lib/recipeSearchSuggestions";
 
 type SearchHeroProps = {
   readonly query: string;

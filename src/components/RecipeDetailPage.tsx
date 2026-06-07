@@ -51,7 +51,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
             <RecipeVisual recipe={recipe} size="detail" />
           </div>
 
-          <div className="detail-page__body">
+          <div className="detail-page__summary">
             <span className="brand-badge">
               {formatRegion(recipe, countryLabel)} · {labelFor(recipe.cuisineRegion)}
             </span>
@@ -92,42 +92,44 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
             </div>
 
             {recipe.cookingTip.length > 0 ? <p className="detail-tip">{recipe.cookingTip}</p> : null}
-
-            <section className="detail-section">
-              <h2>{t("detail.ingredients")}</h2>
-              <ul className="ingredient-list">
-                {recipe.ingredients.map((ingredient, index) => (
-                  <li key={`${ingredient.name}-${index}`}>
-                    <span className="ingredient-list__check" aria-hidden="true" />
-                    <span className="ingredient-list__name">{ingredient.name}</span>
-                    <span className="ingredient-list__amount">
-                      {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="detail-section">
-              <h2>{t("detail.steps")}</h2>
-              <ol className="step-list">
-                {recipe.steps.map((step) => (
-                  <li key={step.stepNumber}>
-                    <span className="step-list__num">{step.stepNumber}</span>
-                    <div>
-                      <p>{step.way}</p>
-                      {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </section>
-
-            <a className="btn btn--primary detail-install" href="/install">
-              <Download size={18} aria-hidden="true" />
-              {t("detail.install")}
-            </a>
           </div>
+        </article>
+
+        <article className="detail-page__content">
+          <section className="detail-section">
+            <h2>{t("detail.ingredients")}</h2>
+            <ul className="ingredient-list">
+              {recipe.ingredients.map((ingredient, index) => (
+                <li key={`${ingredient.name}-${index}`}>
+                  <span className="ingredient-list__check" aria-hidden="true" />
+                  <span className="ingredient-list__name">{ingredient.name}</span>
+                  <span className="ingredient-list__amount">
+                    {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="detail-section">
+            <h2>{t("detail.steps")}</h2>
+            <ol className="step-list">
+              {recipe.steps.map((step) => (
+                <li key={step.stepNumber}>
+                  <span className="step-list__num">{step.stepNumber}</span>
+                  <div>
+                    <p>{step.way}</p>
+                    {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <a className="btn btn--primary detail-install" href="/install">
+            <Download size={18} aria-hidden="true" />
+            {t("detail.install")}
+          </a>
         </article>
       </main>
       <MobileInstallCta />

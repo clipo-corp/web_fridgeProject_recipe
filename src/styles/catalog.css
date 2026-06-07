@@ -544,7 +544,7 @@ main {
   color: var(--text-tertiary);
   font-size: var(--type-small-size);
   font-weight: 800;
-  cursor: default;
+  cursor: pointer;
   white-space: nowrap;
 }
 
@@ -564,16 +564,20 @@ main {
 }
 
 .search-progress {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-lg);
-  align-items: center;
+  display: block;
   margin-top: var(--space-3xl);
   padding: var(--space-xl);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
+}
+
+.search-progress__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
 }
 
 .search-progress__pulse {
@@ -595,24 +599,45 @@ main {
 }
 
 .search-progress__grid {
-  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-md);
 }
 
-.search-progress__grid span {
-  height: 86px;
+.recipe-skeleton-card {
+  min-height: 250px;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  background: var(--bg-card-alt);
+}
+
+.recipe-skeleton-card span {
+  display: block;
   background: linear-gradient(100deg, var(--bg-card-alt), var(--border), var(--bg-card-alt));
   background-size: 200% 100%;
   animation: shimmer-search 1000ms linear infinite;
 }
 
-.results-content--loading {
-  opacity: 0.34;
-  pointer-events: none;
-  user-select: none;
+.recipe-skeleton-card__visual {
+  height: 118px;
+  margin-bottom: var(--space-md);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-skeleton-card__line {
+  height: 16px;
+  margin-top: var(--space-sm);
+  border-radius: var(--radius-pill);
+}
+
+.recipe-skeleton-card__line--short {
+  width: 46%;
+}
+
+.recipe-skeleton-card__line--muted {
+  width: 72%;
+  opacity: 0.7;
 }
 
 /* ---------- Category rail ---------- */
@@ -1346,8 +1371,6 @@ main {
 }
 
 .detail-page__visual {
-  position: sticky;
-  top: 88px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1355,7 +1378,8 @@ main {
   box-shadow: var(--shadow-card);
 }
 
-.detail-page__body {
+.detail-page__summary,
+.detail-page__content {
   padding: var(--space-xl);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1363,7 +1387,7 @@ main {
   box-shadow: var(--shadow-card);
 }
 
-.detail-page__body h1 {
+.detail-page__summary h1 {
   margin: var(--space-md) 0 var(--space-sm);
   color: var(--text);
   font-size: clamp(1.8rem, 4vw, 2.7rem);
@@ -1371,9 +1395,14 @@ main {
   font-weight: 800;
 }
 
-.detail-page__body > p {
+.detail-page__summary > p {
   color: var(--text-secondary);
   line-height: 1.7;
+}
+
+.detail-page__content {
+  width: min(760px, 100%);
+  margin: var(--space-2xl) auto 0;
 }
 
 /* ---------- Mobile sticky CTA ---------- */
@@ -1735,11 +1764,8 @@ main {
     min-height: 320px;
   }
 
-  .detail-page__visual {
-    position: static;
-  }
-
-  .detail-page__body {
+  .detail-page__summary,
+  .detail-page__content {
     padding: var(--space-lg);
   }
 

@@ -9,7 +9,7 @@ import {
   describeFilters,
   isBrowsingFilters,
 } from "./RecipeCatalogFilters";
-import { SearchHero, type SearchSuggestion } from "./SearchHero";
+import { SearchHero } from "./SearchHero";
 import { SearchProgress } from "./SearchProgress";
 import { ResultsSearchBar } from "./ResultsSearchBar";
 import {
@@ -20,6 +20,10 @@ import {
   popularPublicRecipes,
 } from "../lib/recipeCatalogMock";
 import { useI18n } from "../lib/i18n";
+import {
+  buildRecipeSearchSuggestions,
+  type SearchSuggestion,
+} from "../lib/recipeSearchSuggestions";
 import type { PublicRecipeCatalogFilters, PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 export function RecipeCatalogPage(): JSX.Element {
@@ -28,6 +32,7 @@ export function RecipeCatalogPage(): JSX.Element {
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
   const [draftQuery, setDraftQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const searchTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -50,7 +55,7 @@ export function RecipeCatalogPage(): JSX.Element {
 
   const featured = useMemo(() => popularPublicRecipes(recipes).slice(0, 6), [recipes]);
   const suggestions = useMemo<readonly SearchSuggestion[]>(
-    () => buildSuggestions(recipes, labelFor, countryLabel),
+    () => buildRecipeSearchSuggestions(recipes, labelFor, countryLabel),
     [recipes, labelFor, countryLabel],
   );
 
@@ -79,6 +84,7 @@ export function RecipeCatalogPage(): JSX.Element {
     stopSearching();
     setDraftQuery("");
     setFilters(initialCatalogFilters);
+    setFiltersOpen(false);
   };
   const selectSuggestion = (suggestion: SearchSuggestion): void => {
     const nextDraftQuery = suggestion.label;
@@ -100,6 +106,7 @@ export function RecipeCatalogPage(): JSX.Element {
     if (searchTimer.current !== null) {
       window.clearTimeout(searchTimer.current);
     }
+    setFiltersOpen(false);
     setFilters(nextFilters);
     setSearching(true);
     searchTimer.current = window.setTimeout(() => {
@@ -132,8 +139,11 @@ export function RecipeCatalogPage(): JSX.Element {
         ) : (
           <ResultsSearchBar
             query={draftQuery}
+            filtersOpen={filtersOpen}
             onQueryChange={setDraftQuery}
             onSearchSubmit={runSearch}
+            onFiltersClose={() => setFiltersOpen(false)}
+            onFiltersToggle={() => setFiltersOpen((value) => !value)}
           />
         )}
 
@@ -149,62 +159,66 @@ export function RecipeCatalogPage(): JSX.Element {
           </div>
         ) : (
           <div className="page">
-            {searching ? <SearchProgress /> : null}
-
-            <div className={searching ? "results-content results-content--loading" : "results-content"}>
-              <div className="results-head">
-              <div>
-                <span className="eyebrow">{t("results.eyebrow")}</span>
-                <h2>{describeFilters(filters, { t, labelFor, countryLabel, timeLabel })}</h2>
-                <p className="results-count">
-                  {t("results.count", { count: visibleRecipes.length })}
-                </p>
-              </div>
-              <button type="button" className="btn btn--ghost" onClick={resetFilters}>
-                <X size={16} aria-hidden="true" />
-                {t("results.reset")}
-              </button>
-              </div>
-
-            {activeChips.length > 0 ? (
-              <div className="active-filters">
-                {activeChips.map((chip) => (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    className="active-filter"
-                    aria-label={t("filters.clearOne")}
-                    onClick={() => clearActiveChip(chip.clear)}
-                  >
-                    {chip.emoji.length > 0 ? <span aria-hidden="true">{chip.emoji}</span> : null}
-                    {chip.text}
-                    <X size={13} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            <FilterBar filters={filters} options={filterOptions} onChange={patchFilters} />
-
-            {visibleRecipes.length === 0 ? (
-              <div className="empty-state">
-                <Sparkles size={28} aria-hidden="true" />
-                <strong>{t("empty.title")}</strong>
-                <p>{t("empty.body")}</p>
-                <button type="button" className="btn btn--primary" onClick={resetFilters}>
-                  {t("empty.cta")}
-                </button>
-              </div>
+            {searching ? (
+              <SearchProgress />
             ) : (
-              <div className="grid grid--feed">
-                {visibleRecipes.map((recipe) => (
-                  <RecipeCard key={recipe.recipeId} recipe={recipe} />
-                ))}
+              <div className="results-content">
+                <div className="results-head">
+                  <div>
+                    <span className="eyebrow">{t("results.eyebrow")}</span>
+                    <h2>{describeFilters(filters, { t, labelFor, countryLabel, timeLabel })}</h2>
+                    <p className="results-count">
+                      {t("results.count", { count: visibleRecipes.length })}
+                    </p>
+                  </div>
+                  <button type="button" className="btn btn--ghost" onClick={resetFilters}>
+                    <X size={16} aria-hidden="true" />
+                    {t("results.reset")}
+                  </button>
+                </div>
+
+                {activeChips.length > 0 ? (
+                  <div className="active-filters">
+                    {activeChips.map((chip) => (
+                      <button
+                        key={chip.id}
+                        type="button"
+                        className="active-filter"
+                        aria-label={t("filters.clearOne")}
+                        onClick={() => clearActiveChip(chip.clear)}
+                      >
+                        {chip.emoji.length > 0 ? <span aria-hidden="true">{chip.emoji}</span> : null}
+                        {chip.text}
+                        <X size={13} aria-hidden="true" />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                {filtersOpen ? (
+                  <FilterBar filters={filters} options={filterOptions} onChange={patchFilters} />
+                ) : null}
+
+                {visibleRecipes.length === 0 ? (
+                  <div className="empty-state">
+                    <Sparkles size={28} aria-hidden="true" />
+                    <strong>{t("empty.title")}</strong>
+                    <p>{t("empty.body")}</p>
+                    <button type="button" className="btn btn--primary" onClick={resetFilters}>
+                      {t("empty.cta")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid--feed">
+                    {visibleRecipes.map((recipe) => (
+                      <RecipeCard key={recipe.recipeId} recipe={recipe} />
+                    ))}
+                  </div>
+                )}
+
+                <InstallBand />
               </div>
             )}
-
-            <InstallBand />
-            </div>
           </div>
         )}
       </main>
@@ -232,36 +246,4 @@ function Section({ eyebrow, title, note, children }: SectionProps): JSX.Element 
       {children}
     </section>
   );
-}
-
-function buildSuggestions(
-  recipes: readonly PublicRecipeRecord[],
-  labelFor: (value: string) => string,
-  countryLabel: (value: string) => string,
-): readonly SearchSuggestion[] {
-  const primaryIngredients = Array.from(new Set(recipes.map((recipe) => recipe.primaryIngredient)));
-  const countries = Array.from(new Map(recipes.map((recipe) => [recipe.countryCode, recipe])).values());
-  const ingredientSuggestions = primaryIngredients.slice(0, 3).map((ingredient) => ({
-    id: `ingredient-${ingredient}`,
-    label: labelFor(ingredient),
-    note: "주재료",
-    patch: { query: labelFor(ingredient), primaryIngredient: ingredient },
-  }));
-  const countrySuggestions = countries.slice(0, 2).map((recipe) => ({
-    id: `country-${recipe.countryCode}`,
-    label: `${countryLabel(recipe.country)} 레시피`,
-    note: "지역",
-    patch: {
-      query: "",
-      region: { scope: "country", countryCode: recipe.countryCode, country: recipe.country },
-    },
-  }));
-  const recipeSuggestions = recipes.slice(0, 2).map((recipe) => ({
-    id: `recipe-${recipe.recipeId}`,
-    label: recipe.title,
-    note: countryLabel(recipe.country),
-    patch: { query: recipe.title },
-  }));
-
-  return [...ingredientSuggestions, ...recipeSuggestions];
 }
