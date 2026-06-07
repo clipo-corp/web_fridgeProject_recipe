@@ -750,7 +750,7 @@ main {
 }
 
 .recipe-card--spotlight .recipe-card__link {
-  height: clamp(284px, 24vw, 336px);
+  height: clamp(344px, 27.5vw, 380px);
 }
 
 .recipe-card--spotlight .recipe-visual {
@@ -761,7 +761,8 @@ main {
 .recipe-card--spotlight .recipe-card__body {
   flex: 0 0 30%;
   min-height: 0;
-  gap: 5px;
+  gap: 4px;
+  padding: 10px var(--space-md);
 }
 
 .recipe-card--spotlight .recipe-card__ingredients {
@@ -771,6 +772,11 @@ main {
 .recipe-card--spotlight p {
   min-height: 0;
   -webkit-line-clamp: 1;
+}
+
+.recipe-card--spotlight .recipe-card__meta {
+  gap: 8px;
+  padding-top: 2px;
 }
 
 .recipe-card__body {
@@ -1566,7 +1572,7 @@ main {
   }
 
   .recipe-card--spotlight .recipe-card__link {
-    height: 318px;
+    height: 360px;
   }
 
   .rail .recipe-card--rail {
