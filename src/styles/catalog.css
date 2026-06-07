@@ -791,7 +791,7 @@ main {
 }
 
 .recipe-card--spotlight .recipe-card__link {
-  height: clamp(360px, 31vw, 460px);
+  height: clamp(284px, 24vw, 336px);
 }
 
 .recipe-card--spotlight .recipe-visual {
@@ -1611,7 +1611,7 @@ main {
   }
 
   .recipe-card--spotlight .recipe-card__link {
-    height: 390px;
+    height: 318px;
   }
 
   .rail .recipe-card--rail {
