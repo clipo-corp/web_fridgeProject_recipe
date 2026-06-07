@@ -57,6 +57,14 @@ export function RecipeCatalogPage(): JSX.Element {
   const isBrowsing = isBrowsingFilters(filters);
   const showBrowsing = isBrowsing && !searching;
 
+  useEffect(() => {
+    document.body.classList.toggle("is-results-mode", !showBrowsing);
+
+    return () => {
+      document.body.classList.remove("is-results-mode");
+    };
+  }, [showBrowsing]);
+
   const patchFilters = (patch: Partial<PublicRecipeCatalogFilters>): void =>
     setFilters((current) => ({ ...current, ...patch }));
   const runSearch = (): void => {

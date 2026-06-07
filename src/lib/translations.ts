@@ -46,6 +46,11 @@ const ko = {
   "results.count": "{count}개 레시피",
   "results.reset": "전체 보기",
   "results.all": "전체 레시피",
+  "results.tabs": "검색 결과 탭",
+  "results.tabAll": "전체",
+  "results.tabRecipes": "레시피",
+  "results.tabImages": "이미지",
+  "results.tabFilters": "필터",
 
   "searchProgress.eyebrow": "레시피 검색 중",
   "searchProgress.title": "재료와 조건에 맞는 레시피를 고르는 중이에요",
@@ -165,6 +170,11 @@ const en: Record<TranslationKey, string> = {
   "results.count": "{count} recipes",
   "results.reset": "Clear all",
   "results.all": "All recipes",
+  "results.tabs": "Search result tabs",
+  "results.tabAll": "All",
+  "results.tabRecipes": "Recipes",
+  "results.tabImages": "Images",
+  "results.tabFilters": "Filters",
 
   "searchProgress.eyebrow": "Searching recipes",
   "searchProgress.title": "Finding recipes that match your ingredients",
