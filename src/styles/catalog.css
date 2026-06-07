@@ -224,9 +224,9 @@ main {
 
 /* ---------- Hero ---------- */
 .hero {
-  display: flex;
-  align-items: center;
+  box-sizing: border-box;
   min-height: clamp(460px, 56vh, 620px);
+  padding: 72px 0 88px;
   background:
     radial-gradient(1320px 460px at 78% -10%, var(--green-50), transparent 62%),
     var(--bg-app);
@@ -236,7 +236,6 @@ main {
 .hero__inner {
   width: min(1180px, calc(100% - 2 * var(--space-2xl)));
   margin: 0 auto;
-  padding: 96px 0 108px;
   max-width: 760px;
 }
 
@@ -1562,10 +1561,6 @@ main {
 
   .header-cta span {
     display: none;
-  }
-
-  .hero__inner {
-    padding: 72px 0 80px;
   }
 
   .install-band {
