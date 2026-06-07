@@ -522,50 +522,6 @@ main {
   white-space: nowrap;
 }
 
-.results-tabs {
-  display: flex;
-  gap: var(--space-xl);
-  width: min(1320px, calc(100% - 2 * var(--space-2xl)));
-  margin: 10px auto 0;
-  padding-left: 66px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.results-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.results-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 44px;
-  border: 0;
-  background: transparent;
-  color: var(--text-tertiary);
-  font-size: var(--type-small-size);
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.results-tab--active {
-  color: var(--text);
-}
-
-.results-tab--active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 3px;
-  border-radius: var(--radius-pill) var(--radius-pill) 0 0;
-  background: var(--primary);
-}
-
 .search-progress {
   display: block;
   margin-top: var(--space-3xl);
@@ -1666,7 +1622,7 @@ main {
 /* ---------- Detailed filter panel ---------- */
 .filter-panel {
   margin: var(--space-md) 0 var(--space-xl);
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-md) var(--space-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-card);
@@ -1712,34 +1668,59 @@ main {
 }
 
 .filter-chip-groups {
-  display: grid;
+  display: flex;
   gap: var(--space-sm);
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.filter-chip-groups::-webkit-scrollbar {
+  display: none;
 }
 
 .filter-chip-groups--advanced {
+  display: grid;
   margin-top: var(--space-md);
   padding-top: var(--space-md);
   border-top: 1px dashed var(--border);
+  overflow: visible;
 }
 
 .filter-chip-group {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(460px, 78vw);
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card-alt);
+}
+
+.filter-chip-groups--advanced .filter-chip-group {
   display: grid;
   grid-template-columns: 92px minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-sm);
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .filter-chip-group__label {
   color: var(--text-secondary);
   font-size: var(--type-caption-size);
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .filter-chip-group__rail {
   display: flex;
   gap: 7px;
   overflow-x: auto;
-  padding: 1px 1px 4px;
+  padding: 1px;
   scrollbar-width: none;
 }
 
@@ -1892,20 +1873,13 @@ main {
     display: none;
   }
 
-  .results-tabs {
-    width: calc(100% - 2 * var(--space-lg));
-    padding-left: 0;
-    gap: var(--space-lg);
+  .filter-chip-group {
+    max-width: 82vw;
   }
 
-  .filter-chip-group {
+  .filter-chip-groups--advanced .filter-chip-group {
     grid-template-columns: 1fr;
     gap: 6px;
-  }
-
-  .filter-chip-group__rail {
-    margin-right: calc(-1 * var(--space-lg));
-    padding-right: var(--space-lg);
   }
 
   .results-search__divider {

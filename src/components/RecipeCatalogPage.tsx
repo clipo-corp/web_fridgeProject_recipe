@@ -33,7 +33,6 @@ export function RecipeCatalogPage(): JSX.Element {
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
   const [draftQuery, setDraftQuery] = useState("");
   const [searching, setSearching] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const searchTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -85,7 +84,6 @@ export function RecipeCatalogPage(): JSX.Element {
     stopSearching();
     setDraftQuery("");
     setFilters(initialCatalogFilters);
-    setFiltersOpen(false);
   };
   const selectSuggestion = (suggestion: SearchSuggestion): void => {
     const nextDraftQuery = suggestion.label;
@@ -107,7 +105,6 @@ export function RecipeCatalogPage(): JSX.Element {
     if (searchTimer.current !== null) {
       window.clearTimeout(searchTimer.current);
     }
-    setFiltersOpen(false);
     setFilters(nextFilters);
     setSearching(true);
     searchTimer.current = window.setTimeout(() => {
@@ -140,11 +137,8 @@ export function RecipeCatalogPage(): JSX.Element {
         ) : (
           <ResultsSearchBar
             query={draftQuery}
-            filtersOpen={filtersOpen}
             onQueryChange={setDraftQuery}
             onSearchSubmit={runSearch}
-            onFiltersClose={() => setFiltersOpen(false)}
-            onFiltersToggle={() => setFiltersOpen((value) => !value)}
           />
         )}
 
@@ -174,6 +168,8 @@ export function RecipeCatalogPage(): JSX.Element {
                   </button>
                 </div>
 
+                <FilterBar filters={filters} options={filterOptions} onChange={patchFilters} />
+
                 {activeChips.length > 0 ? (
                   <div className="active-filters">
                     {activeChips.map((chip) => (
@@ -190,10 +186,6 @@ export function RecipeCatalogPage(): JSX.Element {
                       </button>
                     ))}
                   </div>
-                ) : null}
-
-                {filtersOpen ? (
-                  <FilterBar filters={filters} options={filterOptions} onChange={patchFilters} />
                 ) : null}
 
                 {visibleRecipes.length === 0 ? (

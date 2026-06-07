@@ -1,22 +1,16 @@
-import { ArrowRight, ChefHat, Images, Leaf, ListFilter, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Leaf, Search, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 
 type ResultsSearchBarProps = {
   readonly query: string;
-  readonly filtersOpen: boolean;
   readonly onQueryChange: (query: string) => void;
   readonly onSearchSubmit: () => void;
-  readonly onFiltersClose: () => void;
-  readonly onFiltersToggle: () => void;
 };
 
 export function ResultsSearchBar({
   query,
-  filtersOpen,
   onQueryChange,
   onSearchSubmit,
-  onFiltersClose,
-  onFiltersToggle,
 }: ResultsSearchBarProps): JSX.Element {
   const { t } = useI18n();
 
@@ -61,32 +55,6 @@ export function ResultsSearchBar({
           <ArrowRight size={15} aria-hidden="true" />
         </a>
       </div>
-      <nav className="results-tabs" aria-label={t("results.tabs")}>
-        <button
-          type="button"
-          className={filtersOpen ? "results-tab" : "results-tab results-tab--active"}
-          onClick={onFiltersClose}
-        >
-          <Sparkles size={16} aria-hidden="true" />
-          {t("results.tabAll")}
-        </button>
-        <button type="button" className="results-tab">
-          <ChefHat size={16} aria-hidden="true" />
-          {t("results.tabRecipes")}
-        </button>
-        <button type="button" className="results-tab">
-          <Images size={16} aria-hidden="true" />
-          {t("results.tabImages")}
-        </button>
-        <button
-          type="button"
-          className={filtersOpen ? "results-tab results-tab--active" : "results-tab"}
-          onClick={onFiltersToggle}
-        >
-          <ListFilter size={16} aria-hidden="true" />
-          {t("results.tabFilters")}
-        </button>
-      </nav>
     </div>
   );
 }
