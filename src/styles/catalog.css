@@ -217,6 +217,23 @@
   font-weight: 900;
 }
 
+.recipe-photo,
+.detail-photo {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+
+.recipe-photo {
+  height: 150px;
+}
+
+.detail-photo {
+  max-height: 280px;
+  margin: 1rem 0;
+  border-radius: 1rem;
+}
+
 .recipe-visual-0 { background: linear-gradient(135deg, #f06f38, #ffd36f); }
 .recipe-visual-1 { background: linear-gradient(135deg, #2d7a64, #9ad7b7); }
 .recipe-visual-2 { background: linear-gradient(135deg, #d9483b, #ff9d8b); }

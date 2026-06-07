@@ -45,6 +45,7 @@ function toRecipe(entry: SeedEntry, index: number): Recipe {
   return {
     id: sourceId,
     title: recipe.title,
+    imageUrl: recipe.titleImageUrl ?? null,
     description: recipe.description ?? "FreshKeeper mock seed에서 가져온 공개 레시피입니다.",
     cookingTip: recipe.cookingTip ?? "",
     category: recipe.category ?? entry._mockMeta?.category ?? "everyday",

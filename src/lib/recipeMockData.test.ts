@@ -6,6 +6,7 @@ const recipes: readonly Recipe[] = [
   {
     id: "one",
     title: "기본 두유 음료",
+    imageUrl: null,
     description: "불린 대두를 갈아 만드는 아침 음료",
     cookingTip: "충분히 끓입니다.",
     category: "dessert",

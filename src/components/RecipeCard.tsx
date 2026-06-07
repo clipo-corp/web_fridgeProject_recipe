@@ -14,9 +14,13 @@ export function RecipeCard({ recipe, index, onOpen }: RecipeCardProps): JSX.Elem
   return (
     <article className="recipe-card">
       <button type="button" onClick={() => onOpen(recipe)}>
-        <div className={`recipe-visual recipe-visual-${colorIndex}`}>
-          <span>{recipeInitial(recipe.title)}</span>
-        </div>
+        {recipe.imageUrl === null ? (
+          <div className={`recipe-visual recipe-visual-${colorIndex}`}>
+            <span>{recipeInitial(recipe.title)}</span>
+          </div>
+        ) : (
+          <img className="recipe-photo" src={recipe.imageUrl} alt="" loading="lazy" />
+        )}
         <div className="recipe-card-body">
           <div className="badge-row">
             <span>{labelFor(recipe.category)}</span>

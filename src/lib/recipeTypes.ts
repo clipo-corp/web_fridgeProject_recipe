@@ -8,6 +8,7 @@ export type RecipeDifficulty =
 export type Recipe = {
   readonly id: string;
   readonly title: string;
+  readonly imageUrl: string | null;
   readonly description: string;
   readonly cookingTip: string;
   readonly category: string;

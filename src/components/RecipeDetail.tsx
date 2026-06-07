@@ -19,6 +19,7 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
           <X size={20} aria-hidden="true" />
         </button>
         <span className="eyebrow">{recipe.country} · {labelFor(recipe.cuisineRegion)}</span>
+        {recipe.imageUrl === null ? null : <img className="detail-photo" src={recipe.imageUrl} alt="" />}
         <h2>{recipe.title}</h2>
         <p className="detail-description">{recipe.description}</p>
         <div className="detail-tags">
