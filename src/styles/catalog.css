@@ -152,8 +152,7 @@ main {
 
 /* ---------- Site header ---------- */
 .site-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
   background: color-mix(in srgb, var(--bg-card) 86%, transparent);
   backdrop-filter: blur(14px);
@@ -224,9 +223,11 @@ main {
 
 /* ---------- Hero ---------- */
 .hero {
+  display: grid;
+  align-items: center;
   box-sizing: border-box;
   min-height: clamp(460px, 56vh, 620px);
-  padding: 72px 0 88px;
+  padding: 0;
   background:
     radial-gradient(1320px 460px at 78% -10%, var(--green-50), transparent 62%),
     var(--bg-app);
