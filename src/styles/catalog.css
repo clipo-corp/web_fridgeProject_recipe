@@ -1695,24 +1695,15 @@ main {
 
 .filter-chip-group {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  gap: 6px;
   max-width: min(460px, 78vw);
-  padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--bg-card-alt);
 }
 
 .filter-chip-groups--advanced .filter-chip-group {
-  display: grid;
   grid-template-columns: 92px minmax(0, 1fr);
   max-width: none;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  align-items: start;
 }
 
 .filter-chip-group__label {
@@ -1726,8 +1717,20 @@ main {
   display: flex;
   gap: 7px;
   overflow-x: auto;
-  padding: 1px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card-alt);
   scrollbar-width: none;
+}
+
+.filter-chip-groups--advanced .filter-chip-group__rail {
+  flex-wrap: wrap;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .filter-chip-group__rail::-webkit-scrollbar {
