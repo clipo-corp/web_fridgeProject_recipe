@@ -11,9 +11,14 @@ export function appRouteForPath(pathname: string): AppRoute {
   }
 
   if (pathname.startsWith(catalogPrefix)) {
+    const recipeId = pathname.slice(catalogPrefix.length);
+    if (recipeId.length === 0) {
+      return { kind: "catalog" };
+    }
+
     return {
       kind: "recipe-detail",
-      recipeId: decodeURIComponent(pathname.slice(catalogPrefix.length)),
+      recipeId: decodeURIComponent(recipeId),
     };
   }
 
@@ -21,5 +26,9 @@ export function appRouteForPath(pathname: string): AppRoute {
 }
 
 export function detailPathForRecipe(recipeId: string): string {
+  if (recipeId.trim().length === 0) {
+    return "/recipe-catalog";
+  }
+
   return `/recipe-catalog/${encodeURIComponent(recipeId)}`;
 }

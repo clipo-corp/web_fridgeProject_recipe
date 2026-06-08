@@ -6,6 +6,7 @@ export type RecipeSource = "ai" | "user";
 export type TranslationStatus = "original" | "translated" | "unavailable";
 
 export type RecipeIngredient = {
+  readonly masterId: number | null;
   readonly name: string;
   readonly quantity: number | null;
   readonly unit: string | null;

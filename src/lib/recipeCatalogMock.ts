@@ -149,7 +149,8 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
     servings: recipe.servings ?? "1-2",
     requiredTool: recipe.requiredTool ?? "basic",
     ingredients: recipe.ingredients.map((ingredient) => ({
-      name: ingredient.name ?? ingredient.description ?? "ingredient",
+      masterId: ingredient.masterId ?? null,
+      name: ingredient.name ?? ingredient.masterName ?? ingredient.master_name ?? "ingredient",
       quantity: ingredient.quantity ?? null,
       unit: ingredient.unit ?? null,
       description: ingredient.description ?? "",

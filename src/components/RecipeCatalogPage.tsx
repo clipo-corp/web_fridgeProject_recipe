@@ -14,12 +14,13 @@ import { SearchHero } from "./SearchHero";
 import { SearchProgress } from "./SearchProgress";
 import { ResultsSearchBar } from "./ResultsSearchBar";
 import {
-  collectCatalogOptions,
-  filterPublicRecipes,
   initialCatalogFilters,
-  loadPublicMockRecipes,
-  popularPublicRecipes,
 } from "../lib/recipeCatalogMock";
+import {
+  loadCatalogFilterOptions,
+  loadCatalogRecipes,
+  loadFeaturedRecipes,
+} from "../lib/recipeApi";
 import { useI18n } from "../lib/i18n";
 import {
   buildRecipeSearchSuggestions,
@@ -30,14 +31,53 @@ import type { PublicRecipeCatalogFilters, PublicRecipeRecord } from "../lib/reci
 export function RecipeCatalogPage(): JSX.Element {
   const { t, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
+  const [suggestionRecipes, setSuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
+  const [featured, setFeatured] = useState<readonly PublicRecipeRecord[]>([]);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    region: { countries: [], cities: [], districts: [] },
+    writtenLang: [],
+    recipeType: [],
+    cookingMethod: [],
+    technique: [],
+    dietaryGoal: [],
+    dietaryRestriction: [],
+    primaryIngredient: [],
+    category: [],
+    occasion: [],
+    difficulty: [],
+    cookingTime: [],
+    cuisineRegion: [],
+    servings: [],
+    requiredTool: [],
+  });
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
   const [draftQuery, setDraftQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const searchTimer = useRef<number | null>(null);
+  const initializedSuggestionRecipes = useRef(false);
 
   useEffect(() => {
-    void loadPublicMockRecipes().then(setRecipes);
+    void loadFeaturedRecipes().then(setFeatured);
+    void loadCatalogFilterOptions().then(setFilterOptions);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void loadCatalogRecipes(filters).then((nextRecipes) => {
+      if (!cancelled) {
+        setRecipes(nextRecipes);
+        if (!initializedSuggestionRecipes.current && isBrowsingFilters(filters)) {
+          setSuggestionRecipes(nextRecipes);
+          initializedSuggestionRecipes.current = true;
+        }
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filters]);
 
   useEffect(() => {
     return () => {
@@ -47,17 +87,11 @@ export function RecipeCatalogPage(): JSX.Element {
     };
   }, []);
 
-  const filterOptions = useMemo<FilterOptions>(
-    () => collectCatalogOptions(recipes),
-    [recipes],
-  );
-  const visibleRecipes = useMemo(() => filterPublicRecipes(recipes, filters), [recipes, filters]);
-
-  const featured = useMemo(() => popularPublicRecipes(recipes).slice(0, 6), [recipes]);
   const suggestions = useMemo<readonly SearchSuggestion[]>(
-    () => buildRecipeSearchSuggestions(recipes, labelFor, countryLabel),
-    [recipes, labelFor, countryLabel],
+    () => buildRecipeSearchSuggestions(suggestionRecipes, labelFor, countryLabel),
+    [suggestionRecipes, labelFor, countryLabel],
   );
+  const homepageFeatured = featured.length > 0 ? featured : suggestionRecipes;
 
   const isBrowsing = isBrowsingFilters(filters);
   const showBrowsing = isBrowsing && !searching;
@@ -128,7 +162,7 @@ export function RecipeCatalogPage(): JSX.Element {
         {showBrowsing ? (
           <SearchHero
             query={draftQuery}
-            recipeCount={recipes.length}
+            recipeCount={suggestionRecipes.length}
             suggestions={suggestions}
             onQueryChange={setDraftQuery}
             onSearchSubmit={runSearch}
@@ -145,8 +179,18 @@ export function RecipeCatalogPage(): JSX.Element {
         {showBrowsing ? (
           <div className="page">
             <Section eyebrow={t("section.featured.eyebrow")} title={t("section.trending.title")}>
-              <FeaturedRecipeCarousel recipes={featured} />
+              <FeaturedRecipeCarousel recipes={homepageFeatured} />
             </Section>
+
+            {suggestionRecipes.length > 0 ? (
+              <Section eyebrow={t("section.featured.eyebrow")} title={t("section.featured.title")}>
+                <div className="grid grid--feed">
+                  {suggestionRecipes.map((recipe) => (
+                    <RecipeCard key={recipe.recipeId} recipe={recipe} />
+                  ))}
+                </div>
+              </Section>
+            ) : null}
           </div>
         ) : (
           <div className="page">
@@ -159,7 +203,7 @@ export function RecipeCatalogPage(): JSX.Element {
                     <span className="eyebrow">{t("results.eyebrow")}</span>
                     <h2>{describeFilters(filters, { t, labelFor, countryLabel, timeLabel })}</h2>
                     <p className="results-count">
-                      {t("results.count", { count: visibleRecipes.length })}
+                      {t("results.count", { count: recipes.length })}
                     </p>
                   </div>
                   <button type="button" className="btn btn--ghost" onClick={resetFilters}>
@@ -188,7 +232,7 @@ export function RecipeCatalogPage(): JSX.Element {
                   </div>
                 ) : null}
 
-                {visibleRecipes.length === 0 ? (
+                {recipes.length === 0 ? (
                   <div className="empty-state">
                     <Sparkles size={28} aria-hidden="true" />
                     <strong>{t("empty.title")}</strong>
@@ -199,7 +243,7 @@ export function RecipeCatalogPage(): JSX.Element {
                   </div>
                 ) : (
                   <div className="grid grid--feed">
-                    {visibleRecipes.map((recipe) => (
+                    {recipes.map((recipe) => (
                       <RecipeCard key={recipe.recipeId} recipe={recipe} />
                     ))}
                   </div>

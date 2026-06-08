@@ -9,6 +9,7 @@ describe("appRouteForPath", () => {
       recipeId: "seed_china_beverage",
     });
     expect(appRouteForPath("/recipe-catalog")).toEqual({ kind: "catalog" });
+    expect(appRouteForPath("/recipe-catalog/")).toEqual({ kind: "catalog" });
   });
 });
 
@@ -17,5 +18,9 @@ describe("detailPathForRecipe", () => {
     expect(detailPathForRecipe("mock id/with slash")).toBe(
       "/recipe-catalog/mock%20id%2Fwith%20slash",
     );
+  });
+
+  it("falls back to the catalog path when the recipe id is empty", () => {
+    expect(detailPathForRecipe("")).toBe("/recipe-catalog");
   });
 });

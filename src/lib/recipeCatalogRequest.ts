@@ -42,7 +42,7 @@ export function toPublicRecipeSearchRequest(
     searchValue: nullableText(filters.query),
     pageNumber,
     displayLang,
-    writtenLang: nullableFilter(filters.writtenLang),
+    writtenLang: writtenLangPayload(filters.writtenLang),
     sort: filters.sort,
     recipeVisibility: "public",
     isUseLocalData: localDataPayload(filters.isUseLocalData),
@@ -57,6 +57,16 @@ function nullableText(value: string): string | null {
 
 function nullableFilter(value: string): string | null {
   return value.length > 0 && value !== "all" ? value : null;
+}
+
+function writtenLangPayload(value: PublicRecipeCatalogFilters["writtenLang"]): string | null {
+  if (value === "ko") {
+    return "ko-KR";
+  }
+  if (value === "en") {
+    return "en-US";
+  }
+  return null;
 }
 
 function localDataPayload(value: PublicRecipeCatalogFilters["isUseLocalData"]): boolean | null {

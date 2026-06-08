@@ -2,7 +2,7 @@ import { ArrowLeft, Clock, Download, Flame, Heart, Languages, Users } from "luci
 import { useEffect, useState } from "react";
 import { MobileInstallCta } from "./AppInstallCta";
 import { RecipeVisual } from "./RecipeVisual";
-import { loadPublicMockRecipes } from "../lib/recipeCatalogMock";
+import { loadPublicRecipeDetail } from "../lib/recipeApi";
 import { useI18n } from "../lib/i18n";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
@@ -16,8 +16,8 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    void loadPublicMockRecipes().then((recipes) => {
-      setRecipe(recipes.find((item) => item.recipeId === recipeId) ?? null);
+    void loadPublicRecipeDetail(recipeId).then((nextRecipe) => {
+      setRecipe(nextRecipe);
       setLoaded(true);
     });
   }, [recipeId]);
