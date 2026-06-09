@@ -29,7 +29,7 @@ import {
 import type { PublicRecipeCatalogFilters, PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 export function RecipeCatalogPage(): JSX.Element {
-  const { t, labelFor, countryLabel, timeLabel } = useI18n();
+  const { t, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [suggestionRecipes, setSuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [featured, setFeatured] = useState<readonly PublicRecipeRecord[]>([]);
@@ -57,14 +57,29 @@ export function RecipeCatalogPage(): JSX.Element {
   const initializedSuggestionRecipes = useRef(false);
 
   useEffect(() => {
-    void loadFeaturedRecipes().then(setFeatured);
-    void loadCatalogFilterOptions().then(setFilterOptions);
-  }, []);
+    let cancelled = false;
+    initializedSuggestionRecipes.current = false;
+
+    void loadFeaturedRecipes(displayLang).then((nextFeatured) => {
+      if (!cancelled) {
+        setFeatured(nextFeatured);
+      }
+    });
+    void loadCatalogFilterOptions(displayLang).then((nextFilterOptions) => {
+      if (!cancelled) {
+        setFilterOptions(nextFilterOptions);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [displayLang]);
 
   useEffect(() => {
     let cancelled = false;
 
-    void loadCatalogRecipes(filters).then((nextRecipes) => {
+    void loadCatalogRecipes(filters, displayLang).then((nextRecipes) => {
       if (!cancelled) {
         setRecipes(nextRecipes);
         if (!initializedSuggestionRecipes.current && isBrowsingFilters(filters)) {
@@ -77,7 +92,7 @@ export function RecipeCatalogPage(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [filters]);
+  }, [displayLang, filters]);
 
   useEffect(() => {
     return () => {

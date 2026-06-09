@@ -11,16 +11,24 @@ type RecipeDetailPageProps = {
 };
 
 export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Element {
-  const { t, labelFor, countryLabel, timeLabel } = useI18n();
+  const { t, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipe, setRecipe] = useState<PublicRecipeRecord | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    void loadPublicRecipeDetail(recipeId).then((nextRecipe) => {
-      setRecipe(nextRecipe);
-      setLoaded(true);
+    let cancelled = false;
+    setLoaded(false);
+    void loadPublicRecipeDetail(recipeId, displayLang).then((nextRecipe) => {
+      if (!cancelled) {
+        setRecipe(nextRecipe);
+        setLoaded(true);
+      }
     });
-  }, [recipeId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [displayLang, recipeId]);
 
   if (!loaded) {
     return <main className="page detail-page detail-page--loading">{t("detail.loading")}</main>;

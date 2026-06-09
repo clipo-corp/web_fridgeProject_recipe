@@ -7,7 +7,13 @@ import {
 } from "./recipeCatalogMock";
 import { initialCatalogFilters, toPublicRecipeSearchRequest } from "./recipeCatalogRequest";
 import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
-import { isMockMode } from "./runtimeConfig";
+import {
+  ingredientMasterLookupFromResponse,
+  recipeNameLanguageCandidates,
+  type ServerMasterFoodBatchResponse,
+} from "./recipeIngredientLocalization";
+import { currentRequestDisplayLanguage, type DisplayLanguage } from "./languagePreference";
+import { apiBaseUrl, isMockMode } from "./runtimeConfig";
 import type {
   PublicRecipeCatalogFilters,
   PublicRecipeRecord,
@@ -18,8 +24,7 @@ import type {
   TranslationStatus,
 } from "./recipeCatalogTypes";
 
-const defaultDisplayLang = "ko-KR";
-const apiBaseUrl = (import.meta.env["VITE_API_BASE_URL"] ?? "").replace(/\/$/, "");
+const fallbackDisplayLang: DisplayLanguage = "ko-KR";
 const guestTokenKey = "freshkeeper.guestAccessToken";
 const guestDeviceKey = "freshkeeper.guestDeviceId";
 const recipeRequestCache = new Map<string, Promise<readonly PublicRecipeRecord[]>>();
@@ -123,52 +128,36 @@ type ServerRecipeStep = {
   readonly imageUrl?: string | null;
 };
 
-type ServerMasterFood = {
-  readonly id?: number | string | null;
-  readonly masterId?: number | string | null;
-  readonly master_id?: number | string | null;
-  readonly names?: Readonly<Record<string, string | null | undefined>> | null;
-  readonly masterName?: string | null;
-  readonly master_name?: string | null;
-  readonly name?: string | null;
-};
-
-type ServerMasterFoodBatchResponse =
-  | readonly ServerMasterFood[]
-  | ServerMasterFood
-  | {
-      readonly foods?: readonly ServerMasterFood[] | null;
-      readonly items?: readonly ServerMasterFood[] | null;
-      readonly masters?: readonly ServerMasterFood[] | null;
-      readonly results?: readonly ServerMasterFood[] | null;
-      readonly data?: readonly ServerMasterFood[] | ServerMasterFood | null;
-    };
-
 export async function loadCatalogRecipes(
   filters: PublicRecipeCatalogFilters,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
 ): Promise<readonly PublicRecipeRecord[]> {
   if (isMockMode) {
     const recipes = await loadPublicMockRecipes();
     return filterPublicRecipes(recipes, filters);
   }
 
-  return fetchPublicRecipes(filters);
+  return fetchPublicRecipes(filters, 100, displayLang);
 }
 
 export async function loadPublicRecipes(): Promise<readonly PublicRecipeRecord[]> {
   return loadCatalogRecipes(initialCatalogFilters);
 }
 
-export async function loadFeaturedRecipes(): Promise<readonly PublicRecipeRecord[]> {
+export async function loadFeaturedRecipes(
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+): Promise<readonly PublicRecipeRecord[]> {
   if (isMockMode) {
     const recipes = await loadPublicMockRecipes();
     return popularPublicRecipes(recipes).slice(0, 6);
   }
 
-  return fetchPublicRecipes({ ...initialCatalogFilters, sort: "popular" }, 6);
+  return fetchPublicRecipes({ ...initialCatalogFilters, sort: "popular" }, 6, displayLang);
 }
 
-export async function loadCatalogFilterOptions(): Promise<CatalogFilterOptions> {
+export async function loadCatalogFilterOptions(
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+): Promise<CatalogFilterOptions> {
   if (isMockMode) {
     const recipes = await loadPublicMockRecipes();
     return collectCatalogOptions(recipes);
@@ -176,7 +165,7 @@ export async function loadCatalogFilterOptions(): Promise<CatalogFilterOptions> 
 
   const [filters, region] = await Promise.all([
     fetchWithGuestAuth<ServerRecipeFilterOptionsResponse>("/api/recipe/filter-options"),
-    fetchCountryRegionOptions(),
+    fetchCountryRegionOptions(displayLang),
   ]);
 
   return {
@@ -198,7 +187,10 @@ export async function loadCatalogFilterOptions(): Promise<CatalogFilterOptions> 
   };
 }
 
-export async function loadPublicRecipeDetail(recipeId: string): Promise<PublicRecipeRecord | null> {
+export async function loadPublicRecipeDetail(
+  recipeId: string,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+): Promise<PublicRecipeRecord | null> {
   if (isMockMode) {
     const recipes = await loadPublicMockRecipes();
     return recipes.find((recipe) => recipe.recipeId === recipeId) ?? null;
@@ -208,23 +200,24 @@ export async function loadPublicRecipeDetail(recipeId: string): Promise<PublicRe
     return null;
   }
 
-  return fetchPublicRecipeDetail(recipeId);
+  return fetchPublicRecipeDetail(recipeId, displayLang);
 }
 
 async function fetchPublicRecipes(
   filters: PublicRecipeCatalogFilters,
   limit = 100,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
 ): Promise<readonly PublicRecipeRecord[]> {
-  const cacheKey = JSON.stringify({ filters, limit });
+  const cacheKey = JSON.stringify({ displayLang, filters, limit });
   const cached = recipeRequestCache.get(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
 
-  const request = fetchPublicRecipePage(filters, 0)
+  const request = fetchPublicRecipePage(filters, 0, displayLang)
     .then((response) =>
       (response.recipes ?? [])
-        .map(toPublicRecipeRecord)
+        .map((recipe) => toPublicRecipeRecord(recipe, displayLang))
         .filter((recipe) => isServerRecipeId(recipe.recipeId))
         .slice(0, limit),
     )
@@ -239,7 +232,7 @@ async function fetchPublicRecipes(
 async function fetchPublicRecipePage(
   filters: PublicRecipeCatalogFilters,
   pageNumber = 0,
-  displayLang = defaultDisplayLang,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
 ): Promise<ServerRecipePageResponse> {
   const request = toServerRecipeSearchRequest(filters, pageNumber, displayLang);
   return fetchWithGuestAuth<ServerRecipePageResponse>(
@@ -253,7 +246,7 @@ async function fetchPublicRecipePage(
 
 async function fetchPublicRecipeDetail(
   recipeId: string,
-  displayLang = defaultDisplayLang,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
 ): Promise<PublicRecipeRecord | null> {
   if (!isServerRecipeId(recipeId)) {
     return null;
@@ -263,7 +256,7 @@ async function fetchPublicRecipeDetail(
     `/api/recipe/load?q=${encodeURIComponent(recipeId)}&displayLang=${encodeURIComponent(displayLang)}`,
   );
 
-  return enrichRecipeIngredientNames(toPublicRecipeRecord(response), displayLang);
+  return enrichRecipeIngredientNames(toPublicRecipeRecord(response, displayLang), displayLang);
 }
 
 function toServerRecipeSearchRequest(
@@ -276,9 +269,9 @@ function toServerRecipeSearchRequest(
   return request;
 }
 
-async function fetchCountryRegionOptions(): Promise<CatalogFilterOptions["region"]> {
+async function fetchCountryRegionOptions(displayLang: DisplayLanguage): Promise<CatalogFilterOptions["region"]> {
   const response = await fetchWithGuestAuth<ServerRecipeRegionCatalogResponse>(
-    `/api/recipe/regions?level=country&displayLang=${encodeURIComponent(defaultDisplayLang)}`,
+    `/api/recipe/regions?level=country&displayLang=${encodeURIComponent(displayLang)}`,
   );
   const countries = (response.regions ?? []).map((option) => ({
     countryCode: stringValue(option.countryCode, ""),
@@ -302,6 +295,7 @@ async function fetchWithGuestAuth<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
+      "Accept-Language": currentRequestDisplayLanguage(),
       Authorization: `Bearer ${token}`,
       ...init.headers,
     },
@@ -325,6 +319,7 @@ async function fetchRawWithGuestAuth<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
+      "Accept-Language": currentRequestDisplayLanguage(),
       Authorization: `Bearer ${token}`,
       ...init.headers,
     },
@@ -350,7 +345,10 @@ async function getGuestAccessToken(): Promise<string> {
 
   guestAccessTokenRequest = fetch(apiUrl("/api/auth/guest/login"), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Accept-Language": currentRequestDisplayLanguage(),
+    },
     body: JSON.stringify({ deviceId: getGuestDeviceId() }),
   })
     .then((response) => readApiResponse<LoginResponse>(response))
@@ -453,6 +451,7 @@ async function enrichRecipeIngredientNames(
   try {
     const lookup = await fetchIngredientMasterLookup(
       masterIds,
+      displayLang,
       recipeNameLanguageCandidates(recipe, displayLang),
     );
     return {
@@ -469,194 +468,18 @@ async function enrichRecipeIngredientNames(
 
 async function fetchIngredientMasterLookup(
   masterIds: readonly number[],
+  displayLang: string,
   languageCandidates: readonly string[],
 ): Promise<ReadonlyMap<number, string>> {
   const response = await fetchRawWithGuestAuth<ServerMasterFoodBatchResponse>(
-    "/api/master/searchIdBatch",
+    `/api/master/searchIdBatch?displayLang=${encodeURIComponent(displayLang)}`,
     {
       method: "POST",
       body: JSON.stringify(masterIds),
     },
     false,
   );
-  const lookup = new Map<number, string>();
-
-  for (const record of masterFoodRecords(response)) {
-    const id = masterFoodId(record);
-    const name = masterFoodName(record, languageCandidates);
-    if (id !== null && name !== null) {
-      lookup.set(id, name);
-    }
-  }
-
-  return lookup;
-}
-
-function masterFoodRecords(response: ServerMasterFoodBatchResponse): readonly ServerMasterFood[] {
-  if (Array.isArray(response)) {
-    return response as readonly ServerMasterFood[];
-  }
-
-  if (isMasterFoodRecord(response)) {
-    return [response];
-  }
-
-  const grouped = response as Exclude<ServerMasterFoodBatchResponse, readonly ServerMasterFood[] | ServerMasterFood>;
-  const data = grouped.data;
-  if (Array.isArray(data)) {
-    return data;
-  }
-  if (data !== null && data !== undefined && isMasterFoodRecord(data)) {
-    return [data];
-  }
-
-  return grouped.foods ?? grouped.items ?? grouped.masters ?? grouped.results ?? [];
-}
-
-function masterFoodId(record: ServerMasterFood): number | null {
-  return numberValue(record.id ?? record.masterId ?? record.master_id);
-}
-
-function isMasterFoodRecord(value: unknown): value is ServerMasterFood {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    ("id" in value || "masterId" in value || "master_id" in value)
-  );
-}
-
-function masterFoodName(record: ServerMasterFood, languageCandidates: readonly string[]): string | null {
-  const namesName = localizedName(record.names, languageCandidates);
-  if (namesName !== null) {
-    return namesName;
-  }
-
-  return nonEmptyString(record.master_name) ?? nonEmptyString(record.masterName) ?? nonEmptyString(record.name);
-}
-
-function localizedName(
-  names: Readonly<Record<string, string | null | undefined>> | null | undefined,
-  languageCandidates: readonly string[],
-): string | null {
-  if (names === null || names === undefined) {
-    return null;
-  }
-
-  const candidates = [
-    ...languageCandidates.flatMap((candidate) => languageNameValues(names, candidate)),
-    ...Object.values(names),
-  ];
-
-  for (const candidate of candidates) {
-    const value = nonEmptyString(candidate);
-    if (value !== null) {
-      return value;
-    }
-  }
-
-  return null;
-}
-
-function recipeNameLanguageCandidates(
-  recipe: PublicRecipeRecord,
-  displayLang: string,
-): readonly string[] {
-  const candidates: string[] = [];
-
-  addLanguageCandidates(candidates, localeForCuisineRegion(recipe.cuisineRegion));
-  addLanguageCandidates(candidates, localeForCountryCode(recipe.countryCode));
-  addLanguageCandidates(candidates, localeForRecipeLanguage(recipe.writtenLang));
-  addLanguageCandidates(candidates, recipe.displayLang);
-  addLanguageCandidates(candidates, displayLang);
-  addLanguageCandidates(candidates, defaultDisplayLang);
-  addLanguageCandidates(candidates, "en-US");
-
-  return candidates;
-}
-
-function addLanguageCandidates(candidates: string[], locale: string | null): void {
-  const normalized = nonEmptyString(locale);
-  if (normalized === null) {
-    return;
-  }
-
-  const variants = [
-    normalized,
-    normalized.replace("_", "-"),
-    normalized.replace("-", "_"),
-    normalized.toLowerCase(),
-    normalized.toLowerCase().replace("_", "-"),
-    normalized.toLowerCase().replace("-", "_"),
-  ];
-  const language = normalized.split(/[-_]/)[0];
-  if (language !== undefined && language.length > 0) {
-    variants.push(language, language.toLowerCase());
-  }
-
-  for (const variant of variants) {
-    if (variant.length > 0 && !candidates.includes(variant)) {
-      candidates.push(variant);
-    }
-  }
-}
-
-function languageNameValues(
-  names: Readonly<Record<string, string | null | undefined>>,
-  candidate: string,
-): readonly (string | null | undefined)[] {
-  return [
-    names[candidate],
-    names[candidate.replace("_", "-")],
-    names[candidate.replace("-", "_")],
-    names[candidate.toLowerCase()],
-    names[candidate.toLowerCase().replace("_", "-")],
-    names[candidate.toLowerCase().replace("-", "_")],
-  ];
-}
-
-function localeForCuisineRegion(cuisineRegion: string): string | null {
-  const locales: Readonly<Record<string, string>> = {
-    korean: "ko-KR",
-    japanese: "ja-JP",
-    chinese: "zh-CN",
-    french: "fr-FR",
-    italian: "it-IT",
-    indian: "hi-IN",
-    western: "en-US",
-    american: "en-US",
-    british: "en-GB",
-  };
-
-  return locales[cuisineRegion.toLowerCase()] ?? null;
-}
-
-function localeForCountryCode(countryCode: string): string | null {
-  const locales: Readonly<Record<string, string>> = {
-    KR: "ko-KR",
-    JP: "ja-JP",
-    CN: "zh-CN",
-    TW: "zh-TW",
-    HK: "zh-HK",
-    FR: "fr-FR",
-    IT: "it-IT",
-    IN: "hi-IN",
-    US: "en-US",
-    GB: "en-GB",
-    SG: "en-SG",
-    AU: "en-AU",
-    CA: "en-CA",
-    DE: "de-DE",
-    ES: "es-ES",
-    MX: "es-MX",
-    TH: "th-TH",
-    VN: "vi-VN",
-  };
-
-  return locales[countryCode.trim().toUpperCase()] ?? null;
-}
-
-function localeForRecipeLanguage(writtenLang: PublicRecipeRecord["writtenLang"]): string {
-  return writtenLang === "en" ? "en-US" : "ko-KR";
+  return ingredientMasterLookupFromResponse(response, languageCandidates);
 }
 
 function ingredientName(
@@ -681,7 +504,10 @@ function ingredientName(
   return "Ingredient";
 }
 
-function toPublicRecipeRecord(recipe: ServerRecipeInfo): PublicRecipeRecord {
+function toPublicRecipeRecord(
+  recipe: ServerRecipeInfo,
+  requestedDisplayLang: DisplayLanguage = fallbackDisplayLang,
+): PublicRecipeRecord {
   const recipeId = idValue(recipe.recipeId ?? recipe.id ?? recipe.recipe_id ?? recipe.recipeID);
 
   return withCatalogDemoMedia({
@@ -691,9 +517,9 @@ function toPublicRecipeRecord(recipe: ServerRecipeInfo): PublicRecipeRecord {
     description: stringValue(recipe.description, ""),
     cookingTip: stringValue(recipe.cookingTip, ""),
     writtenLang: parseWrittenLang(recipe.writtenLang),
-    requestedDisplayLang: stringValue(recipe.requestedDisplayLang, defaultDisplayLang),
-    displayLang: stringValue(recipe.displayLang, defaultDisplayLang),
-    availableLangs: recipe.availableLangs ?? [defaultDisplayLang],
+    requestedDisplayLang: stringValue(recipe.requestedDisplayLang, requestedDisplayLang),
+    displayLang: stringValue(recipe.displayLang, requestedDisplayLang),
+    availableLangs: recipe.availableLangs ?? [requestedDisplayLang],
     isOriginal: recipe.isOriginal ?? true,
     isTranslated: recipe.isTranslated ?? false,
     translationStatus: parseTranslationStatus(recipe.translationStatus),
