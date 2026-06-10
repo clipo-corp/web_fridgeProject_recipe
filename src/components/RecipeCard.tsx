@@ -11,10 +11,13 @@ type RecipeCardProps = {
 
 export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.Element {
   const { labelFor, countryLabel, timeLabel } = useI18n();
-  const ingredientPreview = recipe.ingredients
-    .slice(0, 3)
-    .map((ingredient) => ingredient.name)
-    .filter(Boolean);
+  const metaPreview = [
+    recipe.category,
+    recipe.recipeType,
+    recipe.cookingMethod,
+    recipe.technique,
+    recipe.requiredTool,
+  ].filter((value) => value.length > 0 && value !== "unknown");
 
   return (
     <article className={`recipe-card recipe-card--${variant}`}>
@@ -33,10 +36,10 @@ export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.E
           </div>
           <h3>{recipe.title}</h3>
           <p>{recipe.description}</p>
-          {ingredientPreview.length > 0 ? (
+          {metaPreview.length > 0 ? (
             <div className="recipe-card__ingredients">
-              {ingredientPreview.map((name) => (
-                <span key={name}>{name}</span>
+              {metaPreview.map((value) => (
+                <span key={value}>{labelFor(value)}</span>
               ))}
             </div>
           ) : null}

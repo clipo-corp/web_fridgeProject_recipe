@@ -197,6 +197,10 @@ const countryKo: LabelMap = {
   Italy: "이탈리아",
   Japan: "일본",
   Korea: "한국",
+  America: "미국",
+  USA: "미국",
+  "United States": "미국",
+  "United States of America": "미국",
   Global: "글로벌",
 };
 
@@ -207,6 +211,10 @@ const countryEn: LabelMap = {
   Italy: "Italy",
   Japan: "Japan",
   Korea: "Korea",
+  America: "United States",
+  USA: "United States",
+  "United States": "United States",
+  "United States of America": "United States",
   Global: "Global",
 };
 

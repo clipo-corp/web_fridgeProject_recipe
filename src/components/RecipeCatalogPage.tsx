@@ -17,39 +17,33 @@ import {
   initialCatalogFilters,
 } from "../lib/recipeCatalogMock";
 import {
-  loadCatalogFilterOptions,
   loadCatalogRecipes,
-  loadFeaturedRecipes,
 } from "../lib/recipeApi";
 import { useI18n } from "../lib/i18n";
 import {
   buildRecipeSearchSuggestions,
   type SearchSuggestion,
 } from "../lib/recipeSearchSuggestions";
-import type { PublicRecipeCatalogFilters, PublicRecipeRecord } from "../lib/recipeCatalogTypes";
+import type {
+  PublicRecipeCatalogFilters,
+  PublicRecipeRecord,
+} from "../lib/recipeCatalogTypes";
 
-export function RecipeCatalogPage(): JSX.Element {
+type RecipeCatalogPageProps = {
+  readonly filterOptions: FilterOptions;
+  readonly selectedCuisineRegion: string;
+  readonly onSelectedCuisineRegionChange: (cuisineRegion: string) => void;
+};
+
+export function RecipeCatalogPage({
+  filterOptions,
+  selectedCuisineRegion,
+  onSelectedCuisineRegionChange,
+}: RecipeCatalogPageProps): JSX.Element {
   const { t, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [suggestionRecipes, setSuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [featured, setFeatured] = useState<readonly PublicRecipeRecord[]>([]);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    region: { countries: [], cities: [], districts: [] },
-    writtenLang: [],
-    recipeType: [],
-    cookingMethod: [],
-    technique: [],
-    dietaryGoal: [],
-    dietaryRestriction: [],
-    primaryIngredient: [],
-    category: [],
-    occasion: [],
-    difficulty: [],
-    cookingTime: [],
-    cuisineRegion: [],
-    servings: [],
-    requiredTool: [],
-  });
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
   const [draftQuery, setDraftQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -58,23 +52,32 @@ export function RecipeCatalogPage(): JSX.Element {
 
   useEffect(() => {
     let cancelled = false;
-    initializedSuggestionRecipes.current = false;
 
-    void loadFeaturedRecipes(displayLang).then((nextFeatured) => {
+    void loadCatalogRecipes(
+      { ...initialCatalogFilters, cuisineRegion: selectedCuisineRegion, sort: "popular" },
+      displayLang,
+    ).then((nextFeatured) => {
       if (!cancelled) {
-        setFeatured(nextFeatured);
-      }
-    });
-    void loadCatalogFilterOptions(displayLang).then((nextFilterOptions) => {
-      if (!cancelled) {
-        setFilterOptions(nextFilterOptions);
+        setFeatured(nextFeatured.slice(0, 6));
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [displayLang]);
+  }, [displayLang, selectedCuisineRegion]);
+
+  useEffect(() => {
+    initializedSuggestionRecipes.current = false;
+  }, [displayLang, selectedCuisineRegion]);
+
+  useEffect(() => {
+    setFilters((current) =>
+      current.cuisineRegion === selectedCuisineRegion
+        ? current
+        : { ...current, cuisineRegion: selectedCuisineRegion },
+    );
+  }, [selectedCuisineRegion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +85,10 @@ export function RecipeCatalogPage(): JSX.Element {
     void loadCatalogRecipes(filters, displayLang).then((nextRecipes) => {
       if (!cancelled) {
         setRecipes(nextRecipes);
-        if (!initializedSuggestionRecipes.current && isBrowsingFilters(filters)) {
+        if (
+          !initializedSuggestionRecipes.current &&
+          isBrowsingWithSelectedCuisineRegion(filters, selectedCuisineRegion)
+        ) {
           setSuggestionRecipes(nextRecipes);
           initializedSuggestionRecipes.current = true;
         }
@@ -92,7 +98,7 @@ export function RecipeCatalogPage(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [displayLang, filters]);
+  }, [displayLang, filters, selectedCuisineRegion]);
 
   useEffect(() => {
     return () => {
@@ -108,7 +114,7 @@ export function RecipeCatalogPage(): JSX.Element {
   );
   const homepageFeatured = featured.length > 0 ? featured : suggestionRecipes;
 
-  const isBrowsing = isBrowsingFilters(filters);
+  const isBrowsing = isBrowsingWithSelectedCuisineRegion(filters, selectedCuisineRegion);
   const showBrowsing = isBrowsing && !searching;
 
   useEffect(() => {
@@ -119,19 +125,29 @@ export function RecipeCatalogPage(): JSX.Element {
     };
   }, [showBrowsing]);
 
-  const patchFilters = (patch: Partial<PublicRecipeCatalogFilters>): void =>
+  const baseFilters = (): PublicRecipeCatalogFilters => ({
+    ...initialCatalogFilters,
+    cuisineRegion: selectedCuisineRegion,
+  });
+  const patchFilters = (patch: Partial<PublicRecipeCatalogFilters>): void => {
+    if (patch.cuisineRegion !== undefined) {
+      onSelectedCuisineRegionChange(patch.cuisineRegion);
+    }
     setFilters((current) => ({ ...current, ...patch }));
+  };
   const runSearch = (): void => {
     const query = draftQuery.trim();
     if (query.length === 0) {
-      resetFilters();
+      stopSearching();
+      setFilters(baseFilters());
       return;
     }
-    startSearch({ ...initialCatalogFilters, query });
+    startSearch({ ...baseFilters(), query });
   };
   const resetFilters = (): void => {
     stopSearching();
     setDraftQuery("");
+    onSelectedCuisineRegionChange("all");
     setFilters(initialCatalogFilters);
   };
   const selectSuggestion = (suggestion: SearchSuggestion): void => {
@@ -142,11 +158,17 @@ export function RecipeCatalogPage(): JSX.Element {
         : suggestion.patch.query ?? suggestion.label;
 
     setDraftQuery(nextDraftQuery);
-    startSearch({ ...initialCatalogFilters, ...suggestion.patch, query: nextFilterQuery });
+    if (suggestion.patch.cuisineRegion !== undefined) {
+      onSelectedCuisineRegionChange(suggestion.patch.cuisineRegion);
+    }
+    startSearch({ ...baseFilters(), ...suggestion.patch, query: nextFilterQuery });
   };
   const clearActiveChip = (clear: Partial<PublicRecipeCatalogFilters>): void => {
     if (clear.query === "") {
       setDraftQuery("");
+    }
+    if (clear.cuisineRegion !== undefined) {
+      onSelectedCuisineRegionChange(clear.cuisineRegion);
     }
     patchFilters(clear);
   };
@@ -294,4 +316,19 @@ function Section({ eyebrow, title, note, children }: SectionProps): JSX.Element 
       {children}
     </section>
   );
+}
+
+function isBrowsingWithSelectedCuisineRegion(
+  filters: PublicRecipeCatalogFilters,
+  selectedCuisineRegion: string,
+): boolean {
+  if (isBrowsingFilters(filters)) {
+    return true;
+  }
+
+  if (filters.cuisineRegion !== selectedCuisineRegion) {
+    return false;
+  }
+
+  return isBrowsingFilters({ ...filters, cuisineRegion: "all" });
 }

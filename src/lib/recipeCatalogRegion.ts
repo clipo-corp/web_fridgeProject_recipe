@@ -28,6 +28,10 @@ const countryCodes: Record<string, string> = {
   Italy: "IT",
   Japan: "JP",
   Korea: "KR",
+  America: "US",
+  USA: "US",
+  "United States": "US",
+  "United States of America": "US",
   Global: "GL",
 };
 

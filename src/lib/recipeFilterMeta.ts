@@ -15,6 +15,10 @@ export const filterEmoji: Record<string, string> = {
   France: "🇫🇷",
   Italy: "🇮🇹",
   India: "🇮🇳",
+  America: "🇺🇸",
+  USA: "🇺🇸",
+  "United States": "🇺🇸",
+  "United States of America": "🇺🇸",
   Global: "🌍",
 
   /* cooking time */
