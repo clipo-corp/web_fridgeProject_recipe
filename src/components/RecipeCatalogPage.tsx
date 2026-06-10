@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
-import { Sparkles, X } from "lucide-react";
-import { InstallBand, MobileInstallCta } from "./AppInstallCta";
-import { FeaturedRecipeCarousel } from "./FeaturedRecipeCarousel";
-import { FilterBar, type FilterOptions } from "./FilterBar";
-import { RecipeCard } from "./RecipeCard";
-import {
-  buildActiveChips,
-  describeFilters,
-  isBrowsingFilters,
-} from "./RecipeCatalogFilters";
+import { MobileInstallCta } from "./AppInstallCta";
+import type { FilterOptions } from "./FilterBar";
+import { buildActiveChips, isBrowsingFilters } from "./RecipeCatalogFilters";
+import { RecipeCatalogBrowsingContent } from "./RecipeCatalogBrowsingContent";
+import { RecipeCatalogResultsContent } from "./RecipeCatalogResultsContent";
 import { SearchHero } from "./SearchHero";
-import { SearchProgress } from "./SearchProgress";
 import { ResultsSearchBar } from "./ResultsSearchBar";
 import {
   initialCatalogFilters,
@@ -22,6 +15,8 @@ import {
 import { useI18n } from "../lib/i18n";
 import {
   buildRecipeSearchSuggestions,
+  fallbackRecipeSearchSuggestions,
+  filterRecipeSearchSuggestions,
   type SearchSuggestion,
 } from "../lib/recipeSearchSuggestions";
 import type {
@@ -40,7 +35,7 @@ export function RecipeCatalogPage({
   selectedCuisineRegion,
   onSelectedCuisineRegionChange,
 }: RecipeCatalogPageProps): JSX.Element {
-  const { t, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
+  const { displayLang, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [suggestionRecipes, setSuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [featured, setFeatured] = useState<readonly PublicRecipeRecord[]>([]);
@@ -109,8 +104,19 @@ export function RecipeCatalogPage({
   }, []);
 
   const suggestions = useMemo<readonly SearchSuggestion[]>(
-    () => buildRecipeSearchSuggestions(suggestionRecipes, labelFor, countryLabel),
-    [suggestionRecipes, labelFor, countryLabel],
+    () => {
+      const recipeSuggestions = buildRecipeSearchSuggestions(
+        suggestionRecipes,
+        labelFor,
+        countryLabel,
+        draftQuery,
+      );
+
+      return recipeSuggestions.length > 0
+        ? recipeSuggestions
+        : filterRecipeSearchSuggestions(fallbackRecipeSearchSuggestions, draftQuery);
+    },
+    [suggestionRecipes, labelFor, countryLabel, draftQuery],
   );
   const homepageFeatured = featured.length > 0 ? featured : suggestionRecipes;
 
@@ -208,113 +214,35 @@ export function RecipeCatalogPage({
         ) : (
           <ResultsSearchBar
             query={draftQuery}
+            suggestions={suggestions}
             onQueryChange={setDraftQuery}
             onSearchSubmit={runSearch}
+            onSuggestionSelect={selectSuggestion}
           />
         )}
 
         {showBrowsing ? (
-          <div className="page">
-            <Section eyebrow={t("section.featured.eyebrow")} title={t("section.trending.title")}>
-              <FeaturedRecipeCarousel recipes={homepageFeatured} />
-            </Section>
-
-            {suggestionRecipes.length > 0 ? (
-              <Section eyebrow={t("section.featured.eyebrow")} title={t("section.featured.title")}>
-                <div className="grid grid--feed">
-                  {suggestionRecipes.map((recipe) => (
-                    <RecipeCard key={recipe.recipeId} recipe={recipe} />
-                  ))}
-                </div>
-              </Section>
-            ) : null}
-          </div>
+          <RecipeCatalogBrowsingContent
+            featuredRecipes={homepageFeatured}
+            suggestions={suggestions}
+            onSuggestionSelect={selectSuggestion}
+          />
         ) : (
-          <div className="page">
-            {searching ? (
-              <SearchProgress />
-            ) : (
-              <div className="results-content">
-                <div className="results-head">
-                  <div>
-                    <span className="eyebrow">{t("results.eyebrow")}</span>
-                    <h2>{describeFilters(filters, { t, labelFor, countryLabel, timeLabel })}</h2>
-                    <p className="results-count">
-                      {t("results.count", { count: recipes.length })}
-                    </p>
-                  </div>
-                  <button type="button" className="btn btn--ghost" onClick={resetFilters}>
-                    <X size={16} aria-hidden="true" />
-                    {t("results.reset")}
-                  </button>
-                </div>
-
-                <FilterBar filters={filters} options={filterOptions} onChange={patchFilters} />
-
-                {activeChips.length > 0 ? (
-                  <div className="active-filters">
-                    {activeChips.map((chip) => (
-                      <button
-                        key={chip.id}
-                        type="button"
-                        className="active-filter"
-                        aria-label={t("filters.clearOne")}
-                        onClick={() => clearActiveChip(chip.clear)}
-                      >
-                        {chip.emoji.length > 0 ? <span aria-hidden="true">{chip.emoji}</span> : null}
-                        {chip.text}
-                        <X size={13} aria-hidden="true" />
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-
-                {recipes.length === 0 ? (
-                  <div className="empty-state">
-                    <Sparkles size={28} aria-hidden="true" />
-                    <strong>{t("empty.title")}</strong>
-                    <p>{t("empty.body")}</p>
-                    <button type="button" className="btn btn--primary" onClick={resetFilters}>
-                      {t("empty.cta")}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid--feed">
-                    {recipes.map((recipe) => (
-                      <RecipeCard key={recipe.recipeId} recipe={recipe} />
-                    ))}
-                  </div>
-                )}
-
-                <InstallBand />
-              </div>
-            )}
-          </div>
+          <RecipeCatalogResultsContent
+            recipes={recipes}
+            searching={searching}
+            filters={filters}
+            filterOptions={filterOptions}
+            activeChips={activeChips}
+            onResetFilters={resetFilters}
+            onFilterChange={patchFilters}
+            onClearActiveChip={clearActiveChip}
+          />
         )}
       </main>
 
       <MobileInstallCta />
     </>
-  );
-}
-
-type SectionProps = {
-  readonly eyebrow: string;
-  readonly title: string;
-  readonly note?: string;
-  readonly children: ReactNode;
-};
-
-function Section({ eyebrow, title, note, children }: SectionProps): JSX.Element {
-  return (
-    <section className="section">
-      <div className="section__head">
-        <span className="eyebrow">{eyebrow}</span>
-        <h2>{title}</h2>
-        {note !== undefined ? <p className="section__note">{note}</p> : null}
-      </div>
-      {children}
-    </section>
   );
 }
 

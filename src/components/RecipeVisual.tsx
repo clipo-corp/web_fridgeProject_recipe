@@ -1,29 +1,16 @@
-import {
-  Apple,
-  Beef,
-  Cookie,
-  Croissant,
-  CupSoda,
-  Egg,
-  Fish,
-  Leaf,
-  Salad,
-  Soup,
-  UtensilsCrossed,
-  Wheat,
-  Wine,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Leaf } from "lucide-react";
 import type { CSSProperties } from "react";
-import { recipeInitial } from "../lib/recipeLabels";
 import { useI18n } from "../lib/i18n";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
+import { recipeHomeEmoji, recipeListEmoji } from "../lib/recipeThumbnail";
 
 type RecipeVisualSize = "card" | "spotlight" | "detail" | "thumb";
+type RecipeVisualEmojiMode = "home" | "list";
 
 type RecipeVisualProps = {
   readonly recipe: PublicRecipeRecord;
   readonly size?: RecipeVisualSize;
+  readonly emojiMode?: RecipeVisualEmojiMode;
 };
 
 type VisualTheme = {
@@ -44,64 +31,20 @@ const regionThemes: Record<string, VisualTheme> = {
   global: { tint: "#c2c2f0" },
 };
 
-const categoryIcons: Record<string, LucideIcon> = {
-  dessert: Cookie,
-  "snack-cookie": Cookie,
-  salad: Salad,
-  "noodle-dumpling": Soup,
-  stew: Soup,
-  soup: Soup,
-  "soup-stew": Soup,
-  "rice-porridge": Soup,
-  bread: Croissant,
-  "main-dish": UtensilsCrossed,
-  "side-dish": Salad,
-  "sauce-jam": UtensilsCrossed,
-  "kimchi-paste": Salad,
-  "drink-alcohol": Wine,
-};
-
-const ingredientIcons: Record<string, LucideIcon> = {
-  beef: Beef,
-  pork: Beef,
-  meat: Beef,
-  chicken: Beef,
-  seafood: Fish,
-  "dairy-egg": Egg,
-  flour: Wheat,
-  grains: Wheat,
-  rice: Wheat,
-  fruits: Apple,
-  vegetable: Salad,
-  "bean-nut": Leaf,
-  processed: CupSoda,
-};
-
 const fallbackTheme: VisualTheme = { tint: "#c2c2f0" };
 
 function pickTheme(recipe: PublicRecipeRecord): VisualTheme {
   return regionThemes[recipe.cuisineRegion] ?? fallbackTheme;
 }
 
-function pickIcon(recipe: PublicRecipeRecord): LucideIcon {
-  return (
-    categoryIcons[recipe.category] ??
-    ingredientIcons[recipe.primaryIngredient] ??
-    UtensilsCrossed
-  );
-}
+export function RecipeVisual({
+  recipe,
+  size = "card",
+  emojiMode = "list",
+}: RecipeVisualProps): JSX.Element {
+  const { labelFor } = useI18n();
 
-const iconSizes: Record<RecipeVisualSize, number> = {
-  thumb: 22,
-  card: 36,
-  spotlight: 52,
-  detail: 64,
-};
-
-export function RecipeVisual({ recipe, size = "card" }: RecipeVisualProps): JSX.Element {
-  const { countryLabel, labelFor } = useI18n();
-
-  if (recipe.titleImageUrl !== null) {
+  if (recipe.titleImageUrl !== null && recipe.titleImageUrl.trim().length > 0) {
     return (
       <div className={`recipe-visual recipe-visual--${size} recipe-visual--photo`}>
         <img src={recipe.titleImageUrl} alt="" loading="lazy" />
@@ -110,7 +53,7 @@ export function RecipeVisual({ recipe, size = "card" }: RecipeVisualProps): JSX.
   }
 
   const theme = pickTheme(recipe);
-  const Icon = pickIcon(recipe);
+  const emoji = emojiMode === "home" ? recipeHomeEmoji(recipe) : recipeListEmoji(recipe);
   const styleVars: RecipeVisualStyle = {
     "--rv-tint": theme.tint,
   };
@@ -122,12 +65,9 @@ export function RecipeVisual({ recipe, size = "card" }: RecipeVisualProps): JSX.
       aria-hidden="true"
     >
       <span className="recipe-visual__pattern" />
-      <span className="recipe-visual__region">{countryLabel(recipe.country)}</span>
+      <span className="recipe-visual__region">{labelFor(recipe.cuisineRegion)}</span>
       <span className="recipe-visual__plate">
-        <Icon size={iconSizes[size]} strokeWidth={1.6} />
-        {size === "thumb" ? null : (
-          <span className="recipe-visual__initial">{recipeInitial(recipe.title)}</span>
-        )}
+        <span className="recipe-visual__emoji">{emoji}</span>
       </span>
       <span className="recipe-visual__ingredient">
         <Leaf size={13} aria-hidden="true" />

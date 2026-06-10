@@ -9,6 +9,7 @@ import {
   initialCatalogFilters,
   toPublicRecipeSearchRequest,
 } from "./recipeCatalogRequest";
+import { toRecipeCreatorSource } from "./recipeCreatorSource";
 import { recipeFilterKeys } from "./recipeCatalogTypes";
 import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
 import type {
@@ -109,6 +110,7 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
   const cityKey = makeRegionKey(countryCode, city);
   const districtKey = makeRegionKey(countryCode, city, district);
   const writtenLang = parseWrittenLang(recipe.writtenLang);
+  const creatorSource = toRecipeCreatorSource(entry.importSource);
 
   return withCatalogDemoMedia({
     recipeId: entry.importSource?.sourceId ?? `mock-${index}`,
@@ -124,6 +126,7 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
     isTranslated: writtenLang !== "ko",
     translationStatus: writtenLang === "ko" ? "original" : "translated",
     source: recipe.source === "ai" ? "ai" : "user",
+    ...(creatorSource === undefined ? {} : { creatorSource }),
     visibility: recipe.visibility === "private" || recipe.visibility === "shared" ? recipe.visibility : "public",
     isUseLocalData: recipe.isUseLocalData ?? true,
     likeCount: 24 + index * 3,

@@ -4,6 +4,15 @@ export type LocalDataMode = "all" | "local" | "original";
 export type RecipeVisibility = "private" | "shared" | "public";
 export type RecipeSource = "ai" | "user";
 export type TranslationStatus = "original" | "translated" | "unavailable";
+export type RecipeCreatorSourceType = "manual" | "web" | "blog" | "website" | "url" | "youtube" | "tiktok";
+
+export type RecipeCreatorSource = {
+  readonly sourceType: RecipeCreatorSourceType;
+  readonly sourceUrl: string | null;
+  readonly sourceAccount: string | null;
+  readonly creatorName: string | null;
+  readonly sourceId: string | null;
+};
 
 export type RecipeIngredient = {
   readonly masterId: number | null;
@@ -93,6 +102,7 @@ export type PublicRecipeRecord = {
   readonly isTranslated: boolean;
   readonly translationStatus: TranslationStatus;
   readonly source: RecipeSource;
+  readonly creatorSource?: RecipeCreatorSource;
   readonly visibility: RecipeVisibility;
   readonly isUseLocalData: boolean;
   readonly likeCount: number;
@@ -102,6 +112,9 @@ export type PublicRecipeRecord = {
   readonly country: string;
   readonly city: string | null;
   readonly district: string | null;
+  readonly canonicalCountry?: string | null;
+  readonly canonicalCity?: string | null;
+  readonly canonicalDistrict?: string | null;
   readonly cityKey: string | null;
   readonly districtKey: string | null;
   readonly recipeType: string;

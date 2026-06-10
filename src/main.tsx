@@ -4,6 +4,8 @@ import { App } from "./components/App";
 import { applyStoredTheme } from "./lib/theme";
 import "./styles/base.css";
 import "./styles/catalog.css";
+import "./styles/creator-source.css";
+import "./styles/search-suggestions.css";
 
 applyStoredTheme();
 

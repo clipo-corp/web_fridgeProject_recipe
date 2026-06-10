@@ -1,8 +1,10 @@
-import { ArrowLeft, Clock, Download, Flame, Heart, Languages, Users } from "lucide-react";
+import { ArrowLeft, Clock, Download, Flame, Heart, Languages, MapPin, Play, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { MobileInstallCta } from "./AppInstallCta";
+import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
 import { loadPublicRecipeDetail } from "../lib/recipeApi";
+import { videoCreatorSummary } from "../lib/recipeCreatorSource";
+import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import { useI18n } from "../lib/i18n";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
@@ -46,113 +48,133 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
     );
   }
 
+  const videoSummary = videoCreatorSummary(recipe.creatorSource);
+
   return (
-    <>
-      <main className="page detail-page">
-        <a className="btn btn--ghost detail-page__back" href="/recipe-catalog">
-          <ArrowLeft size={17} aria-hidden="true" />
-          {t("detail.back")}
-        </a>
+    <main className="page detail-page">
+      <a className="btn btn--ghost detail-page__back" href="/recipe-catalog">
+        <ArrowLeft size={17} aria-hidden="true" />
+        {t("detail.back")}
+      </a>
 
-        <article className="detail-page__layout">
-          <div className="detail-page__visual">
-            <RecipeVisual recipe={recipe} size="detail" />
-          </div>
+      <article className="detail-page__layout">
+        <div className="detail-page__summary">
+          <span className="brand-badge">
+            {labelFor(recipe.cuisineRegion)} · {labelFor(recipe.category)}
+          </span>
+          <h1>{recipe.title}</h1>
+          <p>{recipe.description}</p>
+          <RecipeCreatorSource recipe={recipe} variant="detail" showPreview={false} />
 
-          <div className="detail-page__summary">
-            <span className="brand-badge">
-              {formatRegion(recipe, countryLabel)} · {labelFor(recipe.cuisineRegion)}
+          <div className="detail-meta">
+            <span>
+              <Clock size={16} aria-hidden="true" />
+              {timeLabel(recipe.cookingTime)}
             </span>
-            <h1>{recipe.title}</h1>
-            <p>{recipe.description}</p>
-
-            <div className="detail-meta">
-              <span>
-                <Clock size={16} aria-hidden="true" />
-                {timeLabel(recipe.cookingTime)}
-              </span>
-              <span>
-                <Flame size={16} aria-hidden="true" />
-                {labelFor(recipe.difficulty)}
-              </span>
-              <span>
-                <Users size={16} aria-hidden="true" />
-                {recipe.servings}
-              </span>
-              <span>
-                <Heart size={16} aria-hidden="true" />
-                {recipe.likeCount}
-              </span>
-              <span>
-                <Languages size={16} aria-hidden="true" />
-                {recipe.isTranslated ? labelFor(recipe.writtenLang) : labelFor("original")}
-              </span>
-            </div>
-
-            <div className="detail-chips">
-              {[recipe.category, recipe.recipeType, recipe.cookingMethod, recipe.technique, recipe.requiredTool]
-                .filter((value) => value.length > 0 && value !== "unknown")
-                .map((value) => (
-                  <span className="badge badge--muted" key={value}>
-                    {labelFor(value)}
-                  </span>
-                ))}
-            </div>
-
-            {recipe.cookingTip.length > 0 ? <p className="detail-tip">{recipe.cookingTip}</p> : null}
+            <span>
+              <Flame size={16} aria-hidden="true" />
+              {labelFor(recipe.difficulty)}
+            </span>
+            <span>
+              <Users size={16} aria-hidden="true" />
+              {recipe.servings}
+            </span>
+            <span>
+              <Heart size={16} aria-hidden="true" />
+              {recipe.likeCount}
+            </span>
+            <span>
+              <Languages size={16} aria-hidden="true" />
+              {recipe.isTranslated ? labelFor(recipe.writtenLang) : labelFor("original")}
+            </span>
+            <span>
+              <MapPin size={16} aria-hidden="true" />
+              {formatRegion(recipe, countryLabel)}
+            </span>
           </div>
-        </article>
 
-        <article className="detail-page__content">
-          <section className="detail-section">
-            <h2>{t("detail.ingredients")}</h2>
-            <ul className="ingredient-list">
-              {recipe.ingredients.map((ingredient, index) => (
-                <li key={`${ingredient.name}-${index}`}>
-                  <span className="ingredient-list__check" aria-hidden="true" />
-                  <span className="ingredient-list__copy">
-                    <span className="ingredient-list__name">{ingredient.name}</span>
-                    {ingredient.description.length > 0 ? (
-                      <small>{ingredient.description}</small>
-                    ) : null}
-                  </span>
-                  <span className="ingredient-list__amount">
-                    {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
-                  </span>
-                </li>
+          <div className="detail-chips">
+            {[recipe.category, recipe.recipeType, recipe.cookingMethod, recipe.technique, recipe.requiredTool]
+              .filter((value) => value.length > 0 && value !== "unknown")
+              .map((value) => (
+                <span className="badge badge--muted" key={value}>
+                  {labelFor(value)}
+                </span>
               ))}
-            </ul>
-          </section>
+          </div>
 
-          <section className="detail-section">
-            <h2>{t("detail.steps")}</h2>
-            <ol className="step-list">
-              {recipe.steps.map((step) => (
-                <li
-                  key={step.stepNumber}
-                  className={step.imageUrl === null ? "step-list__item" : "step-list__item step-list__item--media"}
-                >
-                  <span className="step-list__num">{step.stepNumber}</span>
-                  {step.imageUrl !== null ? (
-                    <img className="step-list__image" src={step.imageUrl} alt="" loading="lazy" />
-                  ) : null}
-                  <div>
-                    <p>{step.way}</p>
-                    {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
+          {recipe.cookingTip.length > 0 ? <p className="detail-tip">{recipe.cookingTip}</p> : null}
+        </div>
+      </article>
 
-          <a className="btn btn--primary detail-install" href="/install">
-            <Download size={18} aria-hidden="true" />
-            {t("detail.install")}
+      <article className="detail-page__content">
+        {videoSummary?.previewImageUrl !== null && videoSummary?.previewImageUrl !== undefined ? (
+          <a
+            className="detail-source-preview"
+            href={videoSummary.url ?? undefined}
+            target={videoSummary.url === null ? undefined : "_blank"}
+            rel={videoSummary.url === null ? undefined : "noreferrer"}
+          >
+            <img src={videoSummary.previewImageUrl} alt={`${videoSummary.name} 영상 미리보기`} loading="lazy" />
+            <span className="detail-source-preview__play" aria-hidden="true">
+              <Play size={24} fill="currentColor" />
+            </span>
           </a>
-        </article>
-      </main>
-      <MobileInstallCta />
-    </>
+        ) : null}
+
+        <section className="detail-media-card" aria-label={recipe.title}>
+          <RecipeVisual recipe={recipe} size="detail" />
+        </section>
+
+        <section className="detail-section detail-card">
+          <h2>{t("detail.ingredients")}</h2>
+          <ul className="ingredient-list">
+            {recipe.ingredients.map((ingredient, index) => (
+              <li key={`${ingredient.name}-${index}`}>
+                <span className="ingredient-list__emoji" aria-hidden="true">
+                  {recipeIngredientEmoji(ingredient)}
+                </span>
+                <span className="ingredient-list__copy">
+                  <span className="ingredient-list__name">{ingredient.name}</span>
+                  {ingredient.description.length > 0 ? (
+                    <small>{ingredient.description}</small>
+                  ) : null}
+                </span>
+                <span className="ingredient-list__amount">
+                  {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="detail-section detail-card">
+          <h2>{t("detail.steps")}</h2>
+          <ol className="step-list">
+            {recipe.steps.map((step) => (
+              <li
+                key={step.stepNumber}
+                className={step.imageUrl === null ? "step-list__item" : "step-list__item step-list__item--media"}
+              >
+                <span className="step-list__num">{step.stepNumber}</span>
+                {step.imageUrl !== null ? (
+                  <img className="step-list__image" src={step.imageUrl} alt="" loading="lazy" />
+                ) : null}
+                <div>
+                  <p>{step.way}</p>
+                  {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <a className="btn btn--primary detail-install" href="/install">
+          <Download size={18} aria-hidden="true" />
+          {t("detail.install")}
+        </a>
+      </article>
+    </main>
   );
 }
 
@@ -168,7 +190,10 @@ function formatRegion(
   recipe: PublicRecipeRecord,
   countryLabel: (country: string) => string,
 ): string {
-  const parts = [countryLabel(recipe.country), recipe.city, recipe.district].filter(
+  const country = recipe.canonicalCountry ?? recipe.country;
+  const city = recipe.canonicalCity ?? recipe.city;
+  const district = recipe.canonicalDistrict ?? recipe.district;
+  const parts = [countryLabel(country), city, district].filter(
     (value): value is string => value !== null && value.length > 0,
   );
   return parts.join(" · ");

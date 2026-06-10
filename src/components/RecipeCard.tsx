@@ -1,4 +1,5 @@
 import { Clock, Flame, Heart, Languages, Users } from "lucide-react";
+import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
 import { useI18n } from "../lib/i18n";
 import { detailPathForRecipe } from "../lib/routes";
@@ -10,7 +11,7 @@ type RecipeCardProps = {
 };
 
 export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.Element {
-  const { labelFor, countryLabel, timeLabel } = useI18n();
+  const { labelFor, timeLabel } = useI18n();
   const metaPreview = [
     recipe.category,
     recipe.recipeType,
@@ -22,11 +23,15 @@ export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.E
   return (
     <article className={`recipe-card recipe-card--${variant}`}>
       <a className="recipe-card__link" href={detailPathForRecipe(recipe.recipeId)}>
-        <RecipeVisual recipe={recipe} size={variant === "spotlight" ? "spotlight" : "card"} />
+        <RecipeVisual
+          recipe={recipe}
+          size={variant === "spotlight" ? "spotlight" : "card"}
+          emojiMode="home"
+        />
         <div className="recipe-card__body">
           <div className="recipe-card__badges">
             <span className="badge badge--brand">{labelFor(recipe.category)}</span>
-            <span className="badge badge--muted">{countryLabel(recipe.country)}</span>
+            <span className="badge badge--muted">{labelFor(recipe.cuisineRegion)}</span>
             {recipe.isTranslated ? (
               <span className="badge badge--muted">
                 <Languages size={12} aria-hidden="true" />
@@ -34,6 +39,7 @@ export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.E
               </span>
             ) : null}
           </div>
+          <RecipeCreatorSource recipe={recipe} variant="card" />
           <h3>{recipe.title}</h3>
           <p>{recipe.description}</p>
           {metaPreview.length > 0 ? (

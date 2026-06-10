@@ -226,4 +226,16 @@ describe("loadPublicMockRecipes", () => {
     expect(options.cookingMethod).toContain("boil");
     expect(options.region.countries.length).toBeGreaterThan(0);
   });
+
+  it("preserves YouTube creator source metadata from seed imports", async () => {
+    const result = await loadPublicMockRecipes();
+    const youtubeRecipe = result.find(
+      (recipe) => recipe.creatorSource?.sourceType === "youtube",
+    );
+
+    expect(youtubeRecipe?.creatorSource).toMatchObject({
+      sourceType: "youtube",
+      sourceUrl: expect.stringContaining("youtube.com"),
+    });
+  });
 });

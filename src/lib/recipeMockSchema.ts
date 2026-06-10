@@ -46,8 +46,11 @@ const recipeSchema = z.object({
 const seedEntrySchema = z.object({
   importSource: z
     .object({
+      sourceType: z.string().nullable().optional(),
       sourceId: z.string().optional(),
       sourceUrl: z.string().nullable().optional(),
+      sourceAccount: z.string().nullable().optional(),
+      creatorName: z.string().nullable().optional(),
     })
     .optional(),
   recipe: recipeSchema,

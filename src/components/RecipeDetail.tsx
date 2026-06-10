@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { Clock, Download, Flame, Heart, Languages, Users, X } from "lucide-react";
+import { Clock, Download, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
+import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
+import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import { useI18n } from "../lib/i18n";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
@@ -49,10 +51,11 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
 
         <div className="detail-body">
           <span className="brand-badge">
-            {formatRegion(recipe, countryLabel)} · {labelFor(recipe.cuisineRegion)}
+            {labelFor(recipe.cuisineRegion)} · {labelFor(recipe.category)}
           </span>
           <h2>{recipe.title}</h2>
           <p className="detail-description">{recipe.description}</p>
+          <RecipeCreatorSource recipe={recipe} variant="detail" />
 
           <div className="detail-meta">
             <span>
@@ -74,6 +77,10 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
             <span>
               <Languages size={16} aria-hidden="true" />
               {recipe.isTranslated ? labelFor(recipe.writtenLang) : labelFor("original")}
+            </span>
+            <span>
+              <MapPin size={16} aria-hidden="true" />
+              {formatRegion(recipe, countryLabel)}
             </span>
             <span className="badge badge--brand">{labelFor(recipe.category)}</span>
           </div>
@@ -98,7 +105,9 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
               <ul className="ingredient-list">
                 {recipe.ingredients.map((ingredient, index) => (
                   <li key={`${ingredient.name}-${index}`}>
-                    <span className="ingredient-list__check" aria-hidden="true" />
+                    <span className="ingredient-list__emoji" aria-hidden="true">
+                      {recipeIngredientEmoji(ingredient)}
+                    </span>
                     <span className="ingredient-list__name">{ingredient.name}</span>
                     <span className="ingredient-list__amount">
                       {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
@@ -154,7 +163,10 @@ function formatRegion(
   recipe: PublicRecipeRecord,
   countryLabel: (country: string) => string,
 ): string {
-  const parts = [countryLabel(recipe.country), recipe.city, recipe.district].filter(
+  const country = recipe.canonicalCountry ?? recipe.country;
+  const city = recipe.canonicalCity ?? recipe.city;
+  const district = recipe.canonicalDistrict ?? recipe.district;
+  const parts = [countryLabel(country), city, district].filter(
     (value): value is string => value !== null && value.length > 0,
   );
   return parts.join(" · ");

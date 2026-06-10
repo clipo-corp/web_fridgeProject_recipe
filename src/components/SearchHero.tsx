@@ -1,6 +1,7 @@
-import { ArrowRight, Clock3, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Search, Sparkles, Utensils, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 import type { SearchSuggestion } from "../lib/recipeSearchSuggestions";
+import { SearchSuggestionList } from "./SearchSuggestionList";
 
 type SearchHeroProps = {
   readonly query: string;
@@ -20,19 +21,25 @@ export function SearchHero({
   onSuggestionSelect,
 }: SearchHeroProps): JSX.Element {
   const { t } = useI18n();
-  const visibleSuggestions = suggestions.length > 0 ? suggestions : fallbackSuggestions;
+  const queryIsBlank = query.trim().length === 0;
+  const visibleSuggestions = suggestions.length > 0 || !queryIsBlank ? suggestions : fallbackSuggestions;
   const showSuggestions = visibleSuggestions.length > 0;
 
   return (
     <section className="hero" id="top">
       <div className="hero__inner">
-        <span className="brand-badge">{t("hero.badge")}</span>
-        <h1>
-          {t("hero.title1")}
-          <br />
-          {t("hero.title2")}
-        </h1>
-        <p>{t("hero.subtitle", { count: recipeCount })}</p>
+        <div className="hero__headline">
+          <span className="brand-badge">{t("hero.badge")}</span>
+          <h1>
+            <Sparkles size={42} aria-hidden="true" />
+            <span>
+              {t("hero.title1")}
+              <br />
+              {t("hero.title2")}
+            </span>
+          </h1>
+          <p>{t("hero.subtitle", { count: recipeCount })}</p>
+        </div>
         <div className="hero__search-wrap">
           <form
             className="hero__search"
@@ -42,6 +49,11 @@ export function SearchHero({
               onSearchSubmit();
             }}
           >
+            <span className="hero__search-type">
+              {t("header.tag")}
+              <ChevronDown size={15} aria-hidden="true" />
+            </span>
+            <span className="hero__search-divider" aria-hidden="true" />
             <Search size={20} aria-hidden="true" />
             <input
               id="recipe-search"
@@ -67,33 +79,39 @@ export function SearchHero({
               <ArrowRight size={16} aria-hidden="true" />
             </button>
           </form>
-
-          {showSuggestions ? (
-            <div className="hero-suggestions" role="listbox" aria-label={t("hero.suggestions")}>
-              <span className="hero-suggestions__eyebrow">
-                <Sparkles size={14} aria-hidden="true" />
-                {t("hero.suggestions")}
-              </span>
-              {visibleSuggestions.slice(0, 7).map((suggestion) => (
-                <button
-                  key={suggestion.id}
-                  type="button"
-                  className="hero-suggestion"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => onSuggestionSelect(suggestion)}
-                >
-                  <Clock3 size={16} aria-hidden="true" />
-                  <span>{suggestion.label}</span>
-                  <small>{suggestion.note}</small>
-                </button>
-              ))}
-            </div>
-          ) : null}
+          <SearchSuggestionList
+            label={t("hero.suggestions")}
+            suggestions={visibleSuggestions}
+            onSuggestionSelect={onSuggestionSelect}
+          />
         </div>
-        <div className="hero__stats">
-          <span>{t("hero.stat1")}</span>
-          <span>{t("hero.stat2")}</span>
-          <span>{t("hero.stat3")}</span>
+        {showSuggestions ? (
+          <div className="hero-keywords" aria-label={t("hero.suggestions")}>
+            <span>{t("hero.popular")}</span>
+            {visibleSuggestions.slice(0, 8).map((suggestion) => (
+              <button
+                key={suggestion.id}
+                type="button"
+                onClick={() => onSuggestionSelect(suggestion)}
+              >
+                {suggestion.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="hero__banner">
+          <div>
+            <span className="hero__banner-kicker">{t("hero.bannerKicker")}</span>
+            <strong>{t("hero.bannerTitle")}</strong>
+            <p>{t("hero.bannerBody")}</p>
+          </div>
+          <div className="hero__banner-art" aria-hidden="true">
+            <span className="hero__steam hero__steam--one" />
+            <span className="hero__steam hero__steam--two" />
+            <span className="hero__steam hero__steam--three" />
+            <Utensils size={44} />
+          </div>
         </div>
       </div>
     </section>
