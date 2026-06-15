@@ -5,6 +5,7 @@ import { applyStoredTheme } from "./lib/theme";
 import "./styles/base.css";
 import "./styles/catalog.css";
 import "./styles/creator-source.css";
+import "./styles/privacy-policy.css";
 import "./styles/search-suggestions.css";
 
 applyStoredTheme();
