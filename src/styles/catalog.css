@@ -2,6 +2,136 @@
    FreshKeeper Recipe — public catalog styles
    ============================================================ */
 
+/* ---------- Skeleton shimmer ---------- */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--bg-card-alt) 25%,
+    color-mix(in srgb, var(--neutral-600) 22%, var(--bg-card-alt)) 50%,
+    var(--bg-card-alt) 75%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.5s ease infinite;
+  border-radius: var(--radius-xs);
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.skeleton-card--spotlight {
+  height: clamp(344px, 27.5vw, 380px);
+}
+
+.skeleton-card__visual {
+  width: 100%;
+  aspect-ratio: 16 / 8.8;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+.skeleton-card--spotlight .skeleton-card__visual {
+  flex: 0 0 70%;
+  aspect-ratio: auto;
+}
+
+.skeleton-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: var(--space-md);
+  flex: 1;
+  min-height: 0;
+}
+
+.skeleton-card--spotlight .skeleton-card__body {
+  flex: 0 0 30%;
+  gap: 4px;
+  padding: 10px var(--space-md);
+}
+
+.skeleton-card__badges {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.skeleton-card__meta {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.skeleton-line {
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-pill);
+}
+
+.skeleton-line--badge {
+  height: 20px;
+  width: 56px;
+}
+
+.skeleton-line--title {
+  height: 16px;
+  width: 78%;
+}
+
+.skeleton-line--desc {
+  height: 12px;
+  width: 92%;
+}
+
+.skeleton-line--meta {
+  height: 12px;
+  width: 38px;
+}
+
+/* Skeleton chip row */
+.skeleton-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.skeleton-chip {
+  display: block;
+  height: 36px;
+  border-radius: var(--radius-pill);
+}
+
+.skeleton-section-head {
+  display: grid;
+  gap: 6px;
+  margin-bottom: var(--space-lg);
+}
+
+.skeleton-eyebrow {
+  height: 12px;
+  width: 72px;
+  border-radius: var(--radius-pill);
+}
+
+.skeleton-heading {
+  height: 26px;
+  width: 200px;
+  border-radius: var(--radius-xs);
+}
+
 main {
   min-height: 100vh;
   padding-bottom: var(--space-5xl);
@@ -1622,14 +1752,13 @@ main {
 .detail-page {
   padding-top: var(--space-2xl);
   padding-bottom: var(--space-5xl);
+  display: grid;
+  gap: var(--space-xl);
+  align-items: start;
 }
 
 .detail-page__back {
-  margin-bottom: var(--space-lg);
-}
-
-.detail-page__layout {
-  display: block;
+  width: fit-content;
 }
 
 .detail-page__summary,
@@ -1656,12 +1785,114 @@ main {
   line-height: 1.7;
 }
 
-.detail-page__content {
-  display: grid;
-  gap: var(--space-xl);
-  width: 100%;
-  margin-top: var(--space-2xl);
+.detail-page__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
+
+/* ── Translation UI ── */
+.translation-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: color-mix(in srgb, var(--primary) 70%, white);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  letter-spacing: 0.02em;
+}
+
+.translation-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--type-small-size);
+}
+
+.translation-status--processing {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--text-secondary);
+}
+
+.translation-status--error {
+  background: color-mix(in srgb, #e53e3e 8%, transparent);
+  color: #e05252;
+}
+
+@keyframes translation-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+.translation-status__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: translation-pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.btn--translation {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 36px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--type-small-size);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: color-mix(in srgb, var(--primary) 70%, white);
+  border: 1.5px solid color-mix(in srgb, var(--primary) 32%, transparent);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.btn--translation:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 48%, transparent);
+}
+
+.btn--translation--loading {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--translation-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 34px;
+  padding: 0 var(--space-md);
+  font-size: var(--type-small-size);
+  font-weight: 600;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+/* detail-page__content는 제거됨 — 부모 grid가 간격 처리 */
 
 .detail-source-preview {
   position: relative;
@@ -2284,8 +2515,7 @@ main {
     min-height: 320px;
   }
 
-  .detail-page__summary,
-  .detail-page__content {
+  .detail-page__summary {
     padding: var(--space-lg);
   }
 

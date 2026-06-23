@@ -12,6 +12,10 @@ import {
 import {
   loadCatalogRecipes,
 } from "../lib/recipeApi";
+import {
+  filtersFromSearchParams,
+  filtersToSearchParams,
+} from "../lib/recipeCatalogUrlSync";
 import { useI18n } from "../lib/i18n";
 import {
   buildRecipeSearchSuggestions,
@@ -38,9 +42,15 @@ export function RecipeCatalogPage({
   const { displayLang, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [suggestionRecipes, setSuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
+  const [querySuggestionRecipes, setQuerySuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [featured, setFeatured] = useState<readonly PublicRecipeRecord[]>([]);
-  const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(initialCatalogFilters);
-  const [draftQuery, setDraftQuery] = useState("");
+  const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(() =>
+    filtersFromSearchParams(window.location.search),
+  );
+  const [draftQuery, setDraftQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("q") ?? "";
+  });
   const [searching, setSearching] = useState(false);
   const searchTimer = useRef<number | null>(null);
   const initializedSuggestionRecipes = useRef(false);
@@ -103,10 +113,64 @@ export function RecipeCatalogPage({
     };
   }, []);
 
+  useEffect(() => {
+    const params = filtersToSearchParams(filters);
+    const search = params.toString();
+    const newUrl = search.length > 0
+      ? `${window.location.pathname}?${search}`
+      : window.location.pathname;
+    history.replaceState(null, "", newUrl);
+  }, [filters]);
+
+  useEffect(() => {
+    const query = draftQuery.trim();
+    if (query.length === 0) {
+      setQuerySuggestionRecipes([]);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void loadCatalogRecipes(
+        { ...initialCatalogFilters, cuisineRegion: selectedCuisineRegion, query, sort: "popular" },
+        displayLang,
+      ).then((nextRecipes) => {
+        if (!cancelled) {
+          setQuerySuggestionRecipes(nextRecipes.slice(0, 20));
+        }
+      });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [draftQuery, displayLang, selectedCuisineRegion]);
+
+  const suggestionPool = useMemo<readonly PublicRecipeRecord[]>(
+    () => {
+      if (draftQuery.trim().length === 0) {
+        return suggestionRecipes;
+      }
+
+      const merged = new Map<string, PublicRecipeRecord>();
+      for (const recipe of querySuggestionRecipes) {
+        merged.set(recipe.recipeId, recipe);
+      }
+      for (const recipe of suggestionRecipes) {
+        if (!merged.has(recipe.recipeId)) {
+          merged.set(recipe.recipeId, recipe);
+        }
+      }
+      return Array.from(merged.values());
+    },
+    [draftQuery, suggestionRecipes, querySuggestionRecipes],
+  );
+
   const suggestions = useMemo<readonly SearchSuggestion[]>(
     () => {
       const recipeSuggestions = buildRecipeSearchSuggestions(
-        suggestionRecipes,
+        suggestionPool,
         labelFor,
         countryLabel,
         draftQuery,
@@ -116,7 +180,7 @@ export function RecipeCatalogPage({
         ? recipeSuggestions
         : filterRecipeSearchSuggestions(fallbackRecipeSearchSuggestions, draftQuery);
     },
-    [suggestionRecipes, labelFor, countryLabel, draftQuery],
+    [suggestionPool, labelFor, countryLabel, draftQuery],
   );
   const homepageFeatured = featured.length > 0 ? featured : suggestionRecipes;
 

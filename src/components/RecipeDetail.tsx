@@ -41,9 +41,11 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
   return (
     <div className="detail-backdrop" role="presentation" onClick={onClose}>
       <aside className="detail-panel" role="dialog" aria-modal="true" aria-label={recipe.title} onClick={stopPropagation}>
-        <button className="icon-button" type="button" aria-label={t("detail.close")} onClick={onClose}>
-          <X size={20} aria-hidden="true" />
-        </button>
+        <div className="detail-close-bar">
+          <button className="icon-button" type="button" aria-label={t("detail.close")} onClick={onClose}>
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
 
         <div className="detail-header">
           <RecipeVisual recipe={recipe} size="detail" />

@@ -13,15 +13,27 @@ export const fallbackRecipeSearchSuggestions: readonly SearchSuggestion[] = [
   { id: "fallback-chicken", label: "닭고기", note: "검색어", patch: { query: "닭고기" } },
 ] as const;
 
+const MAX_QUERY_SUGGESTIONS = 7;
+
 export function buildRecipeSearchSuggestions(
   recipes: readonly PublicRecipeRecord[],
   labelFor: (value: string) => string,
   countryLabel: (value: string) => string,
   query = "",
 ): readonly SearchSuggestion[] {
+  const normalizedQuery = normalizeSearchText(query);
+  const hasQuery = normalizedQuery.length > 0;
+
   const primaryIngredients = Array.from(new Set(recipes.map((recipe) => recipe.primaryIngredient)));
   const countries = Array.from(new Map(recipes.map((recipe) => [recipe.countryCode, recipe])).values());
-  const ingredientSuggestions = primaryIngredients.slice(0, 3).map((ingredient) =>
+
+  // While the user is typing, search across the entire data set and slice AFTER
+  // filtering. When idle, show a small curated set of quick picks.
+  const ingredientPool = hasQuery ? primaryIngredients : primaryIngredients.slice(0, 3);
+  const countryPool = hasQuery ? countries : countries.slice(0, 2);
+  const recipePool = hasQuery ? recipes : recipes.slice(0, 2);
+
+  const ingredientSuggestions = ingredientPool.map((ingredient) =>
     suggestionCandidate(
       {
         id: `ingredient-${ingredient}`,
@@ -32,7 +44,7 @@ export function buildRecipeSearchSuggestions(
       [ingredient, labelFor(ingredient), "주재료"],
     ),
   );
-  const countrySuggestions = countries.slice(0, 2).map((recipe) =>
+  const countrySuggestions = countryPool.map((recipe) =>
     suggestionCandidate(
       {
         id: `country-${recipe.countryCode}`,
@@ -46,7 +58,7 @@ export function buildRecipeSearchSuggestions(
       [recipe.countryCode, recipe.country, countryLabel(recipe.country), "지역"],
     ),
   );
-  const recipeSuggestions = recipes.slice(0, 2).map((recipe) =>
+  const recipeSuggestions = recipePool.map((recipe) =>
     suggestionCandidate(
       {
         id: `recipe-${recipe.recipeId}`,
@@ -59,14 +71,14 @@ export function buildRecipeSearchSuggestions(
   );
 
   const candidates = [...ingredientSuggestions, ...countrySuggestions, ...recipeSuggestions];
-  const normalizedQuery = normalizeSearchText(query);
 
-  if (normalizedQuery.length === 0) {
+  if (!hasQuery) {
     return candidates.map((candidate) => candidate.suggestion);
   }
 
   return candidates
     .filter((candidate) => candidate.terms.some((term) => term.includes(normalizedQuery)))
+    .slice(0, MAX_QUERY_SUGGESTIONS)
     .map((candidate) => candidate.suggestion);
 }
 

@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RecipeCard } from "./RecipeCard";
+import { SkeletonCard } from "./SkeletonCard";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 type FeaturedRecipeCarouselProps = {
@@ -45,9 +46,13 @@ export function FeaturedRecipeCarousel({
       ) : null}
 
       <div className="grid grid--spotlight">
-        {visibleRecipes.map((recipe) => (
-          <RecipeCard key={recipe.recipeId} recipe={recipe} variant="spotlight" />
-        ))}
+        {recipes.length === 0
+          ? Array.from({ length: pageSize }, (_, i) => (
+              <SkeletonCard key={i} variant="spotlight" />
+            ))
+          : visibleRecipes.map((recipe) => (
+              <RecipeCard key={recipe.recipeId} recipe={recipe} variant="spotlight" />
+            ))}
       </div>
     </div>
   );

@@ -1,21 +1,45 @@
-import { ArrowLeft, Clock, Download, Flame, Heart, Languages, MapPin, Play, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, Clock, Download, Flame, Globe, Heart, Languages, MapPin, Play, Users } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
-import { loadPublicRecipeDetail } from "../lib/recipeApi";
+import { SkeletonDetailPage } from "./SkeletonDetailPage";
+import { loadPublicRecipeDetail, requestRecipeTranslation } from "../lib/recipeApi";
 import { videoCreatorSummary } from "../lib/recipeCreatorSource";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
+import { isServerRecipeId } from "../lib/recipeServerAdapter";
 import { useI18n } from "../lib/i18n";
+import type { DisplayLanguage } from "../lib/languagePreference";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 
 type RecipeDetailPageProps = {
   readonly recipeId: string;
 };
 
+type TranslationPhase = "idle" | "requesting" | "processing" | "error";
+
+function normalizeWrittenLang(writtenLang: string): DisplayLanguage {
+  return writtenLang === "ko" ? "ko-KR" : "en-US";
+}
+
+function langLabel(displayLang: DisplayLanguage): string {
+  return displayLang === "ko-KR" ? "한국어" : "English";
+}
+
 export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Element {
   const { t, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
   const [recipe, setRecipe] = useState<PublicRecipeRecord | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [translationPhase, setTranslationPhase] = useState<TranslationPhase>("idle");
+  const [langReloading, setLangReloading] = useState(false);
+  const translationTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (translationTimerRef.current !== null) {
+        window.clearTimeout(translationTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,8 +56,51 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
     };
   }, [displayLang, recipeId]);
 
+  const handleTranslationRequest = useCallback(async (): Promise<void> => {
+    if (translationTimerRef.current !== null) {
+      window.clearTimeout(translationTimerRef.current);
+      translationTimerRef.current = null;
+    }
+    setTranslationPhase("requesting");
+
+    const poll = async (): Promise<void> => {
+      try {
+        const result = await requestRecipeTranslation(recipeId, displayLang);
+        if (result.status === "COMPLETED") {
+          const next = await loadPublicRecipeDetail(recipeId, displayLang);
+          if (next !== null) setRecipe(next);
+          setTranslationPhase("idle");
+        } else {
+          setTranslationPhase("processing");
+          const retryMs = (result.retryAfterSeconds ?? 4) * 1000;
+          translationTimerRef.current = window.setTimeout(() => {
+            translationTimerRef.current = null;
+            void poll();
+          }, retryMs);
+        }
+      } catch {
+        setTranslationPhase("error");
+      }
+    };
+
+    await poll();
+  }, [recipeId, displayLang]);
+
+  const handleLangToggle = useCallback(async (): Promise<void> => {
+    if (recipe === null) return;
+    const writtenLangFull = normalizeWrittenLang(recipe.writtenLang);
+    const targetLang = recipe.translationStatus === "translated" ? writtenLangFull : displayLang;
+    setLangReloading(true);
+    try {
+      const next = await loadPublicRecipeDetail(recipeId, targetLang);
+      if (next !== null) setRecipe(next);
+    } finally {
+      setLangReloading(false);
+    }
+  }, [recipe, recipeId, displayLang]);
+
   if (!loaded) {
-    return <main className="page detail-page detail-page--loading">{t("detail.loading")}</main>;
+    return <SkeletonDetailPage />;
   }
 
   if (recipe === null) {
@@ -50,6 +117,16 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
 
   const videoSummary = videoCreatorSummary(recipe.creatorSource);
 
+  const writtenLangFull = normalizeWrittenLang(recipe.writtenLang);
+  const showingTranslation = recipe.translationStatus === "translated";
+  const hasTranslation = recipe.availableLangs.includes(displayLang) && displayLang !== writtenLangFull;
+  const canRequestTranslation =
+    isServerRecipeId(recipeId) &&
+    recipe.writtenLang.length > 0 &&
+    displayLang !== writtenLangFull &&
+    !showingTranslation &&
+    !hasTranslation;
+
   return (
     <main className="page detail-page">
       <a className="btn btn--ghost detail-page__back" href="/recipe-catalog">
@@ -57,11 +134,36 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
         {t("detail.back")}
       </a>
 
-      <article className="detail-page__layout">
-        <div className="detail-page__summary">
-          <span className="brand-badge">
-            {labelFor(recipe.cuisineRegion)} · {labelFor(recipe.category)}
+      {videoSummary?.previewImageUrl !== null && videoSummary?.previewImageUrl !== undefined ? (
+        <a
+          className="detail-source-preview"
+          href={videoSummary.url ?? undefined}
+          target={videoSummary.url === null ? undefined : "_blank"}
+          rel={videoSummary.url === null ? undefined : "noreferrer"}
+        >
+          <img src={videoSummary.previewImageUrl} alt={`${videoSummary.name} 영상 미리보기`} loading="lazy" />
+          <span className="detail-source-preview__play" aria-hidden="true">
+            <Play size={24} fill="currentColor" />
           </span>
+        </a>
+      ) : (
+        <section className="detail-media-card" aria-label={recipe.title}>
+          <RecipeVisual recipe={recipe} size="detail" />
+        </section>
+      )}
+
+      <div className="detail-page__summary">
+          <div className="detail-page__badges">
+            <span className="brand-badge">
+              {labelFor(recipe.cuisineRegion)} · {labelFor(recipe.category)}
+            </span>
+            {showingTranslation && (
+              <span className="translation-indicator">
+                <Globe size={12} aria-hidden="true" />
+                {displayLang === "ko-KR" ? "번역됨" : "Translated"}
+              </span>
+            )}
+          </div>
           <h1>{recipe.title}</h1>
           <p>{recipe.description}</p>
           <RecipeCreatorSource recipe={recipe} variant="detail" showPreview={false} />
@@ -104,27 +206,51 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
           </div>
 
           {recipe.cookingTip.length > 0 ? <p className="detail-tip">{recipe.cookingTip}</p> : null}
+
+          {translationPhase === "processing" && (
+            <div className="translation-status translation-status--processing">
+              <span className="translation-status__dot" aria-hidden="true" />
+              {displayLang === "ko-KR" ? "AI가 번역하고 있어요..." : "Generating translation..."}
+            </div>
+          )}
+          {translationPhase === "error" && (
+            <div className="translation-status translation-status--error">
+              {displayLang === "ko-KR" ? "번역 요청에 실패했어요. 다시 시도해주세요." : "Translation failed. Please try again."}
+            </div>
+          )}
+          {translationPhase === "idle" && canRequestTranslation && (
+            <button
+              className="btn btn--translation"
+              onClick={() => { void handleTranslationRequest(); }}
+              type="button"
+            >
+              <Languages size={15} aria-hidden="true" />
+              {langLabel(displayLang)}
+              {displayLang === "ko-KR" ? "로 번역" : " translation"}
+            </button>
+          )}
+          {translationPhase === "requesting" && (
+            <button className="btn btn--translation btn--translation--loading" disabled type="button">
+              <span className="btn-spinner" aria-hidden="true" />
+              {displayLang === "ko-KR" ? "번역 요청 중..." : "Requesting translation..."}
+            </button>
+          )}
+          {translationPhase === "idle" && hasTranslation && (
+            <button
+              className="btn btn--ghost btn--translation-toggle"
+              onClick={() => { void handleLangToggle(); }}
+              disabled={langReloading}
+              type="button"
+            >
+              {langReloading
+                ? <span className="btn-spinner" aria-hidden="true" />
+                : null}
+              {showingTranslation
+                ? (displayLang === "ko-KR" ? "원문 보기" : "View original")
+                : (displayLang === "ko-KR" ? "번역 보기" : "View translation")}
+            </button>
+          )}
         </div>
-      </article>
-
-      <article className="detail-page__content">
-        {videoSummary?.previewImageUrl !== null && videoSummary?.previewImageUrl !== undefined ? (
-          <a
-            className="detail-source-preview"
-            href={videoSummary.url ?? undefined}
-            target={videoSummary.url === null ? undefined : "_blank"}
-            rel={videoSummary.url === null ? undefined : "noreferrer"}
-          >
-            <img src={videoSummary.previewImageUrl} alt={`${videoSummary.name} 영상 미리보기`} loading="lazy" />
-            <span className="detail-source-preview__play" aria-hidden="true">
-              <Play size={24} fill="currentColor" />
-            </span>
-          </a>
-        ) : null}
-
-        <section className="detail-media-card" aria-label={recipe.title}>
-          <RecipeVisual recipe={recipe} size="detail" />
-        </section>
 
         <section className="detail-section detail-card">
           <h2>{t("detail.ingredients")}</h2>
@@ -173,7 +299,6 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
           <Download size={18} aria-hidden="true" />
           {t("detail.install")}
         </a>
-      </article>
     </main>
   );
 }

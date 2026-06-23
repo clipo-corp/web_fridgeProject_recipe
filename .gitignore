@@ -7,6 +7,8 @@ build/
 .env.*.local
 .vite/
 coverage/
+tsconfig.tsbuildinfo
+skeleton-demo.html
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -169,6 +169,23 @@ function toServerRecipeSearchRequest(
   return request;
 }
 
+export type RecipeTranslationResponse = {
+  readonly status: "COMPLETED" | "PROCESSING";
+  readonly recipeId: number;
+  readonly targetLang: string;
+  readonly retryAfterSeconds: number | null;
+};
+
+export async function requestRecipeTranslation(
+  recipeId: string,
+  targetLang: string,
+): Promise<RecipeTranslationResponse> {
+  return fetchWithGuestAuth<RecipeTranslationResponse>(
+    `/api/recipe/${encodeURIComponent(recipeId)}/translations/request?targetLang=${encodeURIComponent(targetLang)}`,
+    { method: "POST", body: "null" },
+  );
+}
+
 async function fetchCountryRegionOptions(displayLang: DisplayLanguage): Promise<CatalogFilterOptions["region"]> {
   const response = await fetchWithGuestAuth<ServerRecipeRegionCatalogResponse>(
     `/api/recipe/regions?level=country&displayLang=${encodeURIComponent(displayLang)}`,

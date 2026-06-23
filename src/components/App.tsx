@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { I18nProvider, useI18n } from "../lib/i18n";
 import { loadCatalogFilterOptions } from "../lib/recipeApi";
 import type { CatalogFilterOptions } from "../lib/recipeCatalogMock";
+import { DesignImprovementProvider } from "../lib/designImprovementSteps";
 import { appRouteForPath } from "../lib/routes";
 import { ThemeProvider } from "../lib/theme";
+import { DesignImprovementPanel } from "./DesignImprovementPanel";
 import { InstallPage } from "./InstallPage";
 import { RecipeCatalogPage } from "./RecipeCatalogPage";
 import { RecipeDetailPage } from "./RecipeDetailPage";
@@ -30,9 +32,11 @@ const emptyCatalogFilterOptions: CatalogFilterOptions = {
 export function App(): JSX.Element {
   return (
     <ThemeProvider>
-      <I18nProvider>
-        <AppShell />
-      </I18nProvider>
+      <DesignImprovementProvider>
+        <I18nProvider>
+          <AppShell />
+        </I18nProvider>
+      </DesignImprovementProvider>
     </ThemeProvider>
   );
 }
@@ -42,7 +46,10 @@ function AppShell(): JSX.Element {
   const { displayLang } = useI18n();
   const [filterOptions, setFilterOptions] =
     useState<CatalogFilterOptions>(emptyCatalogFilterOptions);
-  const [selectedCuisineRegion, setSelectedCuisineRegion] = useState("all");
+  const [selectedCuisineRegion, setSelectedCuisineRegion] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("cuisineRegion") ?? "all";
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -84,6 +91,7 @@ function AppShell(): JSX.Element {
         />
       ) : null}
       {route.kind === "recipe-detail" ? <RecipeDetailPage recipeId={route.recipeId} /> : null}
+      <DesignImprovementPanel />
     </>
   );
 }
