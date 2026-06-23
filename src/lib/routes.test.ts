@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { appRouteForPath, detailPathForRecipe } from "./routes";
 
 describe("appRouteForPath", () => {
+  it("routes privacy policy paths explicitly", () => {
+    expect(appRouteForPath("/privacy")).toEqual({ kind: "privacy" });
+    expect(appRouteForPath("/privacy-policy")).toEqual({ kind: "privacy" });
+  });
+
   it("routes install and recipe detail paths explicitly", () => {
     expect(appRouteForPath("/install")).toEqual({ kind: "install" });
     expect(appRouteForPath("/recipe-catalog/seed_china_beverage")).toEqual({

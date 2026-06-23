@@ -3,10 +3,11 @@ import { I18nProvider, useI18n } from "../lib/i18n";
 import { loadCatalogFilterOptions } from "../lib/recipeApi";
 import type { CatalogFilterOptions } from "../lib/recipeCatalogMock";
 import { DesignImprovementProvider } from "../lib/designImprovementSteps";
-import { appRouteForPath } from "../lib/routes";
+import { appRouteForPath, type AppRoute } from "../lib/routes";
 import { ThemeProvider } from "../lib/theme";
 import { DesignImprovementPanel } from "./DesignImprovementPanel";
 import { InstallPage } from "./InstallPage";
+import { PrivacyPolicyPage } from "./PrivacyPolicyPage";
 import { RecipeCatalogPage } from "./RecipeCatalogPage";
 import { RecipeDetailPage } from "./RecipeDetailPage";
 import { SiteHeader } from "./SiteHeader";
@@ -30,19 +31,26 @@ const emptyCatalogFilterOptions: CatalogFilterOptions = {
 };
 
 export function App(): JSX.Element {
+  const route = appRouteForPath(window.location.pathname);
+
   return (
     <ThemeProvider>
-      <DesignImprovementProvider>
-        <I18nProvider>
-          <AppShell />
-        </I18nProvider>
-      </DesignImprovementProvider>
+      {route.kind === "privacy" ? (
+        <PrivacyPolicyPage />
+      ) : (
+        <DesignImprovementProvider>
+          <I18nProvider>
+            <RecipeApp route={route} />
+          </I18nProvider>
+        </DesignImprovementProvider>
+      )}
     </ThemeProvider>
   );
 }
 
-function AppShell(): JSX.Element {
-  const route = appRouteForPath(window.location.pathname);
+type RecipeAppRoute = Exclude<AppRoute, { readonly kind: "privacy" }>;
+
+function RecipeApp({ route }: { readonly route: RecipeAppRoute }): JSX.Element {
   const { displayLang } = useI18n();
   const [filterOptions, setFilterOptions] =
     useState<CatalogFilterOptions>(emptyCatalogFilterOptions);
