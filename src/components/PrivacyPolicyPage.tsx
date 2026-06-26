@@ -77,8 +77,8 @@ export function PrivacyPolicyPage(): JSX.Element {
             <div>
               <dt>웹사이트</dt>
               <dd>
-                <a href="https://smart-fridge-server-dbvf.onrender.com" rel="noreferrer">
-                  smart-fridge-server-dbvf.onrender.com
+                <a href="https://webfridgerecipe.netlify.app/" rel="noreferrer">
+                  webfridgerecipe.netlify.app
                 </a>
               </dd>
             </div>
@@ -217,8 +217,8 @@ export function PrivacyPolicyPage(): JSX.Element {
             Clipo
             <br />
             웹사이트:{" "}
-            <a href="https://smart-fridge-server-dbvf.onrender.com" rel="noreferrer">
-              https://smart-fridge-server-dbvf.onrender.com
+            <a href="https://webfridgerecipe.netlify.app/" rel="noreferrer">
+              https://webfridgerecipe.netlify.app/
             </a>
             <br />
             이메일: <a href="mailto:clipocor@gmail.com">clipocor@gmail.com</a>
