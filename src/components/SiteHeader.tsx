@@ -68,7 +68,7 @@ export function SiteHeader({
             <Leaf size={20} aria-hidden="true" />
           </span>
           <span className="brand__text">
-            FreshKeeper
+            Keep Cook
             <small>{t("header.tag")}</small>
           </span>
         </a>

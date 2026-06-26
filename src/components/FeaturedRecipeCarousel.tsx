@@ -1,5 +1,3 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
 import { RecipeCard } from "./RecipeCard";
 import { SkeletonCard } from "./SkeletonCard";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
@@ -13,46 +11,18 @@ const pageSize = 3;
 export function FeaturedRecipeCarousel({
   recipes,
 }: FeaturedRecipeCarouselProps): JSX.Element {
-  const [page, setPage] = useState(0);
-  const pageCount = Math.max(1, Math.ceil(recipes.length / pageSize));
-  const normalizedPage = Math.min(page, pageCount - 1);
-  const visibleRecipes = useMemo(
-    () => recipes.slice(normalizedPage * pageSize, normalizedPage * pageSize + pageSize),
-    [recipes, normalizedPage],
-  );
-  const canPage = recipes.length > pageSize;
-
-  const goPrevious = (): void => {
-    setPage((current) => (current === 0 ? pageCount - 1 : current - 1));
-  };
-  const goNext = (): void => {
-    setPage((current) => (current + 1 >= pageCount ? 0 : current + 1));
-  };
+  const visibleRecipes = recipes.slice(0, pageSize);
+  const skeletonCount = pageSize - visibleRecipes.length;
 
   return (
     <div className="featured-carousel">
-      {canPage ? (
-        <div className="featured-carousel__controls" aria-label="지금 뜨는 레시피 넘기기">
-          <button type="button" className="featured-carousel__arrow" aria-label="이전 레시피" onClick={goPrevious}>
-            <ChevronLeft size={18} aria-hidden="true" />
-          </button>
-          <span className="featured-carousel__page">
-            {normalizedPage + 1}/{pageCount}
-          </span>
-          <button type="button" className="featured-carousel__arrow" aria-label="다음 레시피" onClick={goNext}>
-            <ChevronRight size={18} aria-hidden="true" />
-          </button>
-        </div>
-      ) : null}
-
       <div className="grid grid--spotlight">
-        {recipes.length === 0
-          ? Array.from({ length: pageSize }, (_, i) => (
-              <SkeletonCard key={i} variant="spotlight" />
-            ))
-          : visibleRecipes.map((recipe) => (
-              <RecipeCard key={recipe.recipeId} recipe={recipe} variant="spotlight" />
-            ))}
+        {visibleRecipes.map((recipe) => (
+          <RecipeCard key={recipe.recipeId} recipe={recipe} variant="spotlight" />
+        ))}
+        {Array.from({ length: skeletonCount }, (_, i) => (
+          <SkeletonCard key={`featured-skeleton-${i}`} variant="spotlight" />
+        ))}
       </div>
     </div>
   );

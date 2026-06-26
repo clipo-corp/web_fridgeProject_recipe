@@ -23,9 +23,9 @@ export function ResultsSearchBar({
   return (
     <div className="results-search-shell">
       <div className="results-search-top">
-        <a className="results-search-logo" href="/recipe-catalog" aria-label="FreshKeeper">
+        <a className="results-search-logo" href="/recipe-catalog" aria-label="Keep Cook">
           <Leaf size={24} aria-hidden="true" />
-          <span>FreshKeeper</span>
+          <span>Keep Cook</span>
         </a>
         <div className="results-search-wrap">
           <form

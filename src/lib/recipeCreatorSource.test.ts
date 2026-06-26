@@ -30,14 +30,14 @@ describe("videoCreatorSummary", () => {
     const source = toRecipeCreatorSource({
       sourceType: "URL",
       sourceUrl: "https://youtu.be/wILIP0qob3c",
-      sourceAccount: "FreshKeeper kitchen",
+      sourceAccount: "Keep Cook kitchen",
       creatorName: null,
       sourceId: null,
     });
 
     expect(videoCreatorSummary(source)).toMatchObject({
       platform: "youtube",
-      name: "FreshKeeper kitchen",
+      name: "Keep Cook kitchen",
       previewImageUrl: "https://i.ytimg.com/vi/wILIP0qob3c/hqdefault.jpg",
     });
   });
@@ -46,14 +46,14 @@ describe("videoCreatorSummary", () => {
     const source = toRecipeCreatorSource({
       externalSourceType: "youtube",
       sourceUrl: "https://example.com/watch",
-      sourceAccount: "FreshKeeper kitchen",
+      sourceAccount: "Keep Cook kitchen",
       creatorName: null,
       sourceId: "external-video-id",
     });
 
     expect(videoCreatorSummary(source)).toMatchObject({
       platform: "youtube",
-      name: "FreshKeeper kitchen",
+      name: "Keep Cook kitchen",
       previewImageUrl: "https://i.ytimg.com/vi/external-video-id/hqdefault.jpg",
     });
   });
@@ -61,8 +61,8 @@ describe("videoCreatorSummary", () => {
   it("detects TikTok from the source URL when sourceType is generic", () => {
     const source = toRecipeCreatorSource({
       sourceType: "URL",
-      sourceUrl: "https://www.tiktok.com/@freshkeeper/video/123",
-      sourceAccount: "@freshkeeper",
+      sourceUrl: "https://www.tiktok.com/@keepcook/video/123",
+      sourceAccount: "@keepcook",
       creatorName: null,
       sourceId: "123",
     });
@@ -70,7 +70,7 @@ describe("videoCreatorSummary", () => {
     expect(videoCreatorSummary(source)).toMatchObject({
       platform: "tiktok",
       label: "TikTok",
-      name: "@freshkeeper",
+      name: "@keepcook",
       previewImageUrl: null,
     });
   });

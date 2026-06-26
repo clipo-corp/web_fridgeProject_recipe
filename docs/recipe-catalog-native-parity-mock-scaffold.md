@@ -1,7 +1,7 @@
 # Recipe Catalog Native Parity Mock Scaffold
 
 Use this scaffold to rebuild `web_fridgeProject_recipe` so public recipe search
-uses the same read/search business contract as the FreshKeeper native app.
+uses the same read/search business contract as the Keep Cook native app.
 
 AI private recipe generation and AI recipe creation are excluded. Everything
 below is public read/search/catalog logic.

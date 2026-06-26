@@ -113,9 +113,9 @@
 
 .fk-design-step-03 .hero {
   background:
-    radial-gradient(ellipse 80% 60% at 60% -10%, color-mix(in srgb, var(--green-400) 12%, transparent), transparent 62%),
-    radial-gradient(900px 260px at 52% 0%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 66%),
-    linear-gradient(180deg, #050606 0%, #080b0a 62%, var(--bg-app) 100%);
+    radial-gradient(ellipse 80% 60% at 60% -10%, color-mix(in srgb, var(--green-400) 18%, transparent), transparent 62%),
+    radial-gradient(900px 260px at 52% 0%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 66%),
+    linear-gradient(180deg, #f8fffb 0%, #daf7ea 62%, var(--bg-app) 100%);
 }
 
 [data-theme="dark"].fk-design-step-03 .hero {

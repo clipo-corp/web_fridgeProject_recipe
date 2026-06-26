@@ -1,4 +1,4 @@
-# FreshKeeper Web — Design & Structure Improvements
+# Keep Cook Web — Design & Structure Improvements
 
 > Codex용 작업 목록. 기능 변경 없이 디자인/구조 개선에 집중.
 > 각 섹션에 파일 경로, 정확한 클래스명, 변경 방향을 명시함.

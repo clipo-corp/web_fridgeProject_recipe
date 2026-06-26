@@ -1,6 +1,6 @@
 # Server API Integration Rules for `/recipe-catalog`
 
-이 문서는 서버 작업자가 FreshKeeper 웹 레시피 카탈로그 API를 연결할 때
+이 문서는 서버 작업자가 Keep Cook 웹 레시피 카탈로그 API를 연결할 때
 지켜야 하는 프론트 계약과 작업 규칙입니다. 프론트 구현 상세를 몰라도 이
 문서와 타입 파일만 보면 연결 범위를 판단할 수 있게 작성했습니다.
 

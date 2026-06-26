@@ -1,17 +1,19 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const apiBaseUrl = "https://smart-fridge-server-dbvf.onrender.com";
+
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 8091,
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: apiBaseUrl,
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on("proxyReq", (proxyReq) => {
-            proxyReq.setHeader("Origin", "http://localhost:8080");
+            proxyReq.setHeader("Origin", apiBaseUrl);
           });
         },
       },

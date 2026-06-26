@@ -1,7 +1,7 @@
 # Recipe Catalog Native Parity Audit
 
 This audit compares the current `web_fridgeProject_recipe` `/recipe-catalog`
-implementation with the FreshKeeper native app's recipe read/search business
+implementation with the Keep Cook native app's recipe read/search business
 logic. Private AI recipe generation and AI recipe creation are intentionally
 out of scope. Public read, search, filter, region, localization, card, and
 detail behavior should match.

@@ -14,7 +14,7 @@ export function InstallPage(): JSX.Element {
             <h1>{t("installPage.title")}</h1>
             <p>{t("installPage.body")}</p>
             <div className="install-actions">
-              <a className="btn btn--primary" href="https://freshkeeper.app" target="_blank" rel="noreferrer">
+              <a className="btn btn--primary" href="https://keepcook.app" target="_blank" rel="noreferrer">
                 <Download size={18} aria-hidden="true" />
                 {t("installPage.primary")}
               </a>

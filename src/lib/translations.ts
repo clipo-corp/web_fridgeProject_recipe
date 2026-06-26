@@ -11,7 +11,7 @@ const ko = {
   "header.themeToDark": "다크 모드로 전환",
   "header.themeToLight": "라이트 모드로 전환",
 
-  "hero.badge": "FreshKeeper 공개 레시피",
+  "hero.badge": "Keep Cook 공개 레시피",
   "hero.title1": "오늘 냉장고 재료로",
   "hero.title2": "뭐 해 먹지?",
   "hero.subtitle":
@@ -109,11 +109,11 @@ const ko = {
   "detail.install": "앱에서 저장하고 냉장고 재료로 추천받기",
 
   "installBand.title": "내 냉장고 재료 기반 추천은 앱에서",
-  "installBand.body": "저장 · 재료관리 · 맞춤추천은 FreshKeeper 앱에서 이어집니다.",
+  "installBand.body": "저장 · 재료관리 · 맞춤추천은 Keep Cook 앱에서 이어집니다.",
   "installBand.cta": "앱 설치하기",
   "mobileCta": "앱에서 저장하고 추천받기",
 
-  "installPage.badge": "FreshKeeper 앱",
+  "installPage.badge": "Keep Cook 앱",
   "installPage.title": "저장하고, 냉장고 재료로 다시 추천받기",
   "installPage.body":
     "웹에서는 레시피를 빠르게 둘러보고, 앱에서는 내 재료 기반 추천과 저장 목록을 이어갑니다.",
@@ -140,7 +140,7 @@ const en: Record<TranslationKey, string> = {
   "header.themeToDark": "Switch to dark mode",
   "header.themeToLight": "Switch to light mode",
 
-  "hero.badge": "FreshKeeper public recipes",
+  "hero.badge": "Keep Cook public recipes",
   "hero.title1": "What can you cook",
   "hero.title2": "with your fridge today?",
   "hero.subtitle":
@@ -239,11 +239,11 @@ const en: Record<TranslationKey, string> = {
 
   "installBand.title": "Fridge-based recommendations live in the app",
   "installBand.body":
-    "Saving, inventory, and personalized picks continue in the FreshKeeper app.",
+    "Saving, inventory, and personalized picks continue in the Keep Cook app.",
   "installBand.cta": "Get the app",
   "mobileCta": "Save & get picks in the app",
 
-  "installPage.badge": "FreshKeeper app",
+  "installPage.badge": "Keep Cook app",
   "installPage.title": "Save recipes and get fridge-based picks",
   "installPage.body":
     "Browse quickly on the web, then continue with saved recipes and ingredient-based recommendations in the app.",

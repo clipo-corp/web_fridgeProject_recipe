@@ -116,7 +116,7 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
     recipeId: entry.importSource?.sourceId ?? `mock-${index}`,
     title: recipe.title,
     titleImageUrl: recipe.titleImageUrl ?? null,
-    description: recipe.description ?? "FreshKeeper mock seed에서 가져온 공개 레시피입니다.",
+    description: recipe.description ?? "Keep Cook mock seed에서 가져온 공개 레시피입니다.",
     cookingTip: recipe.cookingTip ?? "",
     writtenLang,
     requestedDisplayLang: "ko-KR",

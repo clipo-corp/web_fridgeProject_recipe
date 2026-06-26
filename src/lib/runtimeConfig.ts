@@ -8,4 +8,6 @@ function envFlag(name: string, fallback: boolean): boolean {
 }
 
 export const isMockMode = envFlag("VITE_MOCK_MODE", false);
-export const apiBaseUrl = (import.meta.env["VITE_API_BASE_URL"] ?? "").replace(/\/$/, "");
+const defaultApiBaseUrl = "https://smart-fridge-server-dbvf.onrender.com";
+
+export const apiBaseUrl = (import.meta.env["VITE_API_BASE_URL"] ?? defaultApiBaseUrl).replace(/\/$/, "");
