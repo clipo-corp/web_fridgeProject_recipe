@@ -92,6 +92,8 @@ const ko = {
   "filters.all": "전체",
   "filters.more": "상세 조건 더보기",
   "filters.less": "상세 조건 접기",
+  "filters.mobileOpen": "상세 필터 열기",
+  "filters.mobileClose": "상세 필터 닫기",
   "filters.clearOne": "필터 제거",
 
   "sort.recommended": "추천순",
@@ -221,6 +223,8 @@ const en: Record<TranslationKey, string> = {
   "filters.all": "All",
   "filters.more": "More filters",
   "filters.less": "Hide filters",
+  "filters.mobileOpen": "Show filters",
+  "filters.mobileClose": "Hide filters",
   "filters.clearOne": "Remove filter",
 
   "sort.recommended": "Recommended",
