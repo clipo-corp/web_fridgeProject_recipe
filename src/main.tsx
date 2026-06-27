@@ -8,6 +8,7 @@ import "./styles/creator-source.css";
 import "./styles/design-improvements.css";
 import "./styles/privacy-policy.css";
 import "./styles/search-suggestions.css";
+import "./styles/support.css";
 
 applyStoredTheme();
 

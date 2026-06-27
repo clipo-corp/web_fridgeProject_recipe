@@ -4,8 +4,8 @@ import type { ApiResponse, LoginResponse } from "./recipeServerTypes";
 
 const guestTokenKey = "keepcook.guestAccessToken";
 const guestDeviceKey = "keepcook.guestDeviceId";
-const legacyGuestTokenKey = "freshkeeper.guestAccessToken";
-const legacyGuestDeviceKey = "freshkeeper.guestDeviceId";
+const legacyGuestTokenKey = "keepcook.guestAccessToken";
+const legacyGuestDeviceKey = "keepcook.guestDeviceId";
 let guestAccessTokenRequest: Promise<string> | null = null;
 
 export async function fetchWithGuestAuth<T>(

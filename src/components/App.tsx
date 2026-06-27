@@ -11,6 +11,7 @@ import { PrivacyPolicyPage } from "./PrivacyPolicyPage";
 import { RecipeCatalogPage } from "./RecipeCatalogPage";
 import { RecipeDetailPage } from "./RecipeDetailPage";
 import { SiteHeader } from "./SiteHeader";
+import { SupportPage } from "./SupportPage";
 
 const emptyCatalogFilterOptions: CatalogFilterOptions = {
   region: { countries: [], cities: [], districts: [] },
@@ -37,6 +38,8 @@ export function App(): JSX.Element {
     <ThemeProvider>
       {route.kind === "privacy" ? (
         <PrivacyPolicyPage />
+      ) : route.kind === "support" ? (
+        <SupportPage />
       ) : (
         <DesignImprovementProvider>
           <I18nProvider>
@@ -48,7 +51,10 @@ export function App(): JSX.Element {
   );
 }
 
-type RecipeAppRoute = Exclude<AppRoute, { readonly kind: "privacy" }>;
+type RecipeAppRoute = Exclude<
+  AppRoute,
+  { readonly kind: "privacy" } | { readonly kind: "support" }
+>;
 
 function RecipeApp({ route }: { readonly route: RecipeAppRoute }): JSX.Element {
   const { displayLang } = useI18n();

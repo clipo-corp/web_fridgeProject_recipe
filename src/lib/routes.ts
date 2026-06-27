@@ -2,6 +2,7 @@ export type AppRoute =
   | { readonly kind: "catalog" }
   | { readonly kind: "install" }
   | { readonly kind: "privacy" }
+  | { readonly kind: "support" }
   | { readonly kind: "recipe-detail"; readonly recipeId: string };
 
 const catalogPrefix = "/recipe-catalog/";
@@ -9,6 +10,10 @@ const catalogPrefix = "/recipe-catalog/";
 export function appRouteForPath(pathname: string): AppRoute {
   if (pathname === "/privacy" || pathname === "/privacy-policy") {
     return { kind: "privacy" };
+  }
+
+  if (pathname === "/support" || pathname === "/help") {
+    return { kind: "support" };
   }
 
   if (pathname === "/install" || pathname === "/app-download") {

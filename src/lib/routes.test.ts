@@ -7,6 +7,11 @@ describe("appRouteForPath", () => {
     expect(appRouteForPath("/privacy-policy")).toEqual({ kind: "privacy" });
   });
 
+  it("routes support paths explicitly", () => {
+    expect(appRouteForPath("/support")).toEqual({ kind: "support" });
+    expect(appRouteForPath("/help")).toEqual({ kind: "support" });
+  });
+
   it("routes install and recipe detail paths explicitly", () => {
     expect(appRouteForPath("/install")).toEqual({ kind: "install" });
     expect(appRouteForPath("/recipe-catalog/seed_china_beverage")).toEqual({
