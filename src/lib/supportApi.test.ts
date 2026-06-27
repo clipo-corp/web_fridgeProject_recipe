@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { composeSupportDescription, validateSupportReportInput } from "./supportApi";
+import {
+  composeSupportDescription,
+  createSupportMailtoHref,
+  supportContactEmail,
+  validateSupportReportInput,
+} from "./supportApi";
 
 describe("composeSupportDescription", () => {
   it("prepends optional contact email without changing the support API payload shape", () => {
@@ -24,5 +29,20 @@ describe("validateSupportReportInput", () => {
     expect(validateSupportReportInput("앱에서 저장 버튼을 누르면 오류가 납니다.", "wrong-email")).toBe(
       "답변 받을 이메일 형식을 확인해 주세요.",
     );
+  });
+});
+
+describe("createSupportMailtoHref", () => {
+  it("creates a support email fallback with the selected category and description", () => {
+    const href = createSupportMailtoHref({
+      category: "BUG",
+      description: "앱에서 저장 버튼을 누르면 오류가 납니다.",
+      contactEmail: "user@example.com",
+    });
+
+    expect(href.startsWith(`mailto:${supportContactEmail}?`)).toBe(true);
+    expect(decodeURIComponent(href)).toContain("[keepcook support] BUG");
+    expect(decodeURIComponent(href)).toContain("Contact email: user@example.com");
+    expect(decodeURIComponent(href)).toContain("앱에서 저장 버튼을 누르면 오류가 납니다.");
   });
 });

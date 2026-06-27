@@ -20,8 +20,15 @@ export type SupportReportCreateData = {
   readonly reportId: number;
 };
 
+export type SupportMailtoInput = {
+  readonly category: SupportReportCategory;
+  readonly description: string;
+  readonly contactEmail: string;
+};
+
 export const supportDescriptionMinLength = 10;
 export const supportDescriptionMaxLength = 3000;
+export const supportContactEmail = "clipocor@gmail.com";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -43,6 +50,24 @@ export function composeSupportDescription(description: string, contactEmail: str
   }
 
   return `Contact email: ${trimmedContactEmail}\n\n${trimmedDescription}`;
+}
+
+export function createSupportMailtoHref(input: SupportMailtoInput): string {
+  const subject = encodeURIComponent(`[keepcook support] ${input.category}`);
+  const composedDescription = composeSupportDescription(input.description, input.contactEmail);
+  const body = [
+    "keepcook support request",
+    "",
+    `Category: ${input.category}`,
+    "",
+    composedDescription.length > 0
+      ? composedDescription
+      : "문의 내용을 작성해 주세요. 문제가 발생한 화면, 재현 방법, 기대한 동작을 함께 적어 주시면 확인이 빠릅니다.",
+    "",
+    "Privacy policy: https://webfridgerecipe.netlify.app/privacy",
+  ].join("\n");
+
+  return `mailto:${supportContactEmail}?subject=${subject}&body=${encodeURIComponent(body)}`;
 }
 
 export function validateSupportReportInput(

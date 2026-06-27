@@ -1,8 +1,20 @@
-import { AlertCircle, CheckCircle2, ChevronLeft, HelpCircle, Send } from "lucide-react";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronLeft,
+  Clock3,
+  HelpCircle,
+  Mail,
+  Send,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import {
   composeSupportDescription,
+  createSupportMailtoHref,
   createSupportReport,
+  supportContactEmail,
   supportDescriptionMaxLength,
   supportReportCategories,
   type SupportReportCategory,
@@ -45,6 +57,11 @@ export function SupportPage(): JSX.Element {
   const selectedCategory = supportCategoryOptions.find((option) => option.value === category);
   const composedDescriptionLength = composeSupportDescription(description, contactEmail).length;
   const isSubmitting = submitState.kind === "submitting";
+  const fallbackMailtoHref = createSupportMailtoHref({
+    category,
+    contactEmail,
+    description,
+  });
 
   function handleCategoryChange(event: ChangeEvent<HTMLSelectElement>): void {
     const nextCategory = supportReportCategories.find((item) => item === event.target.value);
@@ -103,8 +120,26 @@ export function SupportPage(): JSX.Element {
               <HelpCircle size={22} aria-hidden="true" />
               <div>
                 <strong>이메일 문의</strong>
-                <a href="mailto:clipocor@gmail.com">clipocor@gmail.com</a>
+                <a href={`mailto:${supportContactEmail}`}>{supportContactEmail}</a>
               </div>
+            </div>
+
+            <div className="support-info-grid" aria-label="고객지원 안내">
+              <SupportInfoItem
+                icon={<Clock3 size={20} aria-hidden="true" />}
+                title="응답 안내"
+                body="접수된 문의는 순서대로 확인합니다. 답변이 필요한 문의는 입력한 이메일로 연락드립니다."
+              />
+              <SupportInfoItem
+                icon={<Smartphone size={20} aria-hidden="true" />}
+                title="지원 범위"
+                body="앱 오류, 계정, 결제, 레시피 사용성, 기능 제안을 모두 접수합니다."
+              />
+              <SupportInfoItem
+                icon={<ShieldCheck size={20} aria-hidden="true" />}
+                title="서비스 정보"
+                body="운영자 Clipo, 서비스 keepcook. 문의 처리를 위해 필요한 정보만 확인합니다."
+              />
             </div>
           </header>
 
@@ -159,15 +194,24 @@ export function SupportPage(): JSX.Element {
               {submitState.kind === "error" ? (
                 <p className="support-status__error">
                   <AlertCircle size={18} aria-hidden="true" />
-                  {submitState.message}
+                  <span>
+                    {submitState.message}{" "}
+                    <a href={fallbackMailtoHref}>이메일로 바로 보내기</a>
+                  </span>
                 </p>
               ) : null}
             </div>
 
-            <button className="support-submit" type="submit" disabled={isSubmitting}>
-              <Send size={18} aria-hidden="true" />
-              {isSubmitting ? "접수 중" : "문의 접수"}
-            </button>
+            <div className="support-actions">
+              <button className="support-submit" type="submit" disabled={isSubmitting}>
+                <Send size={18} aria-hidden="true" />
+                {isSubmitting ? "접수 중" : "문의 접수"}
+              </button>
+              <a className="support-mail-fallback" href={fallbackMailtoHref}>
+                <Mail size={18} aria-hidden="true" />
+                이메일로 직접 문의
+              </a>
+            </div>
 
             <p className="support-privacy-note">
               문의 처리에 필요한 정보만 확인하며, 자세한 내용은{" "}
@@ -177,5 +221,25 @@ export function SupportPage(): JSX.Element {
         </div>
       </section>
     </main>
+  );
+}
+
+function SupportInfoItem({
+  icon,
+  title,
+  body,
+}: {
+  readonly icon: ReactNode;
+  readonly title: string;
+  readonly body: string;
+}): JSX.Element {
+  return (
+    <div className="support-info-item">
+      <span className="support-info-item__icon">{icon}</span>
+      <div>
+        <strong>{title}</strong>
+        <p>{body}</p>
+      </div>
+    </div>
   );
 }

@@ -108,6 +108,53 @@
   color: var(--green-200);
 }
 
+.support-info-grid {
+  display: grid;
+  gap: var(--space-md);
+  width: min(100%, 520px);
+}
+
+.support-info-item {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+  padding: var(--space-lg);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+}
+
+.support-info-item__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-xs);
+  background: var(--badge-brand-bg);
+  color: var(--badge-brand-text);
+}
+
+.support-info-item div {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.support-info-item strong {
+  color: var(--text);
+  font-size: var(--type-small-size);
+  font-weight: 850;
+  line-height: var(--type-small-line);
+}
+
+.support-info-item p {
+  color: var(--text-secondary);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
 .support-form {
   display: grid;
   gap: var(--space-lg);
@@ -204,6 +251,20 @@
   color: var(--danger);
 }
 
+.support-status__error a {
+  color: inherit;
+  font-weight: 850;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.support-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
 .support-submit {
   display: inline-flex;
   align-items: center;
@@ -223,6 +284,27 @@
 
 .support-submit:not(:disabled):hover {
   background: var(--primary-pressed);
+}
+
+.support-mail-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: var(--h-button-large);
+  padding: 0 var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg-card-alt);
+  color: var(--text);
+  font-size: var(--type-small-size);
+  font-weight: 850;
+  line-height: var(--type-small-line);
+  white-space: nowrap;
+}
+
+.support-mail-fallback:hover {
+  border-color: var(--border-hover);
 }
 
 .support-privacy-note {
@@ -281,6 +363,10 @@
 
   .support-form {
     padding: var(--space-lg);
+  }
+
+  .support-actions {
+    grid-template-columns: 1fr;
   }
 
   .support-field input,
