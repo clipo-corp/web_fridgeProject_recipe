@@ -684,6 +684,10 @@ main {
   line-height: 1.5;
 }
 
+[data-theme="dark"] .hero__banner p {
+  color: rgba(23, 34, 28, 0.72);
+}
+
 .hero__banner-art {
   position: relative;
   display: grid;
@@ -961,6 +965,266 @@ main {
 
 .category-rail__track::-webkit-scrollbar {
   display: none;
+}
+
+.category-rail--inline {
+  position: static;
+  z-index: auto;
+  background: transparent;
+  border-bottom: 0;
+  backdrop-filter: none;
+}
+
+.category-rail--inline .category-rail__track {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.category-rail__shell {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.category-rail__nav {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  color: var(--primary-pressed);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.category-rail__nav:hover {
+  border-color: var(--green-400);
+  background: var(--badge-brand-bg);
+  transform: translateY(-1px);
+}
+
+.category-rail--visual .category-rail__track {
+  width: 100%;
+  margin: 0;
+  padding: 2px 2px 10px;
+  flex-wrap: nowrap;
+  gap: var(--space-md);
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 2px;
+  scroll-snap-type: x mandatory;
+  touch-action: pan-x;
+}
+
+.category-card {
+  flex: 0 0 clamp(142px, 16vw, 178px);
+  display: grid;
+  grid-template-rows: auto minmax(40px, auto);
+  gap: var(--space-sm);
+  min-height: 164px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  scroll-snap-align: start;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.category-card:hover {
+  border-color: var(--green-400);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.category-card--active {
+  border-color: var(--primary);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 46%, transparent);
+}
+
+.category-card__picture {
+  --category-surface: linear-gradient(135deg, #f8fff9, #e7f7ef);
+  --category-dish: #ffffff;
+  --category-food: linear-gradient(135deg, #ffcc66, #f26b4f);
+  --category-garnish: #2fb36f;
+  --category-icon: var(--green-800);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1.28 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  box-shadow: none;
+}
+
+.category-card__picture::before,
+.category-card__picture::after {
+  position: absolute;
+  content: "";
+  display: none;
+}
+
+.category-card__picture::before {
+  z-index: 1;
+  left: 12%;
+  right: 12%;
+  bottom: 13%;
+  height: 45%;
+  border-radius: 50% 50% 44% 44%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), transparent 38%),
+    var(--category-dish);
+  box-shadow:
+    0 12px 22px rgba(26, 27, 33, 0.16),
+    inset 0 -7px 12px rgba(26, 27, 33, 0.08);
+}
+
+.category-card__picture::after {
+  z-index: 1;
+  left: 24%;
+  right: 24%;
+  bottom: 26%;
+  height: 30%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 28% 28%, var(--category-garnish) 0 10%, transparent 11%),
+    radial-gradient(circle at 72% 32%, rgba(255, 255, 255, 0.7) 0 11%, transparent 12%),
+    var(--category-food);
+  box-shadow: 0 5px 12px rgba(26, 27, 33, 0.14);
+}
+
+.category-card__icon {
+  position: relative;
+  z-index: 2;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--category-icon);
+  filter: none;
+}
+
+.category-card__picture--all {
+  --category-surface: linear-gradient(135deg, #e6faf2, #fff5d6 48%, #ffe0d4);
+  --category-dish: #ffffff;
+  --category-food: linear-gradient(135deg, #ffcd6a, #e85d75);
+  --category-garnish: #00a866;
+  --category-icon: #00613d;
+}
+
+.category-card__picture--salad {
+  --category-surface: linear-gradient(135deg, #dff8ea, #fff7c7);
+  --category-dish: #fefefe;
+  --category-food: linear-gradient(135deg, #48b86f, #b9d957);
+  --category-garnish: #ee6b6e;
+  --category-icon: #248255;
+}
+
+.category-card__picture--soup {
+  --category-surface: linear-gradient(135deg, #fff0cf, #ffd6bd);
+  --category-dish: #fff7ec;
+  --category-food: linear-gradient(135deg, #f8a13a, #d7482d);
+  --category-garnish: #2f9b68;
+  --category-icon: #b34822;
+}
+
+.category-card__picture--rice {
+  --category-surface: linear-gradient(135deg, #eef7ff, #e9f0d0);
+  --category-dish: #fdfbf1;
+  --category-food: linear-gradient(135deg, #fff6d8, #d8c88f);
+  --category-garnish: #6aa06c;
+  --category-icon: #8d762b;
+}
+
+.category-card__picture--noodle {
+  --category-surface: linear-gradient(135deg, #fff5d6, #e3f3ff);
+  --category-dish: #ffffff;
+  --category-food: repeating-linear-gradient(135deg, #f5cb72 0 7px, #fff0bf 7px 14px);
+  --category-garnish: #cb5647;
+  --category-icon: #bb6730;
+}
+
+.category-card__picture--dessert {
+  --category-surface: linear-gradient(135deg, #ffe8ef, #fff3c9);
+  --category-dish: #ffffff;
+  --category-food: linear-gradient(135deg, #f6a7b8, #8b5bd6);
+  --category-garnish: #ffcf5f;
+  --category-icon: #9c4e85;
+}
+
+.category-card__picture--drink {
+  --category-surface: linear-gradient(135deg, #ddf6ff, #e8f7df);
+  --category-dish: #e8fbff;
+  --category-food: linear-gradient(135deg, #63c9d8, #2f7fd1);
+  --category-garnish: #f4bf45;
+  --category-icon: #2375a6;
+}
+
+.category-card__picture--bread {
+  --category-surface: linear-gradient(135deg, #fff0d6, #f4d1a2);
+  --category-dish: #fff9ef;
+  --category-food: linear-gradient(135deg, #d88934, #f4bd66);
+  --category-garnish: #81532a;
+  --category-icon: #9a5b24;
+}
+
+.category-card__picture--side {
+  --category-surface: linear-gradient(135deg, #eef7df, #fff1e0);
+  --category-dish: #ffffff;
+  --category-food: linear-gradient(135deg, #6bbf7f, #f7a646);
+  --category-garnish: #d64b3a;
+  --category-icon: #507b37;
+}
+
+.category-card__picture--kimchi {
+  --category-surface: linear-gradient(135deg, #ffe8df, #f5f1d2);
+  --category-dish: #fffaf3;
+  --category-food: linear-gradient(135deg, #e6402f, #f09334);
+  --category-garnish: #4c9a55;
+  --category-icon: #bc2f25;
+}
+
+.category-card__picture--main,
+.category-card__picture--mixed {
+  --category-surface: linear-gradient(135deg, #e9f3ff, #ffe7d1);
+  --category-dish: #ffffff;
+  --category-food: linear-gradient(135deg, #dd7a43, #4d8f67);
+  --category-garnish: #ffd05a;
+  --category-icon: #3f7655;
+}
+
+.category-card__label {
+  display: -webkit-box;
+  min-height: 40px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--type-small-size);
+  font-weight: 900;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 /* ---------- Sections ---------- */
@@ -2172,6 +2436,19 @@ main {
   .hero__inner,
   .category-rail__track {
     width: calc(100% - 2 * var(--space-lg));
+  }
+
+  .category-rail__shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .category-rail__nav {
+    display: none;
+  }
+
+  .category-card {
+    flex-basis: 136px;
+    min-height: 154px;
   }
 
   .header-cta span {

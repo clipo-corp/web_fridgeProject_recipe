@@ -27,17 +27,25 @@ import type {
 } from "./recipeServerTypes";
 
 const recipeRequestCache = new Map<string, Promise<readonly PublicRecipeRecord[]>>();
+const serverRecipePageSize = 5;
+const maxRecipePageRequests = 50;
+
+type LoadCatalogRecipesOptions = {
+  readonly maxPages?: number;
+};
 
 export async function loadCatalogRecipes(
   filters: PublicRecipeCatalogFilters,
   displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+  limit = 100,
+  options: LoadCatalogRecipesOptions = {},
 ): Promise<readonly PublicRecipeRecord[]> {
   if (isMockMode) {
     const recipes = await loadPublicMockRecipes();
-    return filterPublicRecipes(recipes, filters);
+    return filterPublicRecipes(recipes, filters).slice(0, limit);
   }
 
-  return fetchPublicRecipes(filters, 100, displayLang);
+  return fetchPublicRecipes(filters, limit, displayLang, options);
 }
 
 export async function loadPublicRecipes(): Promise<readonly PublicRecipeRecord[]> {
@@ -107,26 +115,52 @@ async function fetchPublicRecipes(
   filters: PublicRecipeCatalogFilters,
   limit = 100,
   displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+  options: LoadCatalogRecipesOptions = {},
 ): Promise<readonly PublicRecipeRecord[]> {
-  const cacheKey = JSON.stringify({ displayLang, filters, limit });
+  const cacheKey = JSON.stringify({ displayLang, filters, limit, options });
   const cached = recipeRequestCache.get(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
 
-  const request = fetchPublicRecipePage(filters, 0, displayLang)
-    .then((response) =>
-      (response.recipes ?? [])
-        .map((recipe) => toPublicRecipeRecord(recipe, displayLang))
-        .filter((recipe) => isServerRecipeId(recipe.recipeId))
-        .slice(0, limit),
-    )
+  const request = fetchPublicRecipePages(filters, limit, displayLang, options.maxPages)
     .finally(() => {
       recipeRequestCache.delete(cacheKey);
     });
 
   recipeRequestCache.set(cacheKey, request);
   return request;
+}
+
+async function fetchPublicRecipePages(
+  filters: PublicRecipeCatalogFilters,
+  limit: number,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+  maxPages?: number,
+): Promise<readonly PublicRecipeRecord[]> {
+  if (limit <= 0) {
+    return [];
+  }
+
+  const recipes: PublicRecipeRecord[] = [];
+  const maxPagesForLimit = Math.ceil(limit / serverRecipePageSize) + 2;
+  const optionPageLimit = maxPages === undefined ? maxRecipePageRequests : Math.max(1, maxPages);
+  const pageRequestLimit = Math.min(optionPageLimit, maxRecipePageRequests, Math.max(1, maxPagesForLimit));
+
+  for (let pageNumber = 0; pageNumber < pageRequestLimit && recipes.length < limit; pageNumber += 1) {
+    const response = await fetchPublicRecipePage(filters, pageNumber, displayLang);
+    const nextRecipes = (response.recipes ?? [])
+      .map((recipe) => toPublicRecipeRecord(recipe, displayLang))
+      .filter((recipe) => isServerRecipeId(recipe.recipeId));
+
+    recipes.push(...nextRecipes);
+
+    if (response.isAfter !== true || nextRecipes.length === 0) {
+      break;
+    }
+  }
+
+  return recipes.slice(0, limit);
 }
 
 async function fetchPublicRecipePage(

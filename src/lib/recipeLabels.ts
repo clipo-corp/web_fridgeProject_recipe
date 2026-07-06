@@ -239,6 +239,21 @@ const timeEn: LabelMap = {
 const labelMaps: Record<Lang, LabelMap> = { ko: labelsKo, en: labelsEn };
 const countryMaps: Record<Lang, LabelMap> = { ko: countryKo, en: countryEn };
 const timeMaps: Record<Lang, LabelMap> = { ko: timeKo, en: timeEn };
+const primaryIngredientValues = [
+  "bean-nut",
+  "beef",
+  "chicken",
+  "dairy-egg",
+  "flour",
+  "fruits",
+  "grains",
+  "meat",
+  "pork",
+  "processed",
+  "rice",
+  "seafood",
+  "vegetable",
+] as const;
 
 export function labelFor(value: string, lang: Lang): string {
   return labelMaps[lang][value] ?? value;
@@ -252,6 +267,47 @@ export function timeLabel(value: string, lang: Lang): string {
   return timeMaps[lang][value] ?? value;
 }
 
+export function primaryIngredientValueForSearchText(input: string): string | null {
+  const normalizedInput = normalizeLabel(input);
+  if (normalizedInput.length === 0) {
+    return null;
+  }
+
+  for (const value of primaryIngredientValues) {
+    const candidates = [
+      value,
+      labelsKo[value],
+      labelsEn[value],
+      ...primaryIngredientAliases[value],
+    ];
+    if (candidates.some((candidate) => normalizeLabel(candidate) === normalizedInput)) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 export function recipeInitial(title: string): string {
   return title.trim().slice(0, 1) || "F";
+}
+
+const primaryIngredientAliases: Record<(typeof primaryIngredientValues)[number], readonly string[]> = {
+  "bean-nut": ["콩", "견과", "콩류", "bean", "nut"],
+  beef: ["소고기", "쇠고기", "beef"],
+  chicken: ["닭", "닭고기", "치킨", "chicken", "poultry"],
+  "dairy-egg": ["달걀", "계란", "유제품", "egg", "dairy"],
+  flour: ["밀가루", "flour"],
+  fruits: ["과일", "fruit", "fruits"],
+  grains: ["곡물", "grain", "grains"],
+  meat: ["고기", "육류", "meat"],
+  pork: ["돼지고기", "pork"],
+  processed: ["가공식품", "가공", "processed"],
+  rice: ["밥", "쌀", "rice"],
+  seafood: ["해산물", "seafood"],
+  vegetable: ["채소", "야채", "vegetable", "vegetables"],
+};
+
+function normalizeLabel(value: string | undefined): string {
+  return (value ?? "").replace(/\s+/g, "").toLocaleLowerCase("ko-KR");
 }

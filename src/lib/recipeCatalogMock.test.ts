@@ -171,6 +171,17 @@ describe("toPublicRecipeSearchRequest", () => {
     expect(request.recipeType).toBeNull();
     expect(request.requiredTool).toBeNull();
   });
+
+  it("maps localized primary ingredient search text to the native ingredient filter", () => {
+    const request = toPublicRecipeSearchRequest(
+      { ...initialCatalogFilters, query: "닭고기" },
+      0,
+      "ko-KR",
+    );
+
+    expect(request.searchValue).toBeNull();
+    expect(request.primaryIngredient).toBe("chicken");
+  });
 });
 
 describe("filterPublicRecipes", () => {

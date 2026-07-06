@@ -1,4 +1,5 @@
 import { recipeFilterKeys } from "./recipeCatalogTypes";
+import { primaryIngredientValueForSearchText } from "./recipeLabels";
 import type {
   PublicRecipeCatalogFilters,
   PublicRecipeSearchRequest,
@@ -35,11 +36,16 @@ export function toPublicRecipeSearchRequest(
   const nativeFilters = Object.fromEntries(
     recipeFilterKeys.map((key) => [key, nullableFilter(filters[key])]),
   ) as Record<(typeof recipeFilterKeys)[number], string | null>;
+  const primaryIngredientFromQuery =
+    nativeFilters.primaryIngredient === null
+      ? primaryIngredientValueForSearchText(filters.query)
+      : null;
 
   return {
     ...nativeFilters,
+    primaryIngredient: nativeFilters.primaryIngredient ?? primaryIngredientFromQuery,
     ingredients: [],
-    searchValue: nullableText(filters.query),
+    searchValue: primaryIngredientFromQuery === null ? nullableText(filters.query) : null,
     pageNumber,
     displayLang,
     writtenLang: writtenLangPayload(filters.writtenLang),

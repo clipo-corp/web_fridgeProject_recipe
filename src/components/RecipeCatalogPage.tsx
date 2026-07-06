@@ -34,6 +34,10 @@ type RecipeCatalogPageProps = {
   readonly onSelectedCuisineRegionChange: (cuisineRegion: string) => void;
 };
 
+const homepageRecipeLimit = 5;
+const homepageRecipePageLimit = 1;
+const searchResultRecipeLimit = 100;
+
 export function RecipeCatalogPage({
   filterOptions,
   selectedCuisineRegion,
@@ -43,7 +47,6 @@ export function RecipeCatalogPage({
   const [recipes, setRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [suggestionRecipes, setSuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
   const [querySuggestionRecipes, setQuerySuggestionRecipes] = useState<readonly PublicRecipeRecord[]>([]);
-  const [featured, setFeatured] = useState<readonly PublicRecipeRecord[]>([]);
   const [filters, setFilters] = useState<PublicRecipeCatalogFilters>(() =>
     filtersFromSearchParams(window.location.search),
   );
@@ -51,26 +54,10 @@ export function RecipeCatalogPage({
     const params = new URLSearchParams(window.location.search);
     return params.get("q") ?? "";
   });
-  const [searching, setSearching] = useState(false);
-  const searchTimer = useRef<number | null>(null);
+  const [searching, setSearching] = useState(() =>
+    !isBrowsingWithSelectedCuisineRegion(filtersFromSearchParams(window.location.search), selectedCuisineRegion)
+  );
   const initializedSuggestionRecipes = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void loadCatalogRecipes(
-      { ...initialCatalogFilters, cuisineRegion: selectedCuisineRegion, sort: "popular" },
-      displayLang,
-    ).then((nextFeatured) => {
-      if (!cancelled) {
-        setFeatured(nextFeatured.slice(0, 6));
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [displayLang, selectedCuisineRegion]);
 
   useEffect(() => {
     initializedSuggestionRecipes.current = false;
@@ -86,32 +73,44 @@ export function RecipeCatalogPage({
 
   useEffect(() => {
     let cancelled = false;
+    const isHomepageBrowsing = isBrowsingWithSelectedCuisineRegion(filters, selectedCuisineRegion);
+    const recipeLimit = isHomepageBrowsing ? homepageRecipeLimit : searchResultRecipeLimit;
+    const options = isHomepageBrowsing ? { maxPages: homepageRecipePageLimit } : undefined;
 
-    void loadCatalogRecipes(filters, displayLang).then((nextRecipes) => {
-      if (!cancelled) {
+    if (!isHomepageBrowsing) {
+      setSearching(true);
+    }
+
+    void loadCatalogRecipes(filters, displayLang, recipeLimit, options)
+      .then((nextRecipes) => {
+        if (cancelled) {
+          return;
+        }
+
         setRecipes(nextRecipes);
         if (
           !initializedSuggestionRecipes.current &&
-          isBrowsingWithSelectedCuisineRegion(filters, selectedCuisineRegion)
+          isHomepageBrowsing
         ) {
           setSuggestionRecipes(nextRecipes);
           initializedSuggestionRecipes.current = true;
         }
-      }
-    });
+
+        setSearching(false);
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setRecipes([]);
+        setSearching(false);
+      });
 
     return () => {
       cancelled = true;
     };
   }, [displayLang, filters, selectedCuisineRegion]);
-
-  useEffect(() => {
-    return () => {
-      if (searchTimer.current !== null) {
-        window.clearTimeout(searchTimer.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const params = filtersToSearchParams(filters);
@@ -134,6 +133,7 @@ export function RecipeCatalogPage({
       void loadCatalogRecipes(
         { ...initialCatalogFilters, cuisineRegion: selectedCuisineRegion, query, sort: "popular" },
         displayLang,
+        20,
       ).then((nextRecipes) => {
         if (!cancelled) {
           setQuerySuggestionRecipes(nextRecipes.slice(0, 20));
@@ -182,7 +182,16 @@ export function RecipeCatalogPage({
     },
     [suggestionPool, labelFor, countryLabel, draftQuery],
   );
-  const homepageFeatured = featured.length > 0 ? featured : suggestionRecipes;
+  const homepageFeatured = useMemo(
+    () => suggestionRecipes.slice(0, 3),
+    [suggestionRecipes],
+  );
+  const speedyRecipes = useMemo(
+    () => sortByCookingTimeAsc(suggestionRecipes)
+      .filter((recipe) => cookingTimeMinutes(recipe.cookingTime) >= 10)
+      .slice(0, 3),
+    [suggestionRecipes],
+  );
 
   const isBrowsing = isBrowsingWithSelectedCuisineRegion(filters, selectedCuisineRegion);
   const showBrowsing = isBrowsing && !searching;
@@ -200,10 +209,13 @@ export function RecipeCatalogPage({
     cuisineRegion: selectedCuisineRegion,
   });
   const patchFilters = (patch: Partial<PublicRecipeCatalogFilters>): void => {
+    const nextCuisineRegion = patch.cuisineRegion ?? selectedCuisineRegion;
+    const nextFilters = { ...filters, ...patch };
     if (patch.cuisineRegion !== undefined) {
       onSelectedCuisineRegionChange(patch.cuisineRegion);
     }
-    setFilters((current) => ({ ...current, ...patch }));
+    setSearching(!isBrowsingWithSelectedCuisineRegion(nextFilters, nextCuisineRegion));
+    setFilters(nextFilters);
   };
   const runSearch = (): void => {
     const query = draftQuery.trim();
@@ -233,6 +245,10 @@ export function RecipeCatalogPage({
     }
     startSearch({ ...baseFilters(), ...suggestion.patch, query: nextFilterQuery });
   };
+  const selectCategory = (category: string): void => {
+    setDraftQuery("");
+    startSearch({ ...baseFilters(), category });
+  };
   const clearActiveChip = (clear: Partial<PublicRecipeCatalogFilters>): void => {
     if (clear.query === "") {
       setDraftQuery("");
@@ -243,21 +259,10 @@ export function RecipeCatalogPage({
     patchFilters(clear);
   };
   const startSearch = (nextFilters: PublicRecipeCatalogFilters): void => {
-    if (searchTimer.current !== null) {
-      window.clearTimeout(searchTimer.current);
-    }
+    setSearching(!isBrowsingWithSelectedCuisineRegion(nextFilters, selectedCuisineRegion));
     setFilters(nextFilters);
-    setSearching(true);
-    searchTimer.current = window.setTimeout(() => {
-      setSearching(false);
-      searchTimer.current = null;
-    }, 420);
   };
   const stopSearching = (): void => {
-    if (searchTimer.current !== null) {
-      window.clearTimeout(searchTimer.current);
-      searchTimer.current = null;
-    }
     setSearching(false);
   };
 
@@ -288,8 +293,9 @@ export function RecipeCatalogPage({
         {showBrowsing ? (
           <RecipeCatalogBrowsingContent
             featuredRecipes={homepageFeatured}
-            suggestions={suggestions}
-            onSuggestionSelect={selectSuggestion}
+            speedyRecipes={speedyRecipes}
+            categories={filterOptions.category}
+            onCategorySelect={selectCategory}
           />
         ) : (
           <RecipeCatalogResultsContent
@@ -323,4 +329,27 @@ function isBrowsingWithSelectedCuisineRegion(
   }
 
   return isBrowsingFilters({ ...filters, cuisineRegion: "all" });
+}
+
+function uniqueRecipes(recipes: readonly PublicRecipeRecord[]): readonly PublicRecipeRecord[] {
+  return Array.from(new Map(recipes.map((recipe) => [recipe.recipeId, recipe])).values());
+}
+
+function sortByCookingTimeAsc(recipes: readonly PublicRecipeRecord[]): readonly PublicRecipeRecord[] {
+  return [...uniqueRecipes(recipes)].sort((a, b) => {
+    const timeGap = cookingTimeMinutes(a.cookingTime) - cookingTimeMinutes(b.cookingTime);
+    if (timeGap !== 0) {
+      return timeGap;
+    }
+    return b.likeCount - a.likeCount;
+  });
+}
+
+function cookingTimeMinutes(cookingTime: string): number {
+  if (cookingTime === "1h+") {
+    return 60;
+  }
+
+  const match = /^(\d+)min$/.exec(cookingTime);
+  return match === null ? Number.POSITIVE_INFINITY : Number(match[1]);
 }

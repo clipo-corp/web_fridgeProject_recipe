@@ -2,20 +2,21 @@ import type { ReactNode } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
-import type { SearchSuggestion } from "../lib/recipeSearchSuggestions";
+import { CategoryRail } from "./CategoryRail";
 import { FeaturedRecipeCarousel } from "./FeaturedRecipeCarousel";
-import { HomeQuickChips } from "./HomeQuickChips";
 
 type RecipeCatalogBrowsingContentProps = {
   readonly featuredRecipes: readonly PublicRecipeRecord[];
-  readonly suggestions: readonly SearchSuggestion[];
-  readonly onSuggestionSelect: (suggestion: SearchSuggestion) => void;
+  readonly speedyRecipes: readonly PublicRecipeRecord[];
+  readonly categories: readonly string[];
+  readonly onCategorySelect: (category: string) => void;
 };
 
 export function RecipeCatalogBrowsingContent({
   featuredRecipes,
-  suggestions,
-  onSuggestionSelect,
+  speedyRecipes,
+  categories,
+  onCategorySelect,
 }: RecipeCatalogBrowsingContentProps): JSX.Element {
   const { t, lang } = useI18n();
   const privacyTitle = lang === "ko" ? "개인정보처리방침" : "Privacy policy";
@@ -30,12 +31,18 @@ export function RecipeCatalogBrowsingContent({
         <FeaturedRecipeCarousel recipes={featuredRecipes} />
       </Section>
 
-      <HomeQuickChips
-        eyebrow={t("section.quickChips.eyebrow")}
-        title={t("section.quickChips.title")}
-        suggestions={suggestions}
-        onSuggestionSelect={onSuggestionSelect}
-      />
+      <Section eyebrow={t("section.quick.eyebrow")} title={t("section.quick.title")}>
+        <FeaturedRecipeCarousel recipes={speedyRecipes} />
+      </Section>
+
+      <Section eyebrow={t("section.category.eyebrow")} title={t("section.category.title")}>
+        <CategoryRail
+          categories={categories}
+          selectedCategory="all"
+          variant="inline"
+          onSelectCategory={onCategorySelect}
+        />
+      </Section>
 
       <footer className="home-legal" aria-label={privacyTitle}>
         <div className="home-legal__copy">
