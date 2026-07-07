@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Clock, Download, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
+import { StepIngredientList } from "./StepIngredientList";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import { useI18n } from "../lib/i18n";
 import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
@@ -37,6 +38,10 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
   if (recipe === null) {
     return null;
   }
+
+  const ingredientsLabel = t("detail.ingredients");
+  const amountFallback = t("detail.toTaste");
+  const hasStepIngredientChips = recipe.steps.some((step) => step.ingredientChips.length > 0);
 
   return (
     <div className="detail-backdrop" role="presentation" onClick={onClose}>
@@ -103,7 +108,7 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
 
           {recipe.ingredients.length > 0 ? (
             <section className="detail-section">
-              <h3>{t("detail.ingredients")}</h3>
+              <h3>{ingredientsLabel}</h3>
               <ul className="ingredient-list">
                 {recipe.ingredients.map((ingredient, index) => (
                   <li key={`${ingredient.name}-${index}`}>
@@ -112,7 +117,7 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
                     </span>
                     <span className="ingredient-list__name">{ingredient.name}</span>
                     <span className="ingredient-list__amount">
-                      {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
+                      {formatAmount(ingredient.quantity, ingredient.unit, amountFallback)}
                     </span>
                   </li>
                 ))}
@@ -124,18 +129,33 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
             <section className="detail-section">
               <h3>{t("detail.steps")}</h3>
               <ol className="step-list">
-                {recipe.steps.map((step) => (
-                  <li key={step.stepNumber}>
-                    <span className="step-list__num">{step.stepNumber}</span>
-                    <div>
-                      <p>{step.way}</p>
-                      {step.cookingTip !== null && step.cookingTip.length > 0 ? (
-                        <small>{step.cookingTip}</small>
-                      ) : null}
-                    </div>
-                  </li>
-                ))}
+                {recipe.steps.map((step) => {
+                  return (
+                    <li key={step.stepNumber} className="step-list__item">
+                      <span className="step-list__num">{step.stepNumber}</span>
+                      <div className="step-list__content">
+                        <p>{step.way}</p>
+                        {step.cookingTip !== null && step.cookingTip.length > 0 ? (
+                          <small>{step.cookingTip}</small>
+                        ) : null}
+                        <StepIngredientList
+                          ingredients={step.ingredientChips}
+                          label={ingredientsLabel}
+                          amountFallback={amountFallback}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
               </ol>
+              {!hasStepIngredientChips && recipe.ingredients.length > 0 ? (
+                <StepIngredientList
+                  ingredients={recipe.ingredients}
+                  label={ingredientsLabel}
+                  amountFallback={amountFallback}
+                  className="step-ingredients--summary"
+                />
+              ) : null}
             </section>
           ) : null}
 

@@ -8,6 +8,7 @@ import type {
 
 export const initialCatalogFilters: PublicRecipeCatalogFilters = {
   query: "",
+  searchScope: "all",
   sort: "latest",
   writtenLang: "all",
   region: { scope: "none" },
@@ -37,7 +38,7 @@ export function toPublicRecipeSearchRequest(
     recipeFilterKeys.map((key) => [key, nullableFilter(filters[key])]),
   ) as Record<(typeof recipeFilterKeys)[number], string | null>;
   const primaryIngredientFromQuery =
-    nativeFilters.primaryIngredient === null
+    nativeFilters.primaryIngredient === null && filters.searchScope !== "recipe"
       ? primaryIngredientValueForSearchText(filters.query)
       : null;
 

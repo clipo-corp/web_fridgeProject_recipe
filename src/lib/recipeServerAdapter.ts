@@ -1,4 +1,8 @@
 import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
+import {
+  normalizeStepIngredientMasterIds,
+  recipeStepIngredientChips,
+} from "./recipeStepIngredients";
 import { toRecipeCreatorSource } from "./recipeCreatorSource";
 import type {
   PublicRecipeRecord,
@@ -21,6 +25,7 @@ export function toPublicRecipeRecord(
 ): PublicRecipeRecord {
   const recipeId = idValue(recipe.recipeId ?? recipe.id ?? recipe.recipe_id ?? recipe.recipeID);
   const creatorSource = toRecipeCreatorSource(recipe);
+  const ingredients = (recipe.ingredients ?? []).map(toPublicIngredient);
 
   return withCatalogDemoMedia({
     recipeId,
@@ -64,8 +69,8 @@ export function toPublicRecipeRecord(
     cuisineRegion: stringValue(recipe.cuisineRegion, "global"),
     servings: stringValue(recipe.servings, "1-2"),
     requiredTool: stringValue(recipe.requiredTool, "basic"),
-    ingredients: (recipe.ingredients ?? []).map(toPublicIngredient),
-    steps: (recipe.steps ?? []).map(toPublicStep),
+    ingredients,
+    steps: (recipe.steps ?? []).map((step, index) => toPublicStep(step, index, ingredients)),
   });
 }
 
@@ -93,12 +98,20 @@ function toPublicIngredient(ingredient: ServerRecipeIngredient, index: number): 
   };
 }
 
-function toPublicStep(step: ServerRecipeStep, index: number): RecipeStep {
+function toPublicStep(
+  step: ServerRecipeStep,
+  index: number,
+  ingredients: readonly RecipeIngredient[],
+): RecipeStep {
+  const ingredientMasterIds = normalizeStepIngredientMasterIds(step.ingredientMasterIds);
+
   return {
     stepNumber: step.stepNumber ?? index + 1,
     way: stringValue(step.way, ""),
     cookingTip: nullableString(step.cookingTip),
     imageUrl: nullableString(step.imageUrl),
+    ingredientMasterIds,
+    ingredientChips: recipeStepIngredientChips(ingredients, ingredientMasterIds),
   };
 }
 

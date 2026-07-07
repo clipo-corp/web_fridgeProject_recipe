@@ -108,4 +108,5 @@ export type ServerRecipeStep = {
   readonly way?: string | null;
   readonly cookingTip?: string | null;
   readonly imageUrl?: string | null;
+  readonly ingredientMasterIds?: readonly (number | string)[] | null;
 };

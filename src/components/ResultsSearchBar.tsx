@@ -1,24 +1,35 @@
+import { useState } from "react";
 import { ArrowRight, Leaf, Search, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
+import type { RecipeSearchScope } from "../lib/recipeCatalogTypes";
 import type { SearchSuggestion } from "../lib/recipeSearchSuggestions";
 import { SearchSuggestionList } from "./SearchSuggestionList";
+import { SearchScopeSelect } from "./SearchScopeSelect";
 
 type ResultsSearchBarProps = {
   readonly query: string;
+  readonly searchScope: RecipeSearchScope;
   readonly suggestions: readonly SearchSuggestion[];
   readonly onQueryChange: (query: string) => void;
+  readonly onSearchScopeChange: (searchScope: RecipeSearchScope) => void;
   readonly onSearchSubmit: () => void;
   readonly onSuggestionSelect: (suggestion: SearchSuggestion) => void;
 };
 
 export function ResultsSearchBar({
   query,
+  searchScope,
   suggestions,
   onQueryChange,
+  onSearchScopeChange,
   onSearchSubmit,
   onSuggestionSelect,
 }: ResultsSearchBarProps): JSX.Element {
   const { t } = useI18n();
+  const [scopeSelectActive, setScopeSelectActive] = useState(false);
+  const searchWrapClassName = scopeSelectActive
+    ? "results-search-wrap search-wrap--scope-active"
+    : "results-search-wrap";
 
   return (
     <div className="results-search-shell">
@@ -27,7 +38,7 @@ export function ResultsSearchBar({
           <Leaf size={24} aria-hidden="true" />
           <span>Keep Cook</span>
         </a>
-        <div className="results-search-wrap">
+        <div className={searchWrapClassName}>
           <form
             className="results-search"
             role="search"
@@ -36,9 +47,17 @@ export function ResultsSearchBar({
               onSearchSubmit();
             }}
           >
+            <SearchScopeSelect
+              value={searchScope}
+              className="results-search__scope"
+              onChange={onSearchScopeChange}
+              onActiveChange={setScopeSelectActive}
+            />
+            <Search size={18} aria-hidden="true" />
             <input
               type="search"
               aria-label={t("hero.searchAria")}
+              placeholder={t("hero.searchPlaceholder")}
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
             />

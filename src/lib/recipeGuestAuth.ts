@@ -4,8 +4,6 @@ import type { ApiResponse, LoginResponse } from "./recipeServerTypes";
 
 const guestTokenKey = "keepcook.guestAccessToken";
 const guestDeviceKey = "keepcook.guestDeviceId";
-const legacyGuestTokenKey = "keepcook.guestAccessToken";
-const legacyGuestDeviceKey = "keepcook.guestDeviceId";
 let guestAccessTokenRequest: Promise<string> | null = null;
 
 export async function fetchWithGuestAuth<T>(
@@ -25,12 +23,12 @@ export async function fetchWithGuestAuth<T>(
   });
 
   if ((response.status === 401 || response.status === 403) && retryOnUnauthorized) {
-    clearGuestAccessToken();
+    await refreshGuestAccessToken(token);
     return fetchWithGuestAuth<T>(path, init, false);
   }
 
   if (retryOnUnauthorized && await isGuestAuthMismatchResponse(response)) {
-    clearGuestAccessToken();
+    await refreshGuestAccessToken(token);
     return fetchWithGuestAuth<T>(path, init, false);
   }
 
@@ -54,12 +52,12 @@ export async function fetchRawWithGuestAuth<T>(
   });
 
   if ((response.status === 401 || response.status === 403) && retryOnUnauthorized) {
-    clearGuestAccessToken();
+    await refreshGuestAccessToken(token);
     return fetchRawWithGuestAuth<T>(path, init, false);
   }
 
   if (retryOnUnauthorized && await isGuestAuthMismatchResponse(response)) {
-    clearGuestAccessToken();
+    await refreshGuestAccessToken(token);
     return fetchRawWithGuestAuth<T>(path, init, false);
   }
 
@@ -67,13 +65,19 @@ export async function fetchRawWithGuestAuth<T>(
 }
 
 async function getGuestAccessToken(): Promise<string> {
-  clearMigratedLegacyGuestAccessToken();
-
   const cached = sessionStorage.getItem(guestTokenKey);
   if (cached !== null && cached.length > 0) {
     return cached;
   }
 
+  if (guestAccessTokenRequest !== null) {
+    return guestAccessTokenRequest;
+  }
+
+  return requestGuestAccessToken();
+}
+
+function requestGuestAccessToken(): Promise<string> {
   if (guestAccessTokenRequest !== null) {
     return guestAccessTokenRequest;
   }
@@ -102,23 +106,18 @@ async function getGuestAccessToken(): Promise<string> {
   return guestAccessTokenRequest;
 }
 
-function clearGuestAccessToken(): void {
-  sessionStorage.removeItem(guestTokenKey);
-  sessionStorage.removeItem(legacyGuestTokenKey);
-  guestAccessTokenRequest = null;
-}
-
-function clearMigratedLegacyGuestAccessToken(): void {
-  if (sessionStorage.getItem(legacyGuestTokenKey) === null) {
-    return;
+function refreshGuestAccessToken(staleToken: string): Promise<string> {
+  const currentToken = sessionStorage.getItem(guestTokenKey);
+  if (currentToken !== null && currentToken.length > 0 && currentToken !== staleToken) {
+    return Promise.resolve(currentToken);
   }
 
-  sessionStorage.removeItem(legacyGuestTokenKey);
   sessionStorage.removeItem(guestTokenKey);
+  return requestGuestAccessToken();
 }
 
 function getGuestDeviceId(): string {
-  const cached = readStoredValue(localStorage, guestDeviceKey, legacyGuestDeviceKey);
+  const cached = localStorage.getItem(guestDeviceKey);
   if (cached !== null && cached.length > 0) {
     return cached;
   }
@@ -129,26 +128,6 @@ function getGuestDeviceId(): string {
       : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   localStorage.setItem(guestDeviceKey, deviceId);
   return deviceId;
-}
-
-function readStoredValue(
-  storage: Storage,
-  currentKey: string,
-  legacyKey: string,
-): string | null {
-  const current = storage.getItem(currentKey);
-  if (current !== null && current.length > 0) {
-    return current;
-  }
-
-  const legacy = storage.getItem(legacyKey);
-  if (legacy !== null && legacy.length > 0) {
-    storage.setItem(currentKey, legacy);
-    storage.removeItem(legacyKey);
-    return legacy;
-  }
-
-  return null;
 }
 
 async function isGuestAuthMismatchResponse(response: Response): Promise<boolean> {

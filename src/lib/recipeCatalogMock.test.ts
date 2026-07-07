@@ -48,7 +48,14 @@ const records: readonly PublicRecipeRecord[] = [
     servings: "2-3",
     requiredTool: "pot",
     ingredients: [{ masterId: null, name: "김치", quantity: 200, unit: "g", description: "묵은지" }],
-    steps: [{ stepNumber: 1, way: "김치를 볶고 끓입니다.", cookingTip: null, imageUrl: null }],
+    steps: [{
+      stepNumber: 1,
+      way: "김치를 볶고 끓입니다.",
+      cookingTip: null,
+      imageUrl: null,
+      ingredientMasterIds: null,
+      ingredientChips: [],
+    }],
   },
   {
     recipeId: "r2",
@@ -89,7 +96,14 @@ const records: readonly PublicRecipeRecord[] = [
     servings: "1",
     requiredTool: "bowl",
     ingredients: [{ masterId: null, name: "lettuce", quantity: null, unit: null, description: "greens" }],
-    steps: [{ stepNumber: 1, way: "Mix vegetables.", cookingTip: null, imageUrl: null }],
+    steps: [{
+      stepNumber: 1,
+      way: "Mix vegetables.",
+      cookingTip: null,
+      imageUrl: null,
+      ingredientMasterIds: null,
+      ingredientChips: [],
+    }],
   },
 ];
 

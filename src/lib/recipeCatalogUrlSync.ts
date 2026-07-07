@@ -3,6 +3,7 @@ import type {
   LocalDataMode,
   PublicRecipeCatalogFilters,
   RecipeCatalogRegion,
+  RecipeSearchScope,
   RecipeSearchSort,
   RecipeWrittenLang,
 } from "./recipeCatalogTypes";
@@ -13,6 +14,9 @@ export function filtersToSearchParams(filters: PublicRecipeCatalogFilters): URLS
 
   if (filters.query.trim().length > 0) {
     params.set("q", filters.query.trim());
+  }
+  if (filters.searchScope !== "all") {
+    params.set("scope", filters.searchScope);
   }
   if (filters.sort !== "latest") {
     params.set("sort", filters.sort);
@@ -51,6 +55,7 @@ export function filtersFromSearchParams(search: string): PublicRecipeCatalogFilt
   const params = new URLSearchParams(search);
 
   const q = params.get("q");
+  const scope = params.get("scope");
   const sort = params.get("sort");
   const lang = params.get("lang");
   const local = params.get("local");
@@ -94,6 +99,9 @@ export function filtersFromSearchParams(search: string): PublicRecipeCatalogFilt
     ...initialCatalogFilters,
     ...recipeKeyOverrides,
     query: q ?? initialCatalogFilters.query,
+    searchScope: scope === "recipe" || scope === "ingredient" || scope === "all"
+      ? (scope as RecipeSearchScope)
+      : initialCatalogFilters.searchScope,
     sort: sort === "popular" || sort === "hot_month" || sort === "latest"
       ? (sort as RecipeSearchSort)
       : initialCatalogFilters.sort,

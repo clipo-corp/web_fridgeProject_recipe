@@ -1,4 +1,8 @@
-import type { PublicRecipeCatalogFilters, PublicRecipeRecord } from "./recipeCatalogTypes";
+import type {
+  PublicRecipeCatalogFilters,
+  PublicRecipeRecord,
+  RecipeSearchScope,
+} from "./recipeCatalogTypes";
 
 export type SearchSuggestion = {
   readonly id: string;
@@ -20,6 +24,7 @@ export function buildRecipeSearchSuggestions(
   labelFor: (value: string) => string,
   countryLabel: (value: string) => string,
   query = "",
+  searchScope: RecipeSearchScope = "all",
 ): readonly SearchSuggestion[] {
   const normalizedQuery = normalizeSearchText(query);
   const hasQuery = normalizedQuery.length > 0;
@@ -39,7 +44,7 @@ export function buildRecipeSearchSuggestions(
         id: `ingredient-${ingredient}`,
         label: labelFor(ingredient),
         note: "주재료",
-        patch: { query: labelFor(ingredient), primaryIngredient: ingredient },
+        patch: { query: labelFor(ingredient), searchScope: "ingredient", primaryIngredient: ingredient },
       },
       [ingredient, labelFor(ingredient), "주재료"],
     ),
@@ -64,13 +69,17 @@ export function buildRecipeSearchSuggestions(
         id: `recipe-${recipe.recipeId}`,
         label: recipe.title,
         note: countryLabel(recipe.country),
-        patch: { query: recipe.title },
+        patch: { query: recipe.title, searchScope: "recipe" },
       },
       [recipe.title, recipe.description, recipe.country, countryLabel(recipe.country)],
     ),
   );
 
-  const candidates = [...ingredientSuggestions, ...countrySuggestions, ...recipeSuggestions];
+  const candidates = [
+    ...(searchScope !== "recipe" ? ingredientSuggestions : []),
+    ...(searchScope === "all" ? countrySuggestions : []),
+    ...(searchScope !== "ingredient" ? recipeSuggestions : []),
+  ];
 
   if (!hasQuery) {
     return candidates.map((candidate) => candidate.suggestion);

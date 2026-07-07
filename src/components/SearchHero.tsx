@@ -1,29 +1,40 @@
-import { ArrowRight, ChevronDown, Search, Sparkles, Utensils, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Search, Sparkles, Utensils, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
+import type { RecipeSearchScope } from "../lib/recipeCatalogTypes";
 import type { SearchSuggestion } from "../lib/recipeSearchSuggestions";
 import { SearchSuggestionList } from "./SearchSuggestionList";
+import { SearchScopeSelect } from "./SearchScopeSelect";
 
 type SearchHeroProps = {
   readonly query: string;
+  readonly searchScope: RecipeSearchScope;
   readonly recipeCount: number;
   readonly suggestions: readonly SearchSuggestion[];
   readonly onQueryChange: (query: string) => void;
+  readonly onSearchScopeChange: (searchScope: RecipeSearchScope) => void;
   readonly onSearchSubmit: () => void;
   readonly onSuggestionSelect: (suggestion: SearchSuggestion) => void;
 };
 
 export function SearchHero({
   query,
+  searchScope,
   recipeCount,
   suggestions,
   onQueryChange,
+  onSearchScopeChange,
   onSearchSubmit,
   onSuggestionSelect,
 }: SearchHeroProps): JSX.Element {
   const { t } = useI18n();
+  const [scopeSelectActive, setScopeSelectActive] = useState(false);
   const queryIsBlank = query.trim().length === 0;
   const visibleSuggestions = suggestions.length > 0 || !queryIsBlank ? suggestions : fallbackSuggestions;
   const showSuggestions = visibleSuggestions.length > 0;
+  const searchWrapClassName = scopeSelectActive
+    ? "hero__search-wrap search-wrap--scope-active"
+    : "hero__search-wrap";
 
   return (
     <section className="hero" id="top">
@@ -40,7 +51,7 @@ export function SearchHero({
           </h1>
           <p>{t("hero.subtitle", { count: recipeCount })}</p>
         </div>
-        <div className="hero__search-wrap">
+        <div className={searchWrapClassName}>
           <form
             className="hero__search"
             role="search"
@@ -49,11 +60,12 @@ export function SearchHero({
               onSearchSubmit();
             }}
           >
-            <span className="hero__search-type">
-              {t("header.tag")}
-              <ChevronDown size={15} aria-hidden="true" />
-            </span>
-            <span className="hero__search-divider" aria-hidden="true" />
+            <SearchScopeSelect
+              value={searchScope}
+              className="hero__search-type"
+              onChange={onSearchScopeChange}
+              onActiveChange={setScopeSelectActive}
+            />
             <Search size={20} aria-hidden="true" />
             <input
               id="recipe-search"

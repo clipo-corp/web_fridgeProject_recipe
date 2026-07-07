@@ -28,11 +28,20 @@ export async function enrichRecipeIngredientNames(
       displayLang,
       recipeNameLanguageCandidates(recipe, displayLang),
     );
+    const ingredients = recipe.ingredients.map((ingredient) => ({
+      ...ingredient,
+      name: ingredientName(ingredient, lookup),
+    }));
+
     return {
       ...recipe,
-      ingredients: recipe.ingredients.map((ingredient) => ({
-        ...ingredient,
-        name: ingredientName(ingredient, lookup),
+      ingredients,
+      steps: recipe.steps.map((step) => ({
+        ...step,
+        ingredientChips: step.ingredientChips.map((ingredient) => ({
+          ...ingredient,
+          name: ingredientName(ingredient, lookup),
+        })),
       })),
     };
   } catch {

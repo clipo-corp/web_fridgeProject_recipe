@@ -1,6 +1,12 @@
 .hero__search-wrap,
 .results-search-wrap {
   position: relative;
+  z-index: 20;
+}
+
+.hero__search-wrap.search-wrap--scope-active,
+.results-search-wrap.search-wrap--scope-active {
+  z-index: 80;
 }
 
 .results-search-wrap {
@@ -14,6 +20,8 @@
   right: 0;
   z-index: 60;
   display: none;
+  max-height: min(360px, calc(100vh - 96px));
+  overflow-y: auto;
   padding: var(--space-md);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -24,6 +32,11 @@
 .hero__search-wrap:focus-within .search-suggestions,
 .results-search-wrap:focus-within .search-suggestions {
   display: block;
+}
+
+.hero__search-wrap.search-wrap--scope-active .search-suggestions,
+.results-search-wrap.search-wrap--scope-active .search-suggestions {
+  display: none;
 }
 
 .search-suggestions__eyebrow,

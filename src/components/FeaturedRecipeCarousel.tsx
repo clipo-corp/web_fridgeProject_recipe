@@ -17,8 +17,8 @@ export function FeaturedRecipeCarousel({
   return (
     <div className="featured-carousel">
       <div className="grid grid--spotlight">
-        {visibleRecipes.map((recipe) => (
-          <RecipeCard key={recipe.recipeId} recipe={recipe} variant="spotlight" />
+        {visibleRecipes.map((recipe, index) => (
+          <RecipeCard key={recipe.recipeId} recipe={recipe} variant="spotlight" rank={index + 1} />
         ))}
         {Array.from({ length: skeletonCount }, (_, i) => (
           <SkeletonCard key={`featured-skeleton-${i}`} variant="spotlight" />

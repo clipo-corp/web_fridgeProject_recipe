@@ -1,4 +1,5 @@
 export type RecipeSearchSort = "latest" | "popular" | "hot_month";
+export type RecipeSearchScope = "all" | "recipe" | "ingredient";
 export type RecipeWrittenLang = "all" | "ko" | "en";
 export type LocalDataMode = "all" | "local" | "original";
 export type RecipeVisibility = "private" | "shared" | "public";
@@ -22,11 +23,21 @@ export type RecipeIngredient = {
   readonly description: string;
 };
 
+export type RecipeStepIngredientChip = {
+  readonly masterId: number | null;
+  readonly name: string;
+  readonly quantity: number | null;
+  readonly unit: string | null;
+  readonly description: string;
+};
+
 export type RecipeStep = {
   readonly stepNumber: number;
   readonly way: string;
   readonly cookingTip: string | null;
   readonly imageUrl: string | null;
+  readonly ingredientMasterIds: readonly number[] | null;
+  readonly ingredientChips: readonly RecipeStepIngredientChip[];
 };
 
 export type RecipeCatalogRegion =
@@ -82,6 +93,7 @@ export const recipeFilterKeys: readonly RecipeFilterKey[] = [
 
 export type PublicRecipeCatalogFilters = Record<RecipeFilterKey, string> & {
   readonly query: string;
+  readonly searchScope: RecipeSearchScope;
   readonly sort: RecipeSearchSort;
   readonly writtenLang: RecipeWrittenLang;
   readonly region: RecipeCatalogRegion;

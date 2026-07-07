@@ -1,4 +1,4 @@
-import { Clock, Flame, Heart, Languages, Users } from "lucide-react";
+import { Clock, Flame, Globe2, Heart, Languages, Users } from "lucide-react";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
 import { useI18n } from "../lib/i18n";
@@ -8,9 +8,10 @@ import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 type RecipeCardProps = {
   readonly recipe: PublicRecipeRecord;
   readonly variant?: "grid" | "rail" | "spotlight";
+  readonly rank?: number;
 };
 
-export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.Element {
+export function RecipeCard({ recipe, variant = "grid", rank }: RecipeCardProps): JSX.Element {
   const { labelFor, timeLabel } = useI18n();
   const metaPreview = [
     recipe.category,
@@ -28,6 +29,7 @@ export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.E
           size={variant === "spotlight" ? "spotlight" : "card"}
           emojiMode="home"
         />
+        {rank !== undefined ? <span className="recipe-card__rank">{rank}</span> : null}
         <div className="recipe-card__body">
           <div className="recipe-card__badges">
             <span className="badge badge--brand">{labelFor(recipe.category)}</span>
@@ -40,7 +42,10 @@ export function RecipeCard({ recipe, variant = "grid" }: RecipeCardProps): JSX.E
             ) : null}
           </div>
           <RecipeCreatorSource recipe={recipe} variant="card" />
-          <h3>{recipe.title}</h3>
+          <h3>
+            <Globe2 className="recipe-card__title-icon" size={18} aria-hidden="true" />
+            <span>{recipe.title}</span>
+          </h3>
           <p>{recipe.description}</p>
           {metaPreview.length > 0 ? (
             <div className="recipe-card__ingredients">

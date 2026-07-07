@@ -35,7 +35,11 @@ export function RecipeCatalogBrowsingContent({
         <FeaturedRecipeCarousel recipes={speedyRecipes} />
       </Section>
 
-      <Section eyebrow={t("section.category.eyebrow")} title={t("section.category.title")}>
+      <Section
+        className="section--category"
+        eyebrow={t("section.category.eyebrow")}
+        title={t("section.category.title")}
+      >
         <CategoryRail
           categories={categories}
           selectedCategory="all"
@@ -64,15 +68,16 @@ export function RecipeCatalogBrowsingContent({
 }
 
 type SectionProps = {
+  readonly className?: string;
   readonly eyebrow: string;
   readonly title: string;
   readonly note?: string;
   readonly children: ReactNode;
 };
 
-function Section({ eyebrow, title, note, children }: SectionProps): JSX.Element {
+function Section({ className, eyebrow, title, note, children }: SectionProps): JSX.Element {
   return (
-    <section className="section">
+    <section className={className === undefined ? "section" : `section ${className}`}>
       <div className="section__head">
         <span className="eyebrow">{eyebrow}</span>
         <h2>{title}</h2>

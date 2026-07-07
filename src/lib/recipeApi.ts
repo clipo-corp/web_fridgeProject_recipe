@@ -26,12 +26,27 @@ import type {
   ServerRecipeRegionCatalogResponse,
 } from "./recipeServerTypes";
 
-const recipeRequestCache = new Map<string, Promise<readonly PublicRecipeRecord[]>>();
+type RequestCacheEntry<T> = {
+  readonly request: Promise<T>;
+  readonly expiresAt: number;
+};
+
+const requestCacheTtlMs = 30_000;
+const recipeRequestCache = new Map<string, RequestCacheEntry<readonly PublicRecipeRecord[]>>();
+const recipePageRequestCache = new Map<string, RequestCacheEntry<PublicRecipePage>>();
+const recipeDetailRequestCache = new Map<string, RequestCacheEntry<PublicRecipeRecord | null>>();
+const catalogFilterOptionsCache = new Map<string, RequestCacheEntry<CatalogFilterOptions>>();
 const serverRecipePageSize = 5;
 const maxRecipePageRequests = 50;
 
 type LoadCatalogRecipesOptions = {
   readonly maxPages?: number;
+};
+
+export type PublicRecipePage = {
+  readonly pageNumber: number;
+  readonly recipes: readonly PublicRecipeRecord[];
+  readonly isAfter: boolean;
 };
 
 export async function loadCatalogRecipes(
@@ -46,6 +61,26 @@ export async function loadCatalogRecipes(
   }
 
   return fetchPublicRecipes(filters, limit, displayLang, options);
+}
+
+export async function loadCatalogRecipePage(
+  filters: PublicRecipeCatalogFilters,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+  pageNumber = 0,
+): Promise<PublicRecipePage> {
+  if (isMockMode) {
+    const recipes = filterPublicRecipes(await loadPublicMockRecipes(), filters);
+    const start = pageNumber * serverRecipePageSize;
+    const pageRecipes = recipes.slice(start, start + serverRecipePageSize);
+
+    return {
+      pageNumber,
+      recipes: pageRecipes,
+      isAfter: start + pageRecipes.length < recipes.length,
+    };
+  }
+
+  return fetchPublicRecipeSinglePage(filters, pageNumber, displayLang);
 }
 
 export async function loadPublicRecipes(): Promise<readonly PublicRecipeRecord[]> {
@@ -66,11 +101,92 @@ export async function loadFeaturedRecipes(
 export async function loadCatalogFilterOptions(
   displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
 ): Promise<CatalogFilterOptions> {
-  if (isMockMode) {
-    const recipes = await loadPublicMockRecipes();
-    return collectCatalogOptions(recipes);
+  const cacheKey = JSON.stringify({ displayLang, isMockMode });
+  const cached = cachedRequest(catalogFilterOptionsCache, cacheKey);
+  if (cached !== undefined) {
+    return cached;
   }
 
+  const request = isMockMode
+    ? loadPublicMockRecipes().then(collectCatalogOptions)
+    : fetchCatalogFilterOptions(displayLang);
+
+  cacheRequest(catalogFilterOptionsCache, cacheKey, request);
+  return request;
+}
+
+export async function loadPublicRecipeDetail(
+  recipeId: string,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+): Promise<PublicRecipeRecord | null> {
+  if (isMockMode) {
+    const recipes = await loadPublicMockRecipes();
+    return recipes.find((recipe) => recipe.recipeId === recipeId) ?? null;
+  }
+
+  if (!isServerRecipeId(recipeId)) {
+    return null;
+  }
+
+  const cacheKey = JSON.stringify({ displayLang, recipeId });
+  const cached = cachedRequest(recipeDetailRequestCache, cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const request = fetchPublicRecipeDetail(recipeId, displayLang);
+  cacheRequest(recipeDetailRequestCache, cacheKey, request);
+  return request;
+}
+
+export async function enrichPublicRecipeIngredientNames(
+  recipe: PublicRecipeRecord,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+): Promise<PublicRecipeRecord> {
+  if (isMockMode) {
+    return recipe;
+  }
+
+  return enrichRecipeIngredientNames(recipe, displayLang);
+}
+
+async function fetchPublicRecipes(
+  filters: PublicRecipeCatalogFilters,
+  limit = 100,
+  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
+  options: LoadCatalogRecipesOptions = {},
+): Promise<readonly PublicRecipeRecord[]> {
+  const cacheKey = JSON.stringify({ displayLang, filters, limit, options });
+  const cached = cachedRequest(recipeRequestCache, cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const request = fetchPublicRecipePages(filters, limit, displayLang, options.maxPages);
+
+  cacheRequest(recipeRequestCache, cacheKey, request);
+  return request;
+}
+
+async function fetchPublicRecipeSinglePage(
+  filters: PublicRecipeCatalogFilters,
+  pageNumber: number,
+  displayLang: DisplayLanguage,
+): Promise<PublicRecipePage> {
+  const cacheKey = JSON.stringify({ displayLang, filters, pageNumber });
+  const cached = cachedRequest(recipePageRequestCache, cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const request = fetchPublicRecipePage(filters, pageNumber, displayLang)
+    .then((response) => toPublicRecipePage(response, pageNumber, displayLang));
+
+  cacheRequest(recipePageRequestCache, cacheKey, request);
+  return request;
+}
+
+async function fetchCatalogFilterOptions(displayLang: DisplayLanguage): Promise<CatalogFilterOptions> {
   const [filters, region] = await Promise.all([
     fetchWithGuestAuth<ServerRecipeFilterOptionsResponse>("/api/recipe/filter-options"),
     fetchCountryRegionOptions(displayLang),
@@ -95,41 +211,39 @@ export async function loadCatalogFilterOptions(
   };
 }
 
-export async function loadPublicRecipeDetail(
-  recipeId: string,
-  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
-): Promise<PublicRecipeRecord | null> {
-  if (isMockMode) {
-    const recipes = await loadPublicMockRecipes();
-    return recipes.find((recipe) => recipe.recipeId === recipeId) ?? null;
+function cachedRequest<T>(
+  cache: Map<string, RequestCacheEntry<T>>,
+  cacheKey: string,
+): Promise<T> | undefined {
+  const cached = cache.get(cacheKey);
+  if (cached === undefined) {
+    return undefined;
   }
 
-  if (!isServerRecipeId(recipeId)) {
-    return null;
+  if (cached.expiresAt <= Date.now()) {
+    cache.delete(cacheKey);
+    return undefined;
   }
 
-  return fetchPublicRecipeDetail(recipeId, displayLang);
+  return cached.request;
 }
 
-async function fetchPublicRecipes(
-  filters: PublicRecipeCatalogFilters,
-  limit = 100,
-  displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
-  options: LoadCatalogRecipesOptions = {},
-): Promise<readonly PublicRecipeRecord[]> {
-  const cacheKey = JSON.stringify({ displayLang, filters, limit, options });
-  const cached = recipeRequestCache.get(cacheKey);
-  if (cached !== undefined) {
-    return cached;
-  }
+function cacheRequest<T>(
+  cache: Map<string, RequestCacheEntry<T>>,
+  cacheKey: string,
+  request: Promise<T>,
+): void {
+  cache.set(cacheKey, {
+    request,
+    expiresAt: Date.now() + requestCacheTtlMs,
+  });
 
-  const request = fetchPublicRecipePages(filters, limit, displayLang, options.maxPages)
-    .finally(() => {
-      recipeRequestCache.delete(cacheKey);
-    });
-
-  recipeRequestCache.set(cacheKey, request);
-  return request;
+  request.catch(() => {
+    const cached = cache.get(cacheKey);
+    if (cached?.request === request) {
+      cache.delete(cacheKey);
+    }
+  });
 }
 
 async function fetchPublicRecipePages(
@@ -178,6 +292,22 @@ async function fetchPublicRecipePage(
   );
 }
 
+function toPublicRecipePage(
+  response: ServerRecipePageResponse,
+  pageNumber: number,
+  displayLang: DisplayLanguage,
+): PublicRecipePage {
+  const recipes = (response.recipes ?? [])
+    .map((recipe) => toPublicRecipeRecord(recipe, displayLang))
+    .filter((recipe) => isServerRecipeId(recipe.recipeId));
+
+  return {
+    pageNumber: response.pageNumber ?? pageNumber,
+    recipes,
+    isAfter: response.isAfter === true && recipes.length > 0,
+  };
+}
+
 async function fetchPublicRecipeDetail(
   recipeId: string,
   displayLang: DisplayLanguage = currentRequestDisplayLanguage(),
@@ -190,7 +320,7 @@ async function fetchPublicRecipeDetail(
     `/api/recipe/load?q=${encodeURIComponent(recipeId)}&displayLang=${encodeURIComponent(displayLang)}`,
   );
 
-  return enrichRecipeIngredientNames(toPublicRecipeRecord(response, displayLang), displayLang);
+  return toPublicRecipeRecord(response, displayLang);
 }
 
 function toServerRecipeSearchRequest(

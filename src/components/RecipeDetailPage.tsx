@@ -3,7 +3,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
 import { SkeletonDetailPage } from "./SkeletonDetailPage";
-import { loadPublicRecipeDetail, requestRecipeTranslation } from "../lib/recipeApi";
+import { StepIngredientList } from "./StepIngredientList";
+import {
+  enrichPublicRecipeIngredientNames,
+  loadPublicRecipeDetail,
+  requestRecipeTranslation,
+} from "../lib/recipeApi";
 import { videoCreatorSummary } from "../lib/recipeCreatorSource";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import { isServerRecipeId } from "../lib/recipeServerAdapter";
@@ -49,6 +54,20 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
         setRecipe(nextRecipe);
         setLoaded(true);
       }
+      if (nextRecipe === null || cancelled) {
+        return;
+      }
+
+      void enrichPublicRecipeIngredientNames(nextRecipe, displayLang).then((enrichedRecipe) => {
+        if (!cancelled) {
+          setRecipe((current) => (
+            current?.recipeId === enrichedRecipe.recipeId &&
+            current.displayLang === enrichedRecipe.displayLang
+              ? enrichedRecipe
+              : current
+          ));
+        }
+      });
     });
 
     return () => {
@@ -126,6 +145,9 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
     displayLang !== writtenLangFull &&
     !showingTranslation &&
     !hasTranslation;
+  const ingredientsLabel = t("detail.ingredients");
+  const amountFallback = t("detail.toTaste");
+  const hasStepIngredientChips = recipe.steps.some((step) => step.ingredientChips.length > 0);
 
   return (
     <main className="page detail-page">
@@ -253,7 +275,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
         </div>
 
         <section className="detail-section detail-card">
-          <h2>{t("detail.ingredients")}</h2>
+          <h2>{ingredientsLabel}</h2>
           <ul className="ingredient-list">
             {recipe.ingredients.map((ingredient, index) => (
               <li key={`${ingredient.name}-${index}`}>
@@ -267,7 +289,7 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
                   ) : null}
                 </span>
                 <span className="ingredient-list__amount">
-                  {formatAmount(ingredient.quantity, ingredient.unit, t("detail.toTaste"))}
+                  {formatAmount(ingredient.quantity, ingredient.unit, amountFallback)}
                 </span>
               </li>
             ))}
@@ -277,22 +299,37 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
         <section className="detail-section detail-card">
           <h2>{t("detail.steps")}</h2>
           <ol className="step-list">
-            {recipe.steps.map((step) => (
-              <li
-                key={step.stepNumber}
-                className={step.imageUrl === null ? "step-list__item" : "step-list__item step-list__item--media"}
-              >
-                <span className="step-list__num">{step.stepNumber}</span>
-                {step.imageUrl !== null ? (
-                  <img className="step-list__image" src={step.imageUrl} alt="" loading="lazy" />
-                ) : null}
-                <div>
-                  <p>{step.way}</p>
-                  {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
-                </div>
-              </li>
-            ))}
+            {recipe.steps.map((step) => {
+              return (
+                <li
+                  key={step.stepNumber}
+                  className={step.imageUrl === null ? "step-list__item" : "step-list__item step-list__item--media"}
+                >
+                  <span className="step-list__num">{step.stepNumber}</span>
+                  {step.imageUrl !== null ? (
+                    <img className="step-list__image" src={step.imageUrl} alt="" loading="lazy" />
+                  ) : null}
+                  <div className="step-list__content">
+                    <p>{step.way}</p>
+                    {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
+                    <StepIngredientList
+                      ingredients={step.ingredientChips}
+                      label={ingredientsLabel}
+                      amountFallback={amountFallback}
+                    />
+                  </div>
+                </li>
+              );
+            })}
           </ol>
+          {!hasStepIngredientChips && recipe.ingredients.length > 0 ? (
+            <StepIngredientList
+              ingredients={recipe.ingredients}
+              label={ingredientsLabel}
+              amountFallback={amountFallback}
+              className="step-ingredients--summary"
+            />
+          ) : null}
         </section>
 
         <a className="btn btn--primary detail-install" href="/install">

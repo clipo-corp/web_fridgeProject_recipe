@@ -9,13 +9,20 @@ import {
   initialCatalogFilters,
   toPublicRecipeSearchRequest,
 } from "./recipeCatalogRequest";
+import {
+  normalizeStepIngredientMasterIds,
+  recipeStepIngredientChips,
+} from "./recipeStepIngredients";
 import { toRecipeCreatorSource } from "./recipeCreatorSource";
 import { recipeFilterKeys } from "./recipeCatalogTypes";
 import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
 import type {
   PublicRecipeCatalogFilters,
   PublicRecipeRecord,
+  RecipeIngredient,
   RecipeFilterKey,
+  RecipeStep,
+  RecipeSearchScope,
 } from "./recipeCatalogTypes";
 
 export { initialCatalogFilters, toPublicRecipeSearchRequest };
@@ -40,7 +47,7 @@ export function filterPublicRecipes(
   const filtered = recipes.filter((recipe) => {
     return (
       recipe.visibility === "public" &&
-      passesQuery(recipe, query) &&
+      passesQuery(recipe, query, filters.searchScope) &&
       passesWrittenLang(recipe, filters.writtenLang) &&
       passesLocalMode(recipe, filters.isUseLocalData) &&
       passesRegion(recipe, filters.region) &&
@@ -111,6 +118,7 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
   const districtKey = makeRegionKey(countryCode, city, district);
   const writtenLang = parseWrittenLang(recipe.writtenLang);
   const creatorSource = toRecipeCreatorSource(entry.importSource);
+  const ingredients = recipe.ingredients.map(toPublicIngredient);
 
   return withCatalogDemoMedia({
     recipeId: entry.importSource?.sourceId ?? `mock-${index}`,
@@ -151,35 +159,54 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
     cuisineRegion: recipe.cuisineRegion ?? "global",
     servings: recipe.servings ?? "1-2",
     requiredTool: recipe.requiredTool ?? "basic",
-    ingredients: recipe.ingredients.map((ingredient) => ({
-      masterId: ingredient.masterId ?? null,
-      name: ingredient.name ?? ingredient.masterName ?? ingredient.master_name ?? "ingredient",
-      quantity: ingredient.quantity ?? null,
-      unit: ingredient.unit ?? null,
-      description: ingredient.description ?? "",
-    })),
-    steps: recipe.steps.map((step) => ({
-      stepNumber: step.stepNumber,
-      way: step.way,
-      cookingTip: step.cookingTip ?? null,
-      imageUrl: step.imageUrl ?? null,
-    })),
+    ingredients,
+    steps: recipe.steps.map((step) => toPublicStep(step, ingredients)),
   });
 }
 
-function passesQuery(recipe: PublicRecipeRecord, query: string): boolean {
+function toPublicIngredient(
+  ingredient: SeedEntry["recipe"]["ingredients"][number],
+): RecipeIngredient {
+  return {
+    masterId: ingredient.masterId ?? null,
+    name: ingredient.name ?? ingredient.masterName ?? ingredient.master_name ?? "ingredient",
+    quantity: ingredient.quantity ?? null,
+    unit: ingredient.unit ?? null,
+    description: ingredient.description ?? "",
+  };
+}
+
+function toPublicStep(
+  step: SeedEntry["recipe"]["steps"][number],
+  ingredients: readonly RecipeIngredient[],
+): RecipeStep {
+  const ingredientMasterIds = normalizeStepIngredientMasterIds(step.ingredientMasterIds);
+
+  return {
+    stepNumber: step.stepNumber,
+    way: step.way,
+    cookingTip: step.cookingTip ?? null,
+    imageUrl: step.imageUrl ?? null,
+    ingredientMasterIds,
+    ingredientChips: recipeStepIngredientChips(ingredients, ingredientMasterIds),
+  };
+}
+
+function passesQuery(recipe: PublicRecipeRecord, query: string, searchScope: RecipeSearchScope): boolean {
   if (query.length === 0) {
     return true;
   }
 
-  const searchable = [
-    recipe.title,
-    recipe.description,
-    recipe.cookingTip,
-    recipe.ingredients.map((ingredient) => `${ingredient.name} ${ingredient.description}`).join(" "),
-  ]
-    .join(" ")
-    .toLocaleLowerCase("ko-KR");
+  const ingredientText = recipe.ingredients
+    .map((ingredient) => `${ingredient.name} ${ingredient.description}`)
+    .join(" ");
+  const searchableParts =
+    searchScope === "recipe"
+      ? [recipe.title]
+      : searchScope === "ingredient"
+        ? [recipe.primaryIngredient, ingredientText]
+        : [recipe.title, recipe.description, recipe.cookingTip, recipe.primaryIngredient, ingredientText];
+  const searchable = searchableParts.join(" ").toLocaleLowerCase("ko-KR");
 
   return searchable.includes(query);
 }

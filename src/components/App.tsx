@@ -5,7 +5,6 @@ import type { CatalogFilterOptions } from "../lib/recipeCatalogMock";
 import { DesignImprovementProvider } from "../lib/designImprovementSteps";
 import { appRouteForPath, type AppRoute } from "../lib/routes";
 import { ThemeProvider } from "../lib/theme";
-import { DesignImprovementPanel } from "./DesignImprovementPanel";
 import { InstallPage } from "./InstallPage";
 import { PrivacyPolicyPage } from "./PrivacyPolicyPage";
 import { RecipeCatalogPage } from "./RecipeCatalogPage";
@@ -60,10 +59,6 @@ function RecipeApp({ route }: { readonly route: RecipeAppRoute }): JSX.Element {
   const { displayLang } = useI18n();
   const [filterOptions, setFilterOptions] =
     useState<CatalogFilterOptions>(emptyCatalogFilterOptions);
-  const [selectedCuisineRegion, setSelectedCuisineRegion] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("cuisineRegion") ?? "all";
-  });
 
   useEffect(() => {
     let cancelled = false;
@@ -79,33 +74,16 @@ function RecipeApp({ route }: { readonly route: RecipeAppRoute }): JSX.Element {
     };
   }, [displayLang]);
 
-  useEffect(() => {
-    if (selectedCuisineRegion === "all" || filterOptions.cuisineRegion.length === 0) {
-      return;
-    }
-
-    if (!filterOptions.cuisineRegion.includes(selectedCuisineRegion)) {
-      setSelectedCuisineRegion("all");
-    }
-  }, [filterOptions.cuisineRegion, selectedCuisineRegion]);
-
   return (
     <>
-      <SiteHeader
-        cuisineRegionOptions={filterOptions.cuisineRegion}
-        selectedCuisineRegion={selectedCuisineRegion}
-        onCuisineRegionChange={setSelectedCuisineRegion}
-      />
+      <SiteHeader />
       {route.kind === "install" ? <InstallPage /> : null}
       {route.kind === "catalog" ? (
         <RecipeCatalogPage
           filterOptions={filterOptions}
-          selectedCuisineRegion={selectedCuisineRegion}
-          onSelectedCuisineRegionChange={setSelectedCuisineRegion}
         />
       ) : null}
       {route.kind === "recipe-detail" ? <RecipeDetailPage recipeId={route.recipeId} /> : null}
-      <DesignImprovementPanel />
     </>
   );
 }
