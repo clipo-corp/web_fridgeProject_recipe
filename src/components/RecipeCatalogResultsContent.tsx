@@ -145,8 +145,13 @@ export function RecipeCatalogResultsContent({
           ) : (
             <>
               <div className="grid grid--feed">
-                {pagedRecipes.map((recipe) => (
-                  <RecipeCard key={recipe.recipeId} recipe={recipe} />
+                {pagedRecipes.map((recipe, index) => (
+                  <RecipeCard
+                    key={recipe.recipeId}
+                    recipe={recipe}
+                    variant="spotlight"
+                    rank={pageStart + index + 1}
+                  />
                 ))}
               </div>
 

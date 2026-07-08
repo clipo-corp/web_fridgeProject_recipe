@@ -126,7 +126,7 @@ const ko = {
   "mobileCta": "앱에서 저장하고 추천받기",
 
   "installPage.badge": "Keep Cook 앱 다운로드",
-  "installPage.title": "앱 설치하고 내 냉장고에 맞는 레시피 받기",
+  "installPage.title": "앱 설치하고\n냉장고에 맞는\n레시피 받기",
   "installPage.body":
     "레시피 저장, 냉장고 재료 관리, 내 재료 기반 추천까지 Keep Cook 앱에서 한 번에 이어가세요.",
   "installPage.primary": "앱 설치하기",

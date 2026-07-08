@@ -1,4 +1,5 @@
-import { Languages, Leaf, Moon, Smartphone, Sun } from "lucide-react";
+import { Languages, Moon, Smartphone, Sun } from "lucide-react";
+import { AppLogo } from "./AppLogo";
 import { useI18n } from "../lib/i18n";
 import { useTheme } from "../lib/theme";
 
@@ -12,7 +13,7 @@ export function SiteHeader(): JSX.Element {
       <div className="site-header__inner">
         <a className="brand" href="/recipe-catalog">
           <span className="brand__mark">
-            <Leaf size={20} aria-hidden="true" />
+            <AppLogo />
           </span>
           <span className="brand__text">
             Keep Cook

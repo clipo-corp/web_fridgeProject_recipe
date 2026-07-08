@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ArrowRight, Leaf, Search, X } from "lucide-react";
+import { ArrowRight, Search, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 import type { RecipeSearchScope } from "../lib/recipeCatalogTypes";
 import type { SearchSuggestion } from "../lib/recipeSearchSuggestions";
+import { AppLogo } from "./AppLogo";
 import { SearchSuggestionList } from "./SearchSuggestionList";
 import { SearchScopeSelect } from "./SearchScopeSelect";
 
@@ -35,7 +36,7 @@ export function ResultsSearchBar({
     <div className="results-search-shell">
       <div className="results-search-top">
         <a className="results-search-logo" href="/recipe-catalog" aria-label="Keep Cook">
-          <Leaf size={24} aria-hidden="true" />
+          <AppLogo size={42} />
           <span>Keep Cook</span>
         </a>
         <div className={searchWrapClassName}>
