@@ -2,24 +2,18 @@ import { describe, expect, it } from "vitest";
 import { appRouteForPath, detailPathForRecipe } from "./routes";
 
 describe("appRouteForPath", () => {
-  it("routes privacy policy paths explicitly", () => {
-    expect(appRouteForPath("/privacy")).toEqual({ kind: "privacy" });
-    expect(appRouteForPath("/privacy-policy")).toEqual({ kind: "privacy" });
-  });
-
-  it("routes support paths explicitly", () => {
-    expect(appRouteForPath("/support")).toEqual({ kind: "support" });
-    expect(appRouteForPath("/help")).toEqual({ kind: "support" });
-  });
-
-  it("routes install and recipe detail paths explicitly", () => {
-    expect(appRouteForPath("/install")).toEqual({ kind: "install" });
+  it("keeps every public path in the pre-launch state", () => {
+    expect(appRouteForPath("/")).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/install")).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/recipe-catalog")).toEqual({ kind: "prelaunch" });
     expect(appRouteForPath("/recipe-catalog/seed_china_beverage")).toEqual({
-      kind: "recipe-detail",
-      recipeId: "seed_china_beverage",
+      kind: "prelaunch",
     });
-    expect(appRouteForPath("/recipe-catalog")).toEqual({ kind: "catalog" });
-    expect(appRouteForPath("/recipe-catalog/")).toEqual({ kind: "catalog" });
+    expect(appRouteForPath("/privacy")).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/privacy-policy")).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/support")).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/help")).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/anything-else")).toEqual({ kind: "prelaunch" });
   });
 });
 

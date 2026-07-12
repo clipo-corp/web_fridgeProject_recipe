@@ -110,6 +110,7 @@
   --type-hero-size: 32px;
   --type-hero-line: 40px;
   --type-h1-size: 24px;
+  --type-h1-line: 32px;
   --type-h2-size: 20px;
   --type-h3-size: 18px;
   --type-body-size: 16px;
@@ -118,6 +119,9 @@
   --type-small-line: 20px;
   --type-caption-size: 12px;
   --type-caption-line: 18px;
+
+  /* ----- Content widths ----- */
+  --content-narrow: 480px;
 
   color: var(--text);
   background: var(--bg-app);
