@@ -2,6 +2,7 @@ import type { RecipeFilterKey } from "./recipeCatalogTypes";
 
 export type ApiResponse<T> = {
   readonly success: boolean;
+  readonly code?: string;
   readonly message?: string;
   readonly data?: T;
 };

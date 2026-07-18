@@ -6,6 +6,24 @@ const guestTokenKey = "keepcook.guestAccessToken";
 const guestDeviceKey = "keepcook.guestDeviceId";
 let guestAccessTokenRequest: Promise<string> | null = null;
 
+type ApiResponseErrorInput = {
+  readonly status: number;
+  readonly code: string | null;
+  readonly message: string;
+};
+
+export class ApiResponseError extends Error {
+  readonly status: number;
+  readonly code: string | null;
+
+  constructor(input: ApiResponseErrorInput) {
+    super(input.message);
+    this.name = "ApiResponseError";
+    this.status = input.status;
+    this.code = input.code;
+  }
+}
+
 export async function fetchWithGuestAuth<T>(
   path: string,
   init: RequestInit = {},
@@ -158,7 +176,11 @@ async function readApiResponse<T>(response: Response): Promise<T> {
   }
 
   if (!response.ok || !payload.success || payload.data === undefined) {
-    throw new Error(payload.message ?? `Server request failed with status ${response.status}.`);
+    throw new ApiResponseError({
+      status: response.status,
+      code: payload.code ?? null,
+      message: payload.message ?? `Server request failed with status ${response.status}.`,
+    });
   }
 
   return payload.data;

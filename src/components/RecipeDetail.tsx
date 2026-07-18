@@ -1,6 +1,7 @@
-import { useEffect } from "react";
-import { Clock, Download, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Clock, Download, Flag, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
+import { RecipeReportDialog } from "./RecipeReportDialog";
 import { RecipeVisual } from "./RecipeVisual";
 import { StepIngredientList } from "./StepIngredientList";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
@@ -14,6 +15,7 @@ type RecipeDetailProps = {
 
 export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Element | null {
   const { t, labelFor, countryLabel, timeLabel } = useI18n();
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   useEffect(() => {
     if (recipe === null) {
@@ -47,6 +49,14 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
     <div className="detail-backdrop" role="presentation" onClick={onClose}>
       <aside className="detail-panel" role="dialog" aria-modal="true" aria-label={recipe.title} onClick={stopPropagation}>
         <div className="detail-close-bar">
+          <button
+            className="icon-button recipe-report-button"
+            type="button"
+            aria-label="레시피 신고"
+            onClick={() => setIsReportDialogOpen(true)}
+          >
+            <Flag size={18} aria-hidden="true" />
+          </button>
           <button className="icon-button" type="button" aria-label={t("detail.close")} onClick={onClose}>
             <X size={20} aria-hidden="true" />
           </button>
@@ -165,6 +175,9 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
           </a>
         </div>
       </aside>
+      {isReportDialogOpen ? (
+        <RecipeReportDialog recipe={recipe} onClose={() => setIsReportDialogOpen(false)} />
+      ) : null}
     </div>
   );
 }

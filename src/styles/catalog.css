@@ -3192,6 +3192,187 @@ body:has(.install-page) .site-header__inner {
   background: var(--bg-card-alt);
 }
 
+.recipe-report-button svg {
+  color: var(--text-secondary);
+}
+
+.recipe-report-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg);
+  background: rgba(13, 13, 18, 0.56);
+  animation: fade-in 140ms ease;
+}
+
+.recipe-report-dialog {
+  width: min(520px, 100%);
+  max-height: min(760px, calc(100dvh - var(--space-2xl)));
+  overflow-y: auto;
+  padding: var(--space-xl);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-pop);
+}
+
+.recipe-report-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.recipe-report-dialog__eyebrow {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: var(--type-caption-size);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.recipe-report-dialog h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.recipe-report-dialog__header p:last-child {
+  margin: var(--space-xs) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--type-small-size);
+  font-weight: 700;
+}
+
+.recipe-report-dialog__close {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-alt);
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.recipe-report-dialog__reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+  border: 0;
+}
+
+.recipe-report-dialog__reasons legend,
+.recipe-report-dialog__detail > span {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-xs);
+  color: var(--text-secondary);
+  font-size: var(--type-small-size);
+  font-weight: 800;
+}
+
+.recipe-report-dialog__reason {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 46px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-alt);
+  color: var(--text);
+  font-size: var(--type-small-size);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recipe-report-dialog__reason input {
+  accent-color: var(--primary);
+}
+
+.recipe-report-dialog__detail {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.recipe-report-dialog__detail textarea {
+  min-height: 120px;
+  resize: vertical;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-alt);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.55;
+}
+
+.recipe-report-dialog__detail textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+  outline: none;
+}
+
+.recipe-report-dialog__detail small {
+  justify-self: end;
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+
+.recipe-report-dialog__message {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--type-small-size);
+  font-weight: 800;
+}
+
+.recipe-report-dialog__message a {
+  display: inline-flex;
+  margin-left: var(--space-sm);
+  color: inherit;
+  text-decoration: underline;
+}
+
+.recipe-report-dialog__message--success {
+  background: var(--badge-brand-bg);
+  color: var(--primary-pressed);
+}
+
+.recipe-report-dialog__message--notice {
+  background: var(--bg-card-alt);
+  color: var(--text-secondary);
+}
+
+.recipe-report-dialog__message--error {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+.recipe-report-dialog__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.recipe-report-dialog__actions .btn {
+  width: 100%;
+}
+
+.recipe-report-dialog__actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .detail-body {
   padding: var(--space-2xl);
 }
