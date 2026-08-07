@@ -9,7 +9,15 @@ import {
   loadPublicRecipeDetail,
   requestRecipeTranslation,
 } from "../lib/recipeApi";
-import { videoCreatorSummary } from "../lib/recipeCreatorSource";
+import { videoCreatorSummary, youtubeVideoId } from "../lib/recipeCreatorSource";
+import {
+  formatTimestamp,
+  groupRecipeSteps,
+  isSeekableVideoRecipe,
+  sectionLabel,
+  shouldRenderSectionHeadings,
+  youtubeEmbedUrl,
+} from "../lib/recipeStepSections";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import { isServerRecipeId } from "../lib/recipeServerAdapter";
 import { useI18n } from "../lib/i18n";
@@ -31,7 +39,8 @@ function langLabel(displayLang: DisplayLanguage): string {
 }
 
 export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Element {
-  const { t, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
+  const { t, lang, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
+  const [seekSeconds, setSeekSeconds] = useState<number | null>(null);
   const [recipe, setRecipe] = useState<PublicRecipeRecord | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [translationPhase, setTranslationPhase] = useState<TranslationPhase>("idle");
@@ -148,6 +157,43 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
   const ingredientsLabel = t("detail.ingredients");
   const amountFallback = t("detail.toTaste");
   const hasStepIngredientChips = recipe.steps.some((step) => step.ingredientChips.length > 0);
+
+  const stepGroups = groupRecipeSteps(recipe.steps, recipe.sections);
+  const showSectionHeadings = shouldRenderSectionHeadings(stepGroups);
+  const videoId = isSeekableVideoRecipe(recipe)
+    ? youtubeVideoId(recipe.creatorSource?.sourceId ?? null, recipe.creatorSource?.sourceUrl ?? null)
+    : null;
+
+  const renderStep = (step: PublicRecipeRecord["steps"][number]): JSX.Element => (
+    <li
+      key={step.stepNumber}
+      className={step.imageUrl === null ? "step-list__item" : "step-list__item step-list__item--media"}
+    >
+      <span className="step-list__num">{step.stepNumber}</span>
+      {step.imageUrl !== null ? (
+        <img className="step-list__image" src={step.imageUrl} alt="" loading="lazy" />
+      ) : null}
+      <div className="step-list__content">
+        <p>{step.way}</p>
+        {videoId !== null && step.startSeconds !== null ? (
+          <button
+            className="step-list__seek"
+            type="button"
+            onClick={() => setSeekSeconds(step.startSeconds)}
+            aria-label={t("detail.watchFrom", { time: formatTimestamp(step.startSeconds) })}
+          >
+            {formatTimestamp(step.startSeconds)}
+          </button>
+        ) : null}
+        {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
+        <StepIngredientList
+          ingredients={step.ingredientChips}
+          label={ingredientsLabel}
+          amountFallback={amountFallback}
+        />
+      </div>
+    </li>
+  );
 
   return (
     <main className="page detail-page">
@@ -296,32 +342,37 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
           </ul>
         </section>
 
+        {videoId !== null ? (
+          <section className="detail-section detail-card">
+            <h2>{t("detail.videoSection")}</h2>
+            <div className="recipe-video">
+              <iframe
+                key={seekSeconds ?? "start"}
+                src={youtubeEmbedUrl(videoId, seekSeconds)}
+                title={recipe.title}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </section>
+        ) : null}
+
         <section className="detail-section detail-card">
           <h2>{t("detail.steps")}</h2>
-          <ol className="step-list">
-            {recipe.steps.map((step) => {
+          {showSectionHeadings ? (
+            stepGroups.map((group, index) => {
+              const heading = sectionLabel(group.section, group.title, lang);
               return (
-                <li
-                  key={step.stepNumber}
-                  className={step.imageUrl === null ? "step-list__item" : "step-list__item step-list__item--media"}
-                >
-                  <span className="step-list__num">{step.stepNumber}</span>
-                  {step.imageUrl !== null ? (
-                    <img className="step-list__image" src={step.imageUrl} alt="" loading="lazy" />
-                  ) : null}
-                  <div className="step-list__content">
-                    <p>{step.way}</p>
-                    {step.cookingTip !== null && step.cookingTip.length > 0 ? <small>{step.cookingTip}</small> : null}
-                    <StepIngredientList
-                      ingredients={step.ingredientChips}
-                      label={ingredientsLabel}
-                      amountFallback={amountFallback}
-                    />
-                  </div>
-                </li>
+                <div className="step-group" key={`${group.section}-${index}`}>
+                  {heading !== null ? <h3 className="step-group__title">{heading}</h3> : null}
+                  <ol className="step-list">{group.steps.map(renderStep)}</ol>
+                </div>
               );
-            })}
-          </ol>
+            })
+          ) : (
+            <ol className="step-list">{recipe.steps.map(renderStep)}</ol>
+          )}
           {!hasStepIngredientChips && recipe.ingredients.length > 0 ? (
             <StepIngredientList
               ingredients={recipe.ingredients}
