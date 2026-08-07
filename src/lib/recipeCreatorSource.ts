@@ -145,7 +145,7 @@ function videoPreviewImageUrl(
   return videoId === null ? null : `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 }
 
-function youtubeVideoId(sourceId: string | null, sourceUrl: string | null): string | null {
+export function youtubeVideoId(sourceId: string | null, sourceUrl: string | null): string | null {
   if (sourceId !== null) {
     return sourceId;
   }

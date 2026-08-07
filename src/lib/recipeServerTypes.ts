@@ -90,6 +90,25 @@ export type ServerRecipeInfo = {
   readonly requiredTool?: string | null;
   readonly ingredients?: readonly ServerRecipeIngredient[] | null;
   readonly steps?: readonly ServerRecipeStep[] | null;
+  readonly sections?: readonly ServerRecipeSection[] | null;
+  readonly sourcePlatform?: string | null;
+  readonly source_platform?: string | null;
+  readonly sourceMediaType?: string | null;
+  readonly source_media_type?: string | null;
+  readonly timelineCapability?: string | null;
+  readonly timeline_capability?: string | null;
+};
+
+export type ServerRecipeSection = {
+  readonly section?: string | null;
+  readonly step_section?: string | null;
+  readonly title?: string | null;
+  readonly sectionTitle?: string | null;
+  readonly section_title?: string | null;
+  readonly startSeconds?: number | string | null;
+  readonly start_seconds?: number | string | null;
+  readonly endSeconds?: number | string | null;
+  readonly end_seconds?: number | string | null;
 };
 
 export type ServerRecipeIngredient = {
@@ -110,4 +129,10 @@ export type ServerRecipeStep = {
   readonly cookingTip?: string | null;
   readonly imageUrl?: string | null;
   readonly ingredientMasterIds?: readonly (number | string)[] | null;
+  readonly section?: string | null;
+  readonly step_section?: string | null;
+  readonly startSeconds?: number | string | null;
+  readonly start_seconds?: number | string | null;
+  readonly endSeconds?: number | string | null;
+  readonly end_seconds?: number | string | null;
 };

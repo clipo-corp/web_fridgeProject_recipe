@@ -113,6 +113,8 @@ const ko = {
 
   "detail.ingredients": "재료",
   "detail.steps": "만드는 법",
+  "detail.watchFrom": "{time}부터 보기",
+  "detail.videoSection": "영상",
   "detail.toTaste": "적당량",
   "detail.close": "닫기",
   "detail.loading": "레시피를 불러오는 중입니다.",
@@ -255,6 +257,8 @@ const en: Record<TranslationKey, string> = {
 
   "detail.ingredients": "Ingredients",
   "detail.steps": "Steps",
+  "detail.watchFrom": "Watch from {time}",
+  "detail.videoSection": "Video",
   "detail.toTaste": "To taste",
   "detail.close": "Close",
   "detail.loading": "Loading recipe.",

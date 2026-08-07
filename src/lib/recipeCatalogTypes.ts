@@ -38,6 +38,31 @@ export type RecipeStep = {
   readonly imageUrl: string | null;
   readonly ingredientMasterIds: readonly number[] | null;
   readonly ingredientChips: readonly RecipeStepIngredientChip[];
+  /** Canonical section key this step belongs to. Defaults to `MAIN`. */
+  readonly section: string;
+  /** Only populated when the recipe is `SEEKABLE`; otherwise null. */
+  readonly startSeconds: number | null;
+  readonly endSeconds: number | null;
+};
+
+/** Where the recipe originally came from. Mirrors the server enum. */
+export type RecipeSourcePlatform = "YOUTUBE" | "INSTAGRAM" | "TIKTOK" | "OWNED";
+
+/** What kind of media backs the recipe. Mirrors the server enum. */
+export type RecipeSourceMediaType = "VIDEO" | "PHOTO" | "CAROUSEL";
+
+/**
+ * How far the source media can be navigated.
+ * `SEEKABLE` is the only value that permits per-step timestamps.
+ */
+export type RecipeTimelineCapability = "NONE" | "PLAYABLE_ONLY" | "SEEKABLE";
+
+export type RecipeSection = {
+  readonly section: string;
+  /** Display title. Null means "use the localized default label for this key". */
+  readonly title: string | null;
+  readonly startSeconds: number | null;
+  readonly endSeconds: number | null;
 };
 
 export type RecipeCatalogRegion =
@@ -144,6 +169,11 @@ export type PublicRecipeRecord = {
   readonly requiredTool: string;
   readonly ingredients: readonly RecipeIngredient[];
   readonly steps: readonly RecipeStep[];
+  /** Ordered section runs. Empty when the recipe has no section metadata. */
+  readonly sections: readonly RecipeSection[];
+  readonly sourcePlatform: RecipeSourcePlatform;
+  readonly sourceMediaType: RecipeSourceMediaType;
+  readonly timelineCapability: RecipeTimelineCapability;
 };
 
 export type PublicRecipeSearchRequest = {

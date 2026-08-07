@@ -161,6 +161,10 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
     requiredTool: recipe.requiredTool ?? "basic",
     ingredients,
     steps: recipe.steps.map((step) => toPublicStep(step, ingredients)),
+    sections: [],
+    sourcePlatform: "OWNED",
+    sourceMediaType: "PHOTO",
+    timelineCapability: "NONE",
   });
 }
 
@@ -189,6 +193,9 @@ function toPublicStep(
     imageUrl: step.imageUrl ?? null,
     ingredientMasterIds,
     ingredientChips: recipeStepIngredientChips(ingredients, ingredientMasterIds),
+    section: "MAIN",
+    startSeconds: null,
+    endSeconds: null,
   };
 }
 
