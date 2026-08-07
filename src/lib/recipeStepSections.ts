@@ -43,15 +43,26 @@ function meaningfulTitle(title: string | null, section: string): string | null {
   return isDefaultLabel ? null : trimmed;
 }
 
+/**
+ * `recipe_step.section` is free text on the server, so a key outside the canonical
+ * three is expected rather than exceptional. Falling back to the key itself keeps an
+ * unknown section visible: returning null would split the steps into blocks with no
+ * heading, which reads as a layout glitch rather than a section boundary.
+ */
 export function sectionLabel(
   section: string,
   title: string | null,
   lang: string,
 ): string | null {
   if (title !== null) return title;
+
   const defaults = defaultSectionLabels.get(section);
-  if (defaults === undefined) return null;
-  return lang.startsWith("ko") ? defaults.ko : defaults.en;
+  if (defaults !== undefined) {
+    return lang.startsWith("ko") ? defaults.ko : defaults.en;
+  }
+
+  const trimmed = section.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 /**
@@ -66,24 +77,37 @@ export function groupRecipeSteps(
   steps: readonly RecipeStep[],
   sections: readonly RecipeSection[] = [],
 ): readonly RecipeStepGroup[] {
-  const titles = new Map<string, string | null>();
-  sections.forEach((entry) => {
-    const key = normalizeSection(entry.section);
-    if (!titles.has(key)) titles.set(key, meaningfulTitle(entry.title, key));
-  });
-
-  const groups: { section: string; title: string | null; steps: RecipeStep[] }[] = [];
+  const runs: { section: string; steps: RecipeStep[] }[] = [];
   steps.forEach((step) => {
     const section = normalizeSection(step.section);
-    const previous = groups[groups.length - 1];
+    const previous = runs[runs.length - 1];
     if (previous !== undefined && previous.section === section) {
       previous.steps.push(step);
       return;
     }
-    groups.push({ section, title: titles.get(section) ?? null, steps: [step] });
+    runs.push({ section, steps: [step] });
   });
 
-  return groups;
+  // `sections[]` describes runs, not unique keys — each entry carries its own
+  // start/end seconds, so a recipe that returns to PREP sends two PREP entries with
+  // different titles. Consume them in order, matching each run to the next unused
+  // entry with the same key, so a repeated run keeps its own title instead of
+  // inheriting the first one's.
+  const consumed = new Array<boolean>(sections.length).fill(false);
+  const titleForRun = (section: string): string | null => {
+    const index = sections.findIndex(
+      (entry, i) => !consumed[i] && normalizeSection(entry.section) === section,
+    );
+    if (index === -1) return null;
+    consumed[index] = true;
+    return meaningfulTitle(sections[index]?.title ?? null, section);
+  };
+
+  return runs.map((run) => ({
+    section: run.section,
+    title: titleForRun(run.section),
+    steps: run.steps,
+  }));
 }
 
 /**
@@ -124,11 +148,21 @@ export function isSeekableVideoRecipe(recipe: PublicRecipeRecord): boolean {
   );
 }
 
+/**
+ * `recipe.source_id` is free-text server data, and `youtubeVideoId` hands it back
+ * verbatim when present. Anything that is not a real video id would otherwise be
+ * interpolated straight into the embed path and produce a silently broken player, so
+ * validate the shape and let the caller fall back to no video instead.
+ */
+export function isValidYoutubeVideoId(value: string | null): value is string {
+  return value !== null && /^[A-Za-z0-9_-]{6,20}$/.test(value);
+}
+
 export function youtubeEmbedUrl(videoId: string, startSeconds: number | null): string {
   const params = new URLSearchParams({ rel: "0", modestbranding: "1" });
   if (startSeconds !== null) {
     params.set("start", String(Math.max(0, Math.floor(startSeconds))));
     params.set("autoplay", "1");
   }
-  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
 }

@@ -4,6 +4,7 @@ import {
   formatTimestamp,
   groupRecipeSteps,
   sectionLabel,
+  isValidYoutubeVideoId,
   shouldRenderSectionHeadings,
   youtubeEmbedUrl,
 } from "./recipeStepSections";
@@ -103,8 +104,10 @@ describe("sectionLabel", () => {
     expect(sectionLabel("PREP", null, "en-US")).toBe("Preparation");
   });
 
-  it("returns null for an unknown key with no title", () => {
-    expect(sectionLabel("PLATING", null, "ko-KR")).toBeNull();
+  it("falls back to the key itself for an unknown section", () => {
+    // Server-side `section` is free text, so an unrecognized key must still produce a
+    // heading — otherwise the group renders as an unexplained gap in the step list.
+    expect(sectionLabel("PLATING", null, "ko-KR")).toBe("PLATING");
   });
 });
 
@@ -137,5 +140,67 @@ describe("youtubeEmbedUrl", () => {
     const url = youtubeEmbedUrl("abc123", 93);
     expect(url).toContain("start=93");
     expect(url).toContain("autoplay=1");
+  });
+});
+
+describe("regressions from review", () => {
+  it("gives a repeated section run its own title instead of the first one's", () => {
+    // sections[] describes runs, not unique keys — each entry carries its own
+    // start/end seconds, so a recipe returning to PREP sends two PREP entries.
+    const groups = groupRecipeSteps(
+      [step(1, "PREP"), step(2, "MAIN"), step(3, "PREP")],
+      [
+        section("PREP", "채소 손질"),
+        section("MAIN", "끓이기"),
+        section("PREP", "고명 준비"),
+      ],
+    );
+
+    expect(groups.map((group) => group.title)).toEqual([
+      "채소 손질",
+      "끓이기",
+      "고명 준비",
+    ]);
+  });
+
+  it("leaves a run untitled once the matching entries are used up", () => {
+    const groups = groupRecipeSteps(
+      [step(1, "PREP"), step(2, "MAIN"), step(3, "PREP")],
+      [section("PREP", "채소 손질"), section("MAIN", "끓이기")],
+    );
+
+    expect(groups[2]?.title).toBeNull();
+  });
+
+  it("labels an unknown section key with the key rather than nothing", () => {
+    // recipe_step.section is free text on the server; returning null would split the
+    // steps into blocks with no heading, which reads as a layout glitch.
+    expect(sectionLabel("DOUGH", null, "ko-KR")).toBe("DOUGH");
+    expect(sectionLabel("   ", null, "ko-KR")).toBeNull();
+  });
+
+  it("never leaves a rendered group without a heading", () => {
+    const groups = groupRecipeSteps([step(1, "DOUGH"), step(2, "FILLING")]);
+
+    expect(shouldRenderSectionHeadings(groups)).toBe(true);
+    for (const group of groups) {
+      expect(sectionLabel(group.section, group.title, "ko-KR")).not.toBeNull();
+    }
+  });
+});
+
+describe("isValidYoutubeVideoId", () => {
+  it("accepts a real video id", () => {
+    expect(isValidYoutubeVideoId("dQw4w9WgXcQ")).toBe(true);
+  });
+
+  it("rejects values that would break out of the embed path", () => {
+    for (const bad of [null, "", "../../evil", "abc/def", "a?b=c", "x".repeat(64)]) {
+      expect(isValidYoutubeVideoId(bad)).toBe(false);
+    }
+  });
+
+  it("percent-encodes whatever it is given anyway", () => {
+    expect(youtubeEmbedUrl("a/b", null)).toContain("/embed/a%2Fb");
   });
 });

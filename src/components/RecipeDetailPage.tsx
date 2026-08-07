@@ -14,6 +14,7 @@ import {
   formatTimestamp,
   groupRecipeSteps,
   isSeekableVideoRecipe,
+  isValidYoutubeVideoId,
   sectionLabel,
   shouldRenderSectionHeadings,
   youtubeEmbedUrl,
@@ -40,7 +41,12 @@ function langLabel(displayLang: DisplayLanguage): string {
 
 export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Element {
   const { t, lang, displayLang, labelFor, countryLabel, timeLabel } = useI18n();
-  const [seekSeconds, setSeekSeconds] = useState<number | null>(null);
+  // The nonce is what makes a repeat press work. Seeking is done by remounting the
+  // iframe, and remounting is driven by the React key; keying on the seconds alone
+  // means pressing the same chip twice sets an identical value, React bails out, and
+  // the player never moves — dead exactly on the "watch that bit again" gesture.
+  const [seek, setSeek] = useState<{ seconds: number; nonce: number } | null>(null);
+  const videoRef = useRef<HTMLDivElement | null>(null);
   const [recipe, setRecipe] = useState<PublicRecipeRecord | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [translationPhase, setTranslationPhase] = useState<TranslationPhase>("idle");
@@ -160,9 +166,10 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
 
   const stepGroups = groupRecipeSteps(recipe.steps, recipe.sections);
   const showSectionHeadings = shouldRenderSectionHeadings(stepGroups);
-  const videoId = isSeekableVideoRecipe(recipe)
+  const candidateVideoId = isSeekableVideoRecipe(recipe)
     ? youtubeVideoId(recipe.creatorSource?.sourceId ?? null, recipe.creatorSource?.sourceUrl ?? null)
     : null;
+  const videoId = isValidYoutubeVideoId(candidateVideoId) ? candidateVideoId : null;
 
   const renderStep = (step: PublicRecipeRecord["steps"][number]): JSX.Element => (
     <li
@@ -179,7 +186,16 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
           <button
             className="step-list__seek"
             type="button"
-            onClick={() => setSeekSeconds(step.startSeconds)}
+            onClick={() => {
+              setSeek((current) => ({
+                seconds: step.startSeconds as number,
+                nonce: (current?.nonce ?? 0) + 1,
+              }));
+              // The player sits above the steps, so a press from further down the
+              // list would otherwise reload it entirely off-screen with no visible
+              // feedback.
+              videoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
             aria-label={t("detail.watchFrom", { time: formatTimestamp(step.startSeconds) })}
           >
             {formatTimestamp(step.startSeconds)}
@@ -345,12 +361,14 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
         {videoId !== null ? (
           <section className="detail-section detail-card">
             <h2>{t("detail.videoSection")}</h2>
-            <div className="recipe-video">
+            <div className="recipe-video" ref={videoRef}>
               <iframe
-                key={seekSeconds ?? "start"}
-                src={youtubeEmbedUrl(videoId, seekSeconds)}
+                key={seek?.nonce ?? "start"}
+                src={youtubeEmbedUrl(videoId, seek?.seconds ?? null)}
                 title={recipe.title}
-                loading="lazy"
+                // Eager once a seek is pending: a lazily-loaded replacement may defer
+                // its request while off-screen, so the seek would appear to do nothing.
+                loading={seek === null ? "lazy" : "eager"}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
                 allowFullScreen
               />

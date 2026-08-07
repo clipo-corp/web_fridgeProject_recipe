@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Clock, Download, Flag, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeReportDialog } from "./RecipeReportDialog";
@@ -10,6 +10,7 @@ import {
   formatTimestamp,
   groupRecipeSteps,
   isSeekableVideoRecipe,
+  isValidYoutubeVideoId,
   sectionLabel,
   shouldRenderSectionHeadings,
   youtubeEmbedUrl,
@@ -25,11 +26,12 @@ type RecipeDetailProps = {
 export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Element | null {
   const { t, lang, labelFor, countryLabel, timeLabel } = useI18n();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
-  const [seekSeconds, setSeekSeconds] = useState<number | null>(null);
+  const [seek, setSeek] = useState<{ seconds: number; nonce: number } | null>(null);
+  const videoRef = useRef<HTMLDivElement | null>(null);
 
   // Reopening the panel on a different recipe must not carry the old seek target.
   useEffect(() => {
-    setSeekSeconds(null);
+    setSeek(null);
   }, [recipe?.recipeId]);
 
   useEffect(() => {
@@ -62,9 +64,10 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
 
   const stepGroups = groupRecipeSteps(recipe.steps, recipe.sections);
   const showSectionHeadings = shouldRenderSectionHeadings(stepGroups);
-  const videoId = isSeekableVideoRecipe(recipe)
+  const candidateVideoId = isSeekableVideoRecipe(recipe)
     ? youtubeVideoId(recipe.creatorSource?.sourceId ?? null, recipe.creatorSource?.sourceUrl ?? null)
     : null;
+  const videoId = isValidYoutubeVideoId(candidateVideoId) ? candidateVideoId : null;
 
   const renderStep = (step: RecipeStep): JSX.Element => (
     <li key={step.stepNumber} className="step-list__item">
@@ -75,7 +78,13 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
           <button
             className="step-list__seek"
             type="button"
-            onClick={() => setSeekSeconds(step.startSeconds)}
+            onClick={() => {
+              setSeek((current) => ({
+                seconds: step.startSeconds as number,
+                nonce: (current?.nonce ?? 0) + 1,
+              }));
+              videoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
             aria-label={t("detail.watchFrom", { time: formatTimestamp(step.startSeconds) })}
           >
             {formatTimestamp(step.startSeconds)}
@@ -186,12 +195,12 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
           {videoId !== null ? (
             <section className="detail-section">
               <h3>{t("detail.videoSection")}</h3>
-              <div className="recipe-video">
+              <div className="recipe-video" ref={videoRef}>
                 <iframe
-                  key={seekSeconds ?? "start"}
-                  src={youtubeEmbedUrl(videoId, seekSeconds)}
+                  key={seek?.nonce ?? "start"}
+                  src={youtubeEmbedUrl(videoId, seek?.seconds ?? null)}
                   title={recipe.title}
-                  loading="lazy"
+                  loading={seek === null ? "lazy" : "eager"}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
                   allowFullScreen
                 />
