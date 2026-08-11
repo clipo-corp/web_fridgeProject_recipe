@@ -102,6 +102,10 @@ export type ServerRecipeIngredient = {
   readonly quantity?: number | string | null;
   readonly unit?: string | null;
   readonly description?: string | null;
+  readonly processingForm?: string | null;
+  readonly processing_form?: string | null;
+  readonly processingFormHint?: string | null;
+  readonly processing_form_hint?: string | null;
 };
 
 export type ServerRecipeStep = {

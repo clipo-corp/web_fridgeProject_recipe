@@ -12,6 +12,8 @@ const ingredients: readonly RecipeIngredient[] = [
     quantity: 200,
     unit: "g",
     description: "Dummy ingredient White Rice",
+    processingForm: null,
+    isMasterName: false,
   },
   {
     masterId: 7509,
@@ -19,6 +21,8 @@ const ingredients: readonly RecipeIngredient[] = [
     quantity: 100,
     unit: "g",
     description: "Dummy ingredient Cabbage Kimchi",
+    processingForm: "MINCED",
+    isMasterName: true,
   },
 ];
 
@@ -46,6 +50,8 @@ describe("recipeStepIngredientChips", () => {
         quantity: 100,
         unit: "g",
         description: "Dummy ingredient Cabbage Kimchi",
+        processingForm: "MINCED",
+        isMasterName: true,
       },
       {
         masterId: 3508,
@@ -53,6 +59,8 @@ describe("recipeStepIngredientChips", () => {
         quantity: 200,
         unit: "g",
         description: "Dummy ingredient White Rice",
+        processingForm: null,
+        isMasterName: false,
       },
     ]);
   });

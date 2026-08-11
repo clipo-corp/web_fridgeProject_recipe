@@ -1,3 +1,5 @@
+import type { IngredientProcessingForm } from "./ingredientProcessingForm";
+
 export type RecipeSearchSort = "latest" | "popular" | "hot_month";
 export type RecipeSearchScope = "all" | "recipe" | "ingredient";
 export type RecipeWrittenLang = "all" | "ko" | "en";
@@ -21,6 +23,10 @@ export type RecipeIngredient = {
   readonly quantity: number | null;
   readonly unit: string | null;
   readonly description: string;
+  /** Processing-form axis (축 B) code from the server; null = unknown. */
+  readonly processingForm: IngredientProcessingForm | null;
+  /** True when `name` is a master-catalog display name rather than the raw recipe text. */
+  readonly isMasterName: boolean;
 };
 
 export type RecipeStepIngredientChip = {
@@ -29,6 +35,8 @@ export type RecipeStepIngredientChip = {
   readonly quantity: number | null;
   readonly unit: string | null;
   readonly description: string;
+  readonly processingForm: IngredientProcessingForm | null;
+  readonly isMasterName: boolean;
 };
 
 export type RecipeStep = {
