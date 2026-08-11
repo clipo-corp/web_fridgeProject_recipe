@@ -9,6 +9,8 @@ function ingredient(patch: Partial<RecipeIngredient>): RecipeIngredient {
     quantity: null,
     unit: null,
     description: "",
+    processingForm: null,
+    isMasterName: false,
     ...patch,
   };
 }

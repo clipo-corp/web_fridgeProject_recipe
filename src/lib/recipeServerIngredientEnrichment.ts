@@ -4,7 +4,11 @@ import {
   recipeNameLanguageCandidates,
   type ServerMasterFoodBatchResponse,
 } from "./recipeIngredientLocalization";
-import type { PublicRecipeRecord, RecipeIngredient } from "./recipeCatalogTypes";
+import type {
+  PublicRecipeRecord,
+  RecipeIngredient,
+  RecipeStepIngredientChip,
+} from "./recipeCatalogTypes";
 
 export async function enrichRecipeIngredientNames(
   recipe: PublicRecipeRecord,
@@ -28,20 +32,14 @@ export async function enrichRecipeIngredientNames(
       displayLang,
       recipeNameLanguageCandidates(recipe, displayLang),
     );
-    const ingredients = recipe.ingredients.map((ingredient) => ({
-      ...ingredient,
-      name: ingredientName(ingredient, lookup),
-    }));
+    const ingredients = recipe.ingredients.map((ingredient) => enrichIngredient(ingredient, lookup));
 
     return {
       ...recipe,
       ingredients,
       steps: recipe.steps.map((step) => ({
         ...step,
-        ingredientChips: step.ingredientChips.map((ingredient) => ({
-          ...ingredient,
-          name: ingredientName(ingredient, lookup),
-        })),
+        ingredientChips: step.ingredientChips.map((ingredient) => enrichIngredient(ingredient, lookup)),
       })),
     };
   } catch {
@@ -65,17 +63,21 @@ async function fetchIngredientMasterLookup(
   return ingredientMasterLookupFromResponse(response, languageCandidates);
 }
 
-function ingredientName(
-  ingredient: RecipeIngredient,
+function enrichIngredient<T extends RecipeIngredient | RecipeStepIngredientChip>(
+  ingredient: T,
   lookup: ReadonlyMap<number, string>,
-): string {
+): T {
   if (ingredient.masterId !== null) {
     const lookupName = lookup.get(ingredient.masterId);
     if (lookupName !== undefined && lookupName.length > 0) {
-      return lookupName;
+      return { ...ingredient, name: lookupName, isMasterName: true };
     }
   }
 
+  return { ...ingredient, name: ingredientName(ingredient) };
+}
+
+function ingredientName(ingredient: RecipeIngredient | RecipeStepIngredientChip): string {
   if (ingredient.name.length > 0) {
     return ingredient.name;
   }

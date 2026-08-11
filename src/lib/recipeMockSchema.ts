@@ -8,6 +8,10 @@ const ingredientSchema = z.object({
   quantity: z.number().nullable().optional(),
   unit: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  processingForm: z.string().nullable().optional(),
+  processing_form: z.string().nullable().optional(),
+  processingFormHint: z.string().nullable().optional(),
+  processing_form_hint: z.string().nullable().optional(),
 });
 
 const stepSchema = z.object({

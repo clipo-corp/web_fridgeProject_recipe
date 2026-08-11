@@ -1,3 +1,4 @@
+import { IngredientFormHint } from "./IngredientFormHint";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import type { RecipeStepIngredientChip } from "../lib/recipeCatalogTypes";
 
@@ -31,7 +32,10 @@ export function StepIngredientList({
             <span className="step-ingredient-list__emoji" aria-hidden="true">
               {recipeIngredientEmoji(ingredient)}
             </span>
-            <span className="step-ingredient-list__name">{ingredient.name}</span>
+            <span className="step-ingredient-list__name">
+              <IngredientFormHint ingredient={ingredient} />
+              {ingredient.name}
+            </span>
             <span className="step-ingredient-list__amount">
               {formatAmount(ingredient.quantity, ingredient.unit, amountFallback)}
             </span>

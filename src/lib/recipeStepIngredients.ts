@@ -51,6 +51,8 @@ export function recipeStepIngredientChips(
           quantity: ingredient.quantity,
           unit: ingredient.unit,
           description: ingredient.description,
+          processingForm: ingredient.processingForm,
+          isMasterName: ingredient.isMasterName,
         }];
   });
 }
