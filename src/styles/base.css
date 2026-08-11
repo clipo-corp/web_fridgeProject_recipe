@@ -106,15 +106,31 @@
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
 
-  /* type roles: fontSize / lineHeight / weight */
+  /*
+   * Type roles. These mirror `Typography` in the native client
+   * (smart-fridge-native/client/constants/theme.ts) role for role, so the two
+   * platforms describe text the same way even though they use different typefaces.
+   * Prefer a role token over a raw font-size; see docs/typography.md.
+   */
+  --type-weight-heading: 800;
+  --type-weight-body: 400;
+
   --type-hero-size: 32px;
   --type-hero-line: 40px;
+  --type-banner-size: 28px;
   --type-h1-size: 24px;
   --type-h1-line: 32px;
   --type-h2-size: 20px;
   --type-h3-size: 18px;
+  --type-h4-size: 16px;
+  --type-h5-size: 14px;
+  --type-h6-size: 11px;
+  --type-boldtitle-size: 16px;
+  --type-boldtitle-line: 24px;
   --type-body-size: 16px;
   --type-body-line: 24px;
+  --type-link-size: 16px;
+  --type-link-line: 24px;
   --type-small-size: 14px;
   --type-small-line: 20px;
   --type-caption-size: 12px;
