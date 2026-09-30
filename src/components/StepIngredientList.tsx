@@ -1,3 +1,4 @@
+import { IngredientAmount } from "./IngredientAmount";
 import { IngredientFormHint } from "./IngredientFormHint";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import type { RecipeStepIngredientChip } from "../lib/recipeCatalogTypes";
@@ -36,20 +37,14 @@ export function StepIngredientList({
               <IngredientFormHint ingredient={ingredient} />
               {ingredient.name}
             </span>
-            <span className="step-ingredient-list__amount">
-              {formatAmount(ingredient.quantity, ingredient.unit, amountFallback)}
-            </span>
+            <IngredientAmount
+              ingredient={ingredient}
+              className="step-ingredient-list__amount"
+              amountFallback={amountFallback}
+            />
           </li>
         ))}
       </ul>
     </div>
   );
-}
-
-function formatAmount(quantity: number | null, unit: string | null, fallback: string): string {
-  if (quantity === null && unit === null) {
-    return fallback;
-  }
-
-  return `${quantity ?? ""}${unit ?? ""}`.trim();
 }

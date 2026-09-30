@@ -20,9 +20,37 @@ const defaultSectionLabels = new Map<string, SectionLabels>([
   ["FINISH", { ko: "마무리", en: "Finish" }],
 ]);
 
+/**
+ * Titles that restate a default label, per key. Includes the native client's
+ * labels ("준비", "본 조리") so a title written for the app is treated the same way.
+ */
+const defaultTitleAliases = new Map<string, readonly string[]>([
+  ["PREP", ["재료 준비", "준비", "preparation", "prep"]],
+  ["MAIN", ["조리", "본 조리", "main"]],
+  ["FINISH", ["마무리", "finish"]],
+]);
+
+/**
+ * Numeric stages: the pipeline writes stage 1 as ingredient prep and every later
+ * stage as cooking, so an untitled stage borrows the PREP or MAIN label.
+ */
+function isNumericStage(section: string): boolean {
+  return /^[1-9]\d*$/.test(section);
+}
+
+function defaultKeyFor(section: string): string {
+  if (!isNumericStage(section)) return section;
+  return section === "1" ? "PREP" : "MAIN";
+}
+
 function normalizeSection(value: string | null | undefined): string {
   const trimmed = typeof value === "string" ? value.trim().toUpperCase() : "";
   return trimmed.length > 0 ? trimmed : "MAIN";
+}
+
+/** "1단계 재료 손질" → "재료 손질"; a bare "1단계" is not a title at all. */
+function stripStagePrefix(title: string): string {
+  return title.replace(/^\d+\s*단계\s*[:.·-]?\s*/u, "").replace(/^(stage|part|step)\s*\d+\s*[:.·-]?\s*/iu, "").trim();
 }
 
 /**
@@ -31,16 +59,14 @@ function normalizeSection(value: string | null | undefined): string {
  * comparing against the built-ins keeps those from becoming noise.
  */
 function meaningfulTitle(title: string | null, section: string): string | null {
-  const trimmed = title?.trim() ?? "";
+  const trimmed = stripStagePrefix(title?.trim() ?? "");
   if (trimmed.length === 0) return null;
 
-  const defaults = defaultSectionLabels.get(section);
-  if (defaults === undefined) return trimmed;
+  const aliases = defaultTitleAliases.get(defaultKeyFor(section));
+  if (aliases === undefined) return trimmed;
 
-  const isDefaultLabel = [defaults.ko, defaults.en].some(
-    (label) => label.toLocaleLowerCase() === trimmed.toLocaleLowerCase(),
-  );
-  return isDefaultLabel ? null : trimmed;
+  const lowered = trimmed.toLocaleLowerCase();
+  return aliases.some((label) => label.toLocaleLowerCase() === lowered) ? null : trimmed;
 }
 
 /**
@@ -56,13 +82,22 @@ export function sectionLabel(
 ): string | null {
   if (title !== null) return title;
 
-  const defaults = defaultSectionLabels.get(section);
+  const defaults = defaultSectionLabels.get(defaultKeyFor(section));
   if (defaults !== undefined) {
     return lang.startsWith("ko") ? defaults.ko : defaults.en;
   }
 
   const trimmed = section.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * Kicker shown above each group title, numbered by position like the native
+ * client's `recipeDetailPhaseHeading` ("1단계", "Part 1"). Position rather than the
+ * section key, so PREP/MAIN/FINISH recipes and numeric-stage recipes read the same.
+ */
+export function stageKicker(index: number, lang: string): string {
+  return lang.startsWith("ko") ? `${index + 1}단계` : `Part ${index + 1}`;
 }
 
 /**

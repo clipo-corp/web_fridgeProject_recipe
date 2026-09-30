@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock, Download, Flag, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
+import { IngredientAmount } from "./IngredientAmount";
 import { IngredientFormHint } from "./IngredientFormHint";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeReportDialog } from "./RecipeReportDialog";
@@ -187,9 +188,11 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
                       <IngredientFormHint ingredient={ingredient} />
                       {ingredient.name}
                     </span>
-                    <span className="ingredient-list__amount">
-                      {formatAmount(ingredient.quantity, ingredient.unit, amountFallback)}
-                    </span>
+                    <IngredientAmount
+                      ingredient={ingredient}
+                      className="ingredient-list__amount"
+                      amountFallback={amountFallback}
+                    />
                   </li>
                 ))}
               </ul>
@@ -250,14 +253,6 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
       ) : null}
     </div>
   );
-}
-
-function formatAmount(quantity: number | null, unit: string | null, fallback: string): string {
-  if (quantity === null && unit === null) {
-    return fallback;
-  }
-
-  return `${quantity ?? ""}${unit ?? ""}`.trim();
 }
 
 function stopPropagation(event: React.MouseEvent): void {

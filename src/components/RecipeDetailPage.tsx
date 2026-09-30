@@ -1,5 +1,6 @@
 import { ArrowLeft, Clock, Download, Flame, Globe, Heart, Languages, MapPin, Play, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { IngredientAmount } from "./IngredientAmount";
 import { IngredientFormHint } from "./IngredientFormHint";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
@@ -11,6 +12,7 @@ import {
   requestRecipeTranslation,
 } from "../lib/recipeApi";
 import { videoCreatorSummary, youtubeVideoId } from "../lib/recipeCreatorSource";
+import { formatIngredientAmount } from "../lib/recipeIngredientAmount";
 import {
   formatTimestamp,
   groupRecipeSteps,
@@ -18,8 +20,10 @@ import {
   isValidYoutubeVideoId,
   sectionLabel,
   shouldRenderSectionHeadings,
+  stageKicker,
   youtubeEmbedUrl,
 } from "../lib/recipeStepSections";
+import { formatToolGroupLabel, groupRecipeTools } from "../lib/recipeTools";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
 import { isServerRecipeId } from "../lib/recipeServerAdapter";
 import { useI18n } from "../lib/i18n";
@@ -164,6 +168,10 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
   const ingredientsLabel = t("detail.ingredients");
   const amountFallback = t("detail.toTaste");
   const hasStepIngredientChips = recipe.steps.some((step) => step.ingredientChips.length > 0);
+  const toolGroups = groupRecipeTools(recipe.tools, lang, labelFor);
+  const showConversionNote = recipe.ingredients.some(
+    (ingredient) => formatIngredientAmount(ingredient, lang, amountFallback).approxGrams !== null,
+  );
 
   const stepGroups = groupRecipeSteps(recipe.steps, recipe.sections);
   const showSectionHeadings = shouldRenderSectionHeadings(stepGroups);
@@ -281,7 +289,8 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
           </div>
 
           <div className="detail-chips">
-            {[recipe.category, recipe.recipeType, recipe.cookingMethod, recipe.technique, recipe.requiredTool]
+            {[recipe.category, recipe.recipeType, recipe.cookingMethod, recipe.technique]
+              .concat(toolGroups.length > 0 ? [] : [recipe.requiredTool])
               .filter((value) => value.length > 0 && value !== "unknown")
               .map((value) => (
                 <span className="badge badge--muted" key={value}>
@@ -289,6 +298,24 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
                 </span>
               ))}
           </div>
+
+          {toolGroups.length > 0 ? (
+            <div className="detail-tools">
+              <span className="detail-tools__label" id="detail-tools-label">
+                {t("detail.tools")}
+              </span>
+              <ul className="detail-tools__list" aria-labelledby="detail-tools-label">
+                {toolGroups.map((group) => (
+                  <li key={group.key}>
+                    {formatToolGroupLabel(group, lang)}
+                    {group.optional ? (
+                      <span className="detail-tools__optional"> {t("detail.toolOptional")}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {recipe.cookingTip.length > 0 ? <p className="detail-tip">{recipe.cookingTip}</p> : null}
 
@@ -354,12 +381,21 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
                     <small>{ingredient.description}</small>
                   ) : null}
                 </span>
-                <span className="ingredient-list__amount">
-                  {formatAmount(ingredient.quantity, ingredient.unit, amountFallback)}
-                </span>
+                <IngredientAmount
+                  ingredient={ingredient}
+                  className="ingredient-list__amount"
+                  amountFallback={amountFallback}
+                />
               </li>
             ))}
           </ul>
+          {showConversionNote ? (
+            <p className="ingredient-conversion-note">
+              <strong>{t("detail.conversionNoteTitle")}</strong>
+              {" "}
+              {t("detail.conversionNote")}
+            </p>
+          ) : null}
         </section>
 
         {videoId !== null ? (
@@ -387,7 +423,15 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
               const heading = sectionLabel(group.section, group.title, lang);
               return (
                 <div className="step-group" key={`${group.section}-${index}`}>
-                  {heading !== null ? <h3 className="step-group__title">{heading}</h3> : null}
+                  <h3 className="step-group__title">
+                    <span className="step-group__kicker">{stageKicker(index, lang)}</span>
+                    {heading !== null ? (
+                      <>
+                        {" "}
+                        <span className="step-group__name">{heading}</span>
+                      </>
+                    ) : null}
+                  </h3>
                   <ol className="step-list">{group.steps.map(renderStep)}</ol>
                 </div>
               );
@@ -411,14 +455,6 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
         </a>
     </main>
   );
-}
-
-function formatAmount(quantity: number | null, unit: string | null, fallback: string): string {
-  if (quantity === null && unit === null) {
-    return fallback;
-  }
-
-  return `${quantity ?? ""}${unit ?? ""}`.trim();
 }
 
 function formatRegion(

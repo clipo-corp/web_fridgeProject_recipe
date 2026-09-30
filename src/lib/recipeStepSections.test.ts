@@ -6,6 +6,7 @@ import {
   sectionLabel,
   isValidYoutubeVideoId,
   shouldRenderSectionHeadings,
+  stageKicker,
   youtubeEmbedUrl,
 } from "./recipeStepSections";
 import type { RecipeSection, RecipeStep } from "./recipeCatalogTypes";
@@ -202,5 +203,59 @@ describe("isValidYoutubeVideoId", () => {
 
   it("percent-encodes whatever it is given anyway", () => {
     expect(youtubeEmbedUrl("a/b", null)).toContain("/embed/a%2Fb");
+  });
+});
+
+describe("numeric stages (stage 1 = prep)", () => {
+  it("groups numeric stages into runs and titles them from sections[]", () => {
+    const groups = groupRecipeSteps(
+      [step(1, "1"), step(2, "2"), step(3, "2"), step(4, "3")],
+      [section("1", "육수 끓이기"), section("2", "우거지 손질과 양념하기"), section("3", "끓여 완성하기")],
+    );
+
+    expect(groups.map((group) => group.section)).toEqual(["1", "2", "3"]);
+    expect(groups.map((group) => group.title)).toEqual([
+      "육수 끓이기",
+      "우거지 손질과 양념하기",
+      "끓여 완성하기",
+    ]);
+    expect(shouldRenderSectionHeadings(groups)).toBe(true);
+  });
+
+  it("labels an untitled stage 1 as prep and later stages as cooking", () => {
+    const groups = groupRecipeSteps([step(1, "1"), step(2, "2"), step(3, "3")]);
+
+    expect(groups.map((group) => sectionLabel(group.section, group.title, "ko"))).toEqual([
+      "재료 준비",
+      "조리",
+      "조리",
+    ]);
+    expect(sectionLabel("1", null, "en")).toBe("Preparation");
+  });
+
+  it("drops stage titles that only restate the default or the stage number", () => {
+    const groups = groupRecipeSteps(
+      [step(1, "1"), step(2, "2"), step(3, "3")],
+      [section("1", "준비"), section("2", "2단계"), section("3", "3단계 끓이기")],
+    );
+
+    expect(groups.map((group) => group.title)).toEqual([null, null, "끓이기"]);
+  });
+
+  it("treats the app's default labels as defaults for canonical keys too", () => {
+    const groups = groupRecipeSteps(
+      [step(1, "PREP"), step(2, "MAIN")],
+      [section("PREP", "준비"), section("MAIN", "본 조리")],
+    );
+
+    expect(groups.map((group) => group.title)).toEqual([null, null]);
+  });
+});
+
+describe("stageKicker", () => {
+  it("numbers groups by position", () => {
+    expect(stageKicker(0, "ko")).toBe("1단계");
+    expect(stageKicker(2, "ko-KR")).toBe("3단계");
+    expect(stageKicker(1, "en")).toBe("Part 2");
   });
 });

@@ -88,6 +88,8 @@ export type ServerRecipeInfo = {
   readonly cuisineRegion?: string | null;
   readonly servings?: string | null;
   readonly requiredTool?: string | null;
+  /** Detail-only. Every tool the recipe uses; `requiredTool` stays the representative one. */
+  readonly tools?: readonly ServerRecipeTool[] | null;
   readonly ingredients?: readonly ServerRecipeIngredient[] | null;
   readonly steps?: readonly ServerRecipeStep[] | null;
   readonly sections?: readonly ServerRecipeSection[] | null;
@@ -99,12 +101,31 @@ export type ServerRecipeInfo = {
   readonly timeline_capability?: string | null;
 };
 
+export type ServerRecipeTool = {
+  readonly code?: string | null;
+  readonly labelKo?: string | null;
+  readonly labelEn?: string | null;
+  /** Everyday kitchen basics (knife, bowl…) that the tools line hides. */
+  readonly basic?: boolean | null;
+  readonly stepNumbers?: readonly (number | string)[] | null;
+  readonly optional?: boolean | null;
+  /** Tools sharing an altGroup are interchangeable ("오븐 또는 에어프라이어"). */
+  readonly altGroup?: string | null;
+};
+
 export type ServerRecipeSection = {
-  readonly section?: string | null;
-  readonly step_section?: string | null;
+  /** Canonical keys (`PREP`/`MAIN`/`FINISH`) or a numeric stage (`1` = prep). */
+  readonly section?: string | number | null;
+  readonly step_section?: string | number | null;
   readonly title?: string | null;
   readonly sectionTitle?: string | null;
   readonly section_title?: string | null;
+  readonly titleKo?: string | null;
+  readonly title_ko?: string | null;
+  readonly titleEn?: string | null;
+  readonly title_en?: string | null;
+  /** Localized titles keyed by display language (`ko-KR`, `en-US`, …). */
+  readonly titles?: Readonly<Record<string, string | null | undefined>> | null;
   readonly startSeconds?: number | string | null;
   readonly start_seconds?: number | string | null;
   readonly endSeconds?: number | string | null;
@@ -125,6 +146,14 @@ export type ServerRecipeIngredient = {
   readonly processing_form?: string | null;
   readonly processingFormHint?: string | null;
   readonly processing_form_hint?: string | null;
+  /** Detail-only display fields: the amount as the recipe wrote it ("1 공기"). */
+  readonly displayQuantity?: number | string | null;
+  readonly displayUnitLabel?: string | null;
+  readonly sourceText?: string | null;
+  /** Nutrition-side weight estimate for the line, in grams. */
+  readonly convertedGrams?: number | string | null;
+  readonly conversionMethod?: string | null;
+  readonly conversionReviewRequired?: boolean | null;
 };
 
 export type ServerRecipeStep = {
@@ -133,8 +162,8 @@ export type ServerRecipeStep = {
   readonly cookingTip?: string | null;
   readonly imageUrl?: string | null;
   readonly ingredientMasterIds?: readonly (number | string)[] | null;
-  readonly section?: string | null;
-  readonly step_section?: string | null;
+  readonly section?: string | number | null;
+  readonly step_section?: string | number | null;
   readonly startSeconds?: number | string | null;
   readonly start_seconds?: number | string | null;
   readonly endSeconds?: number | string | null;

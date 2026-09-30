@@ -8,11 +8,13 @@ import { toRecipeCreatorSource } from "./recipeCreatorSource";
 import type {
   PublicRecipeRecord,
   RecipeIngredient,
+  RecipeIngredientDisplayFields,
   RecipeSection,
   RecipeSourceMediaType,
   RecipeSourcePlatform,
   RecipeStep,
   RecipeTimelineCapability,
+  RecipeTool,
   RecipeVisibility,
   TranslationStatus,
 } from "./recipeCatalogTypes";
@@ -21,6 +23,7 @@ import type {
   ServerRecipeIngredient,
   ServerRecipeSection,
   ServerRecipeStep,
+  ServerRecipeTool,
 } from "./recipeServerTypes";
 
 const fallbackDisplayLang = "ko-KR";
@@ -76,12 +79,19 @@ export function toPublicRecipeRecord(
     cuisineRegion: stringValue(recipe.cuisineRegion, "global"),
     servings: stringValue(recipe.servings, "1-2"),
     requiredTool: stringValue(recipe.requiredTool, "basic"),
+    ...(Array.isArray(recipe.tools)
+      ? {
+          tools: recipe.tools
+            .map(toPublicTool)
+            .filter((tool): tool is RecipeTool => tool !== null),
+        }
+      : {}),
     ingredients,
     steps: (recipe.steps ?? []).map((step, index) =>
       toPublicStep(step, index, ingredients, timelineCapability),
     ),
     sections: (recipe.sections ?? []).map((section) =>
-      toPublicSection(section, timelineCapability),
+      toPublicSection(section, timelineCapability, requestedDisplayLang),
     ),
     sourcePlatform: parseSourcePlatform(recipe),
     sourceMediaType: parseSourceMediaType(recipe),
@@ -115,6 +125,49 @@ function toPublicIngredient(ingredient: ServerRecipeIngredient, index: number): 
     description: stringValue(ingredient.description, ""),
     processingForm: readIngredientProcessingForm(ingredient),
     isMasterName,
+    ...toIngredientDisplayFields(ingredient),
+  };
+}
+
+/**
+ * Only fields the server actually sent are copied, so records built from list
+ * responses (which omit them) stay shape-identical to before.
+ */
+function toIngredientDisplayFields(
+  ingredient: ServerRecipeIngredient,
+): RecipeIngredientDisplayFields {
+  const displayQuantity = numberValue(ingredient.displayQuantity);
+  const displayUnitLabel = nullableString(ingredient.displayUnitLabel?.trim());
+  const sourceText = nullableString(ingredient.sourceText?.trim());
+  const grams = numberValue(ingredient.convertedGrams);
+  const conversionMethod = nullableString(ingredient.conversionMethod?.trim());
+
+  return {
+    ...(displayQuantity === null ? {} : { displayQuantity }),
+    ...(displayUnitLabel === null ? {} : { displayUnitLabel }),
+    ...(sourceText === null ? {} : { sourceText }),
+    ...(grams === null || grams <= 0 ? {} : { convertedGrams: grams }),
+    ...(conversionMethod === null ? {} : { conversionMethod }),
+    ...(typeof ingredient.conversionReviewRequired === "boolean"
+      ? { conversionReviewRequired: ingredient.conversionReviewRequired }
+      : {}),
+  };
+}
+
+function toPublicTool(tool: ServerRecipeTool): RecipeTool | null {
+  const code = nullableString(tool.code?.trim());
+  if (code === null) return null;
+
+  return {
+    code,
+    labelKo: nullableString(tool.labelKo?.trim()),
+    labelEn: nullableString(tool.labelEn?.trim()),
+    basic: tool.basic === true,
+    stepNumbers: (tool.stepNumbers ?? [])
+      .map((value) => numberValue(value))
+      .filter((value): value is number => value !== null && Number.isInteger(value)),
+    optional: tool.optional === true,
+    altGroup: nullableString(tool.altGroup?.trim()),
   };
 }
 
@@ -147,6 +200,7 @@ function toPublicStep(
 function toPublicSection(
   section: ServerRecipeSection,
   timelineCapability: RecipeTimelineCapability,
+  displayLang: string,
 ): RecipeSection {
   const { startSeconds, endSeconds } = toTimestamps(
     section.startSeconds ?? section.start_seconds,
@@ -156,14 +210,44 @@ function toPublicSection(
 
   return {
     section: sectionKey(section.section ?? section.step_section),
-    title: nullableString(section.title ?? section.sectionTitle ?? section.section_title),
+    title: localizedSectionTitle(section, displayLang),
     startSeconds,
     endSeconds,
   };
 }
 
-/** Uppercases and trims a section key. Anything missing collapses to `MAIN`. */
-function sectionKey(value: string | null | undefined): string {
+/**
+ * Korean pages prefer the ko-KR title; other languages prefer their own localized
+ * title. Both then fall back to the untyped `title`, which is written in the
+ * recipe's source language.
+ */
+function localizedSectionTitle(section: ServerRecipeSection, displayLang: string): string | null {
+  const titles = section.titles ?? {};
+  const baseLang = displayLang.split("-")[0] ?? displayLang;
+  const localized = displayLang.startsWith("ko")
+    ? [titles["ko-KR"], titles["ko"], section.titleKo, section.title_ko]
+    : [
+        titles[displayLang],
+        titles[baseLang],
+        ...(baseLang === "en" ? [section.titleEn, section.title_en] : []),
+      ];
+
+  const candidates = [...localized, section.title, section.sectionTitle, section.section_title];
+  for (const candidate of candidates) {
+    const trimmed = typeof candidate === "string" ? candidate.trim() : "";
+    if (trimmed.length > 0) return trimmed;
+  }
+  return null;
+}
+
+/**
+ * Uppercases and trims a section key. A numeric stage (`1`, `"2"`) is kept as its
+ * integer string. Anything missing collapses to `MAIN`.
+ */
+function sectionKey(value: string | number | null | undefined): string {
+  if (typeof value === "number") {
+    return Number.isInteger(value) && value > 0 ? String(value) : "MAIN";
+  }
   const trimmed = typeof value === "string" ? value.trim().toUpperCase() : "";
   return trimmed.length > 0 ? trimmed : "MAIN";
 }
