@@ -259,3 +259,104 @@ describe("stageKicker", () => {
     expect(stageKicker(1, "en")).toBe("Part 2");
   });
 });
+
+describe("numbered stage sections (server contract V40)", () => {
+  function staged(
+    stepNumber: number,
+    sectionNumber: number | null,
+    sectionStepNumber: number | null = null,
+    legacySection = "MAIN",
+  ): RecipeStep {
+    return { ...step(stepNumber, legacySection), sectionNumber, sectionStepNumber };
+  }
+
+  it("groups by sectionNumber in sections[] order and numbers steps inside each stage", () => {
+    // Legacy strings deliberately disagree with the numbers: the new fields must win.
+    const groups = groupRecipeSteps(
+      [
+        staged(1, 1, 1, "WRONG"),
+        staged(2, 1, 2, "WRONG"),
+        staged(3, 2, 1, "PREP"),
+        staged(4, 2, 2, "PREP"),
+        staged(5, 3, 1, "PREP"),
+      ],
+      [section("2", "볶기"), section("1", "재료 손질"), section("3", "끓여 완성하기")],
+    );
+
+    expect(groups.map((group) => group.section)).toEqual(["1", "2", "3"]);
+    expect(groups.map((group) => group.title)).toEqual(["재료 손질", "볶기", "끓여 완성하기"]);
+    expect(groups.map((group) => group.steps.map((s) => s.stepNumber))).toEqual([[1, 2], [3, 4], [5]]);
+    expect(groups.map((group) => group.displayNumbers)).toEqual([[1, 2], [1, 2], [1]]);
+    expect(shouldRenderSectionHeadings(groups)).toBe(true);
+  });
+
+  it("orders a stage by sectionStepNumber and derives missing positions from order", () => {
+    const withExplicit = groupRecipeSteps(
+      [staged(1, 1, 2), staged(2, 1, 1)],
+      [section("1", "손질")],
+    );
+    expect(withExplicit[0]?.steps.map((s) => s.stepNumber)).toEqual([2, 1]);
+    expect(withExplicit[0]?.displayNumbers).toEqual([1, 2]);
+
+    const derived = groupRecipeSteps([staged(4, 1), staged(5, 1)], [section("1", "손질")]);
+    expect(derived[0]?.displayNumbers).toEqual([1, 2]);
+  });
+
+  it("puts steps without a sectionNumber into one untitled trailing group", () => {
+    const groups = groupRecipeSteps(
+      [staged(1, 1, 1), staged(2, null), staged(3, 2, 1), staged(4, null)],
+      [section("1", "손질"), section("2", "볶기")],
+    );
+
+    expect(groups.map((group) => group.section)).toEqual(["1", "2", "MAIN"]);
+    expect(groups[2]?.title).toBeNull();
+    expect(groups[2]?.steps.map((s) => s.stepNumber)).toEqual([2, 4]);
+    expect(groups[2]?.displayNumbers).toEqual([1, 2]);
+  });
+
+  it("gives a stage number missing from sections[] its own untitled group in numeric order", () => {
+    const groups = groupRecipeSteps(
+      [staged(1, 1, 1), staged(2, 3, 1), staged(3, 2, 1)],
+      [section("1", "손질"), section("3", "마무리하기")],
+    );
+
+    expect(groups.map((group) => group.section)).toEqual(["1", "2", "3"]);
+    expect(groups.map((group) => group.title)).toEqual(["손질", null, "마무리하기"]);
+    expect(sectionLabel("2", null, "ko")).toBe("조리");
+  });
+
+  it("falls back to the default stage label when the server title is null or a default", () => {
+    // The server localizes displayLang -> writtenLang -> legacy, and can still end with null.
+    const groups = groupRecipeSteps(
+      [staged(1, 1, 1), staged(2, 2, 1), staged(3, 3, 1)],
+      [section("1", null), section("2", "2단계"), section("3", "   ")],
+    );
+
+    expect(groups.map((group) => group.title)).toEqual([null, null, null]);
+    expect(groups.map((group) => sectionLabel(group.section, group.title, "ko"))).toEqual([
+      "재료 준비",
+      "조리",
+      "조리",
+    ]);
+  });
+
+  it("keeps the first title when sections[] repeats a number", () => {
+    const groups = groupRecipeSteps(
+      [staged(1, 1, 1)],
+      [section("1", "손질"), section("1", "duplicate loses")],
+    );
+    expect(groups[0]?.title).toBe("손질");
+  });
+
+  it("falls back to the legacy string grouping when sections[] is empty", () => {
+    const groups = groupRecipeSteps([staged(1, 1, 1, "PREP"), staged(2, 2, 1, "MAIN")], []);
+
+    expect(groups.map((group) => group.section)).toEqual(["PREP", "MAIN"]);
+    expect(groups.map((group) => group.displayNumbers)).toEqual([[1], [2]]);
+  });
+
+  it("treats an unstaged MAIN-only recipe as having no stages", () => {
+    const groups = groupRecipeSteps([staged(1, null), staged(2, null)], []);
+    expect(shouldRenderSectionHeadings(groups)).toBe(false);
+  });
+});

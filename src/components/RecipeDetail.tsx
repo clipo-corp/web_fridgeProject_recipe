@@ -71,9 +71,9 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
     : null;
   const videoId = isValidYoutubeVideoId(candidateVideoId) ? candidateVideoId : null;
 
-  const renderStep = (step: RecipeStep): JSX.Element => (
+  const renderStep = (step: RecipeStep, displayNumber?: number): JSX.Element => (
     <li key={step.stepNumber} className="step-list__item">
-      <span className="step-list__num">{step.stepNumber}</span>
+      <span className="step-list__num">{displayNumber ?? step.stepNumber}</span>
       <div className="step-list__content">
         <p>{step.way}</p>
         {videoId !== null && step.startSeconds !== null ? (
@@ -224,12 +224,12 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
                   return (
                     <div className="step-group" key={`${group.section}-${index}`}>
                       {heading !== null ? <h4 className="step-group__title">{heading}</h4> : null}
-                      <ol className="step-list">{group.steps.map(renderStep)}</ol>
+                      <ol className="step-list">{group.steps.map((step, i) => renderStep(step, group.displayNumbers[i]))}</ol>
                     </div>
                   );
                 })
               ) : (
-                <ol className="step-list">{recipe.steps.map(renderStep)}</ol>
+                <ol className="step-list">{recipe.steps.map((step) => renderStep(step))}</ol>
               )}
               {!hasStepIngredientChips && recipe.ingredients.length > 0 ? (
                 <StepIngredientList

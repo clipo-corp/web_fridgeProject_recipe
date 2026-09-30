@@ -192,6 +192,8 @@ function toPublicStep(
     ingredientMasterIds,
     ingredientChips: recipeStepIngredientChips(ingredients, ingredientMasterIds),
     section: sectionKey(step.section ?? step.step_section),
+    sectionNumber: positiveIntegerValue(step.sectionNumber),
+    sectionStepNumber: positiveIntegerValue(step.sectionStepNumber),
     startSeconds,
     endSeconds,
   };
@@ -273,6 +275,12 @@ function toTimestamps(
   }
 
   return { startSeconds, endSeconds };
+}
+
+/** Positive integer (stage numbers are 1-based) or null. */
+function positiveIntegerValue(value: number | string | null | undefined): number | null {
+  const parsed = numberValue(value);
+  return parsed !== null && Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 function wholeSecondsValue(value: number | string | null | undefined): number | null {

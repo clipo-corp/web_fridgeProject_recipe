@@ -63,6 +63,10 @@ export type RecipeStep = {
   readonly ingredientChips: readonly RecipeStepIngredientChip[];
   /** Canonical section key this step belongs to. Defaults to `MAIN`. */
   readonly section: string;
+  /** 1-based stage number (`sections[].section`), or null when unstaged. */
+  readonly sectionNumber?: number | null;
+  /** 1-based position inside the stage, or null when the server sent none. */
+  readonly sectionStepNumber?: number | null;
   /** Only populated when the recipe is `SEEKABLE`; otherwise null. */
   readonly startSeconds: number | null;
   readonly endSeconds: number | null;

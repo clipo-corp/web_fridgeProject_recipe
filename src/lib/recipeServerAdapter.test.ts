@@ -210,4 +210,28 @@ describe("toPublicRecipeRecord — display amounts, tools, stages", () => {
     const en = toPublicRecipeRecord(serverRecipe({ sections }), "en-US");
     expect(en.sections.map((section) => section.title)).toEqual(["Broth", "Season"]);
   });
+
+  it("reads numbered stages: sections[].section, steps[].sectionNumber and sectionStepNumber", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        steps: [
+          { stepNumber: 1, way: "손질합니다.", section: "재료 손질", sectionNumber: 1, sectionStepNumber: 1 },
+          { stepNumber: 2, way: "볶습니다.", section: "볶기", sectionNumber: "2", sectionStepNumber: null },
+          { stepNumber: 3, way: "담습니다.", section: "MAIN", sectionNumber: 0 },
+        ],
+        sections: [
+          { section: 1, title: "재료 손질" },
+          { section: 2, title: null },
+        ],
+      }),
+      "ko-KR",
+    );
+
+    expect(record.steps.map((step) => step.sectionNumber)).toEqual([1, 2, null]);
+    expect(record.steps.map((step) => step.sectionStepNumber)).toEqual([1, null, null]);
+    expect(record.sections.map((section) => [section.section, section.title])).toEqual([
+      ["1", "재료 손질"],
+      ["2", null],
+    ]);
+  });
 });

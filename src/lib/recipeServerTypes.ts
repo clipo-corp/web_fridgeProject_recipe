@@ -92,6 +92,10 @@ export type ServerRecipeInfo = {
   readonly tools?: readonly ServerRecipeTool[] | null;
   readonly ingredients?: readonly ServerRecipeIngredient[] | null;
   readonly steps?: readonly ServerRecipeStep[] | null;
+  /**
+   * Detail load. Numbered stages `[{ section: 1, title }]` in displayLang (server falls
+   * back to writtenLang; `title` may still be null). `[]` when the recipe is unstaged.
+   */
   readonly sections?: readonly ServerRecipeSection[] | null;
   readonly sourcePlatform?: string | null;
   readonly source_platform?: string | null;
@@ -114,7 +118,10 @@ export type ServerRecipeTool = {
 };
 
 export type ServerRecipeSection = {
-  /** Canonical keys (`PREP`/`MAIN`/`FINISH`) or a numeric stage (`1` = prep). */
+  /**
+   * 1-based stage number that `steps[].sectionNumber` points at. Older payloads sent
+   * canonical keys (`PREP`/`MAIN`/`FINISH`) or a numeric string here.
+   */
   readonly section?: string | number | null;
   readonly step_section?: string | number | null;
   readonly title?: string | null;
@@ -162,8 +169,13 @@ export type ServerRecipeStep = {
   readonly cookingTip?: string | null;
   readonly imageUrl?: string | null;
   readonly ingredientMasterIds?: readonly (number | string)[] | null;
+  /** Legacy stage string (displayLang title, or `MAIN` when unstaged). */
   readonly section?: string | number | null;
   readonly step_section?: string | number | null;
+  /** 1-based stage number; matches `sections[].section`. */
+  readonly sectionNumber?: number | string | null;
+  /** 1-based position of the step inside its stage. */
+  readonly sectionStepNumber?: number | string | null;
   readonly startSeconds?: number | string | null;
   readonly start_seconds?: number | string | null;
   readonly endSeconds?: number | string | null;
