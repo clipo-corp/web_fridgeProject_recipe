@@ -1,5 +1,6 @@
 import type {
   RecipeIngredient,
+  RecipeIngredientDisplayFields,
   RecipeStepIngredientChip,
 } from "./recipeCatalogTypes";
 
@@ -53,8 +54,27 @@ export function recipeStepIngredientChips(
           description: ingredient.description,
           processingForm: ingredient.processingForm,
           isMasterName: ingredient.isMasterName,
+          ...pickDisplayFields(ingredient),
         }];
   });
+}
+
+const displayFieldKeys = [
+  "displayQuantity",
+  "displayUnitLabel",
+  "sourceText",
+  "convertedGrams",
+  "conversionMethod",
+  "conversionReviewRequired",
+] as const satisfies readonly (keyof RecipeIngredientDisplayFields)[];
+
+/** Copies only the display fields that are present, keeping chips shape-stable. */
+function pickDisplayFields(ingredient: RecipeIngredient): RecipeIngredientDisplayFields {
+  const picked: Record<string, unknown> = {};
+  for (const key of displayFieldKeys) {
+    if (ingredient[key] !== undefined) picked[key] = ingredient[key];
+  }
+  return picked as RecipeIngredientDisplayFields;
 }
 
 function numberValue(value: number | string | null | undefined): number | null {

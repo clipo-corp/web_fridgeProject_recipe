@@ -7347,12 +7347,94 @@ body:has(.install-clean) {
 }
 
 .step-group__title {
+  display: grid;
+  gap: 2px;
   margin: 0 0 var(--space-sm);
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+}
+
+.step-group__kicker {
   color: var(--text-secondary);
+  font-size: var(--type-caption-size);
+  font-weight: 700;
+  line-height: var(--type-caption-line);
+}
+
+.step-group__name {
+  color: var(--text);
+  font-size: var(--type-body-size);
+  font-weight: 800;
+  line-height: var(--type-body-line);
+}
+
+/* Ingredient amounts: recipe wording first, converted weight second */
+
+.ingredient-list__amount {
+  display: inline-grid;
+  justify-items: end;
+}
+
+.ingredient-list__amount .ingredient-amount__grams {
+  color: var(--text-tertiary);
+  font-size: var(--type-caption-size);
+  font-weight: 500;
+  line-height: var(--type-caption-line);
+}
+
+.step-ingredient-list__amount .ingredient-amount__grams {
+  margin-inline-start: var(--space-xs);
+  font-weight: 500;
+}
+
+.ingredient-conversion-note {
+  margin: var(--space-md) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line);
+}
+
+.ingredient-conversion-note strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Tools line on the recipe detail summary */
+
+.detail-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  margin: 0 0 var(--space-lg);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+.detail-tools__label {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.detail-tools__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.detail-tools__list li + li::before {
+  content: "·";
+  content: "·" / "";
+  margin-inline-end: var(--space-sm);
+  color: var(--text-tertiary);
+}
+
+.detail-tools__optional {
+  color: var(--text-tertiary);
+  font-weight: 500;
 }
 
 .step-list__seek {

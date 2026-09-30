@@ -17,7 +17,22 @@ export type RecipeCreatorSource = {
   readonly sourceId: string | null;
 };
 
-export type RecipeIngredient = {
+/**
+ * Detail-only amount fields from the server. All optional: list responses and mock
+ * data omit them, and the amount formatter falls back to `quantity`/`unit`.
+ */
+export type RecipeIngredientDisplayFields = {
+  /** The amount as the recipe wrote it, e.g. `1` for "밥 1 공기". */
+  readonly displayQuantity?: number | null;
+  /** Unit as written ("공기", "줌") or a lowercase unit enum ("ml", "count"). */
+  readonly displayUnitLabel?: string | null;
+  readonly sourceText?: string | null;
+  readonly convertedGrams?: number | null;
+  readonly conversionMethod?: string | null;
+  readonly conversionReviewRequired?: boolean | null;
+};
+
+export type RecipeIngredient = RecipeIngredientDisplayFields & {
   readonly masterId: number | null;
   readonly name: string;
   readonly quantity: number | null;
@@ -29,7 +44,7 @@ export type RecipeIngredient = {
   readonly isMasterName: boolean;
 };
 
-export type RecipeStepIngredientChip = {
+export type RecipeStepIngredientChip = RecipeIngredientDisplayFields & {
   readonly masterId: number | null;
   readonly name: string;
   readonly quantity: number | null;
@@ -48,6 +63,10 @@ export type RecipeStep = {
   readonly ingredientChips: readonly RecipeStepIngredientChip[];
   /** Canonical section key this step belongs to. Defaults to `MAIN`. */
   readonly section: string;
+  /** 1-based stage number (`sections[].section`), or null when unstaged. */
+  readonly sectionNumber?: number | null;
+  /** 1-based position inside the stage, or null when the server sent none. */
+  readonly sectionStepNumber?: number | null;
   /** Only populated when the recipe is `SEEKABLE`; otherwise null. */
   readonly startSeconds: number | null;
   readonly endSeconds: number | null;
@@ -71,6 +90,16 @@ export type RecipeSection = {
   readonly title: string | null;
   readonly startSeconds: number | null;
   readonly endSeconds: number | null;
+};
+
+export type RecipeTool = {
+  readonly code: string;
+  readonly labelKo: string | null;
+  readonly labelEn: string | null;
+  readonly basic: boolean;
+  readonly stepNumbers: readonly number[];
+  readonly optional: boolean;
+  readonly altGroup: string | null;
 };
 
 export type RecipeCatalogRegion =
@@ -175,6 +204,8 @@ export type PublicRecipeRecord = {
   readonly cuisineRegion: string;
   readonly servings: string;
   readonly requiredTool: string;
+  /** Detail-only full tool list. Absent on list responses and mock data. */
+  readonly tools?: readonly RecipeTool[];
   readonly ingredients: readonly RecipeIngredient[];
   readonly steps: readonly RecipeStep[];
   /** Ordered section runs. Empty when the recipe has no section metadata. */

@@ -118,3 +118,120 @@ describe("toPublicRecipeRecord — timestamp handling", () => {
     expect(record.sections[0]?.startSeconds).toBe(0);
   });
 });
+
+describe("toPublicRecipeRecord — display amounts, tools, stages", () => {
+  it("carries ingredient display fields and passes them to step chips", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        ingredients: [
+          {
+            masterId: 10,
+            name: "밥",
+            quantity: 1,
+            unit: "count",
+            displayQuantity: 1,
+            displayUnitLabel: " 공기 ",
+            sourceText: "밥 1공기",
+            convertedGrams: 210,
+            conversionMethod: "portion_standard",
+            conversionReviewRequired: false,
+          },
+        ],
+        steps: [{ stepNumber: 1, way: "담습니다.", ingredientMasterIds: [10] }],
+      }),
+    );
+
+    expect(record.ingredients[0]).toMatchObject({
+      displayQuantity: 1,
+      displayUnitLabel: "공기",
+      sourceText: "밥 1공기",
+      convertedGrams: 210,
+      conversionMethod: "portion_standard",
+      conversionReviewRequired: false,
+    });
+    expect(record.steps[0]?.ingredientChips[0]?.displayUnitLabel).toBe("공기");
+  });
+
+  it("omits display fields the server did not send", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({ ingredients: [{ masterId: 1, name: "소금", quantity: 1, unit: "pinch" }] }),
+    );
+
+    expect(record.ingredients[0]).not.toHaveProperty("displayQuantity");
+    expect(record.ingredients[0]).not.toHaveProperty("convertedGrams");
+  });
+
+  it("normalizes tools and drops entries without a code", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        requiredTool: "oven",
+        tools: [
+          { code: "oven", labelKo: "오븐", labelEn: "Oven", basic: false, stepNumbers: [2, "3"], optional: false, altGroup: "bake" },
+          { code: " ", labelKo: "없음" },
+          { code: "knife", basic: true },
+        ],
+      }),
+    );
+
+    expect(record.tools).toEqual([
+      { code: "oven", labelKo: "오븐", labelEn: "Oven", basic: false, stepNumbers: [2, 3], optional: false, altGroup: "bake" },
+      { code: "knife", labelKo: null, labelEn: null, basic: true, stepNumbers: [], optional: false, altGroup: null },
+    ]);
+  });
+
+  it("leaves tools undefined when the server sends none", () => {
+    expect(toPublicRecipeRecord(serverRecipe({})).tools).toBeUndefined();
+  });
+
+  it("keeps numeric stage keys from steps and sections", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        steps: [
+          { stepNumber: 1, way: "손질합니다.", section: 1 },
+          { stepNumber: 2, way: "끓입니다.", section: "2" },
+        ],
+        sections: [{ section: 1, title: "육수 끓이기" }],
+      }),
+    );
+
+    expect(record.steps.map((step) => step.section)).toEqual(["1", "2"]);
+    expect(record.sections[0]?.section).toBe("1");
+  });
+
+  it("prefers the ko-KR section title on Korean pages and the localized one elsewhere", () => {
+    const sections = [
+      { section: 1, title: "Make the broth", titles: { "ko-KR": "육수 끓이기", "en-US": "Broth" } },
+      { section: 2, title: "Season", titleKo: "간하기" },
+    ];
+
+    const ko = toPublicRecipeRecord(serverRecipe({ sections }), "ko-KR");
+    expect(ko.sections.map((section) => section.title)).toEqual(["육수 끓이기", "간하기"]);
+
+    const en = toPublicRecipeRecord(serverRecipe({ sections }), "en-US");
+    expect(en.sections.map((section) => section.title)).toEqual(["Broth", "Season"]);
+  });
+
+  it("reads numbered stages: sections[].section, steps[].sectionNumber and sectionStepNumber", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        steps: [
+          { stepNumber: 1, way: "손질합니다.", section: "재료 손질", sectionNumber: 1, sectionStepNumber: 1 },
+          { stepNumber: 2, way: "볶습니다.", section: "볶기", sectionNumber: "2", sectionStepNumber: null },
+          { stepNumber: 3, way: "담습니다.", section: "MAIN", sectionNumber: 0 },
+        ],
+        sections: [
+          { section: 1, title: "재료 손질" },
+          { section: 2, title: null },
+        ],
+      }),
+      "ko-KR",
+    );
+
+    expect(record.steps.map((step) => step.sectionNumber)).toEqual([1, 2, null]);
+    expect(record.steps.map((step) => step.sectionStepNumber)).toEqual([1, null, null]);
+    expect(record.sections.map((section) => [section.section, section.title])).toEqual([
+      ["1", "재료 손질"],
+      ["2", null],
+    ]);
+  });
+});
