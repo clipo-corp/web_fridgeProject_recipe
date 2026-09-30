@@ -15,6 +15,8 @@ import {
   recipeStepIngredientChips,
 } from "./recipeStepIngredients";
 import { toRecipeCreatorSource } from "./recipeCreatorSource";
+import { seekableDemoRecipe } from "./recipeSeekableDemo";
+import { isSeekableDemoEnabled } from "./runtimeConfig";
 import { recipeFilterKeys } from "./recipeCatalogTypes";
 import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
 import type {
@@ -37,7 +39,12 @@ export async function loadPublicMockRecipes(): Promise<readonly PublicRecipeReco
   const seedModule = await import("../data/recipe_seed_mock_100.json");
   const parsed = seedFileSchema.parse(seedModule.default);
 
-  return parsed.recipes.map(toPublicRecipeRecord);
+  const records = parsed.recipes.map(toPublicRecipeRecord);
+
+  // The seed corpus predates the section/timeline shape. The demo record is the only
+  // way to review that UI until the server ships the V33 columns, so it is opt-in and
+  // appended last rather than changing the shape of the bundled mock catalog.
+  return isSeekableDemoEnabled ? [...records, seekableDemoRecipe] : records;
 }
 
 export function filterPublicRecipes(
@@ -162,6 +169,10 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
     requiredTool: recipe.requiredTool ?? "basic",
     ingredients,
     steps: recipe.steps.map((step) => toPublicStep(step, ingredients)),
+    sections: [],
+    sourcePlatform: "OWNED",
+    sourceMediaType: "PHOTO",
+    timelineCapability: "NONE",
   });
 }
 
@@ -196,6 +207,9 @@ function toPublicStep(
     imageUrl: step.imageUrl ?? null,
     ingredientMasterIds,
     ingredientChips: recipeStepIngredientChips(ingredients, ingredientMasterIds),
+    section: "MAIN",
+    startSeconds: null,
+    endSeconds: null,
   };
 }
 

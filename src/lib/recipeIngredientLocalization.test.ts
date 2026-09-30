@@ -46,6 +46,10 @@ const recipe: PublicRecipeRecord = {
   requiredTool: "no-tool",
   ingredients: [],
   steps: [],
+  sections: [],
+  sourcePlatform: "OWNED",
+  sourceMediaType: "PHOTO",
+  timelineCapability: "NONE",
 };
 
 const seaweedMaster = {

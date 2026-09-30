@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Clock, Download, Flag, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
 import { IngredientFormHint } from "./IngredientFormHint";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
@@ -6,8 +6,18 @@ import { RecipeReportDialog } from "./RecipeReportDialog";
 import { RecipeVisual } from "./RecipeVisual";
 import { StepIngredientList } from "./StepIngredientList";
 import { recipeIngredientEmoji } from "../lib/recipeIngredientEmoji";
+import { youtubeVideoId } from "../lib/recipeCreatorSource";
+import {
+  formatTimestamp,
+  groupRecipeSteps,
+  isSeekableVideoRecipe,
+  isValidYoutubeVideoId,
+  sectionLabel,
+  shouldRenderSectionHeadings,
+  youtubeEmbedUrl,
+} from "../lib/recipeStepSections";
 import { useI18n } from "../lib/i18n";
-import type { PublicRecipeRecord } from "../lib/recipeCatalogTypes";
+import type { PublicRecipeRecord, RecipeStep } from "../lib/recipeCatalogTypes";
 
 type RecipeDetailProps = {
   readonly recipe: PublicRecipeRecord | null;
@@ -15,8 +25,15 @@ type RecipeDetailProps = {
 };
 
 export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Element | null {
-  const { t, labelFor, countryLabel, timeLabel } = useI18n();
+  const { t, lang, labelFor, countryLabel, timeLabel } = useI18n();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [seek, setSeek] = useState<{ seconds: number; nonce: number } | null>(null);
+  const videoRef = useRef<HTMLDivElement | null>(null);
+
+  // Reopening the panel on a different recipe must not carry the old seek target.
+  useEffect(() => {
+    setSeek(null);
+  }, [recipe?.recipeId]);
 
   useEffect(() => {
     if (recipe === null) {
@@ -45,6 +62,46 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
   const ingredientsLabel = t("detail.ingredients");
   const amountFallback = t("detail.toTaste");
   const hasStepIngredientChips = recipe.steps.some((step) => step.ingredientChips.length > 0);
+
+  const stepGroups = groupRecipeSteps(recipe.steps, recipe.sections);
+  const showSectionHeadings = shouldRenderSectionHeadings(stepGroups);
+  const candidateVideoId = isSeekableVideoRecipe(recipe)
+    ? youtubeVideoId(recipe.creatorSource?.sourceId ?? null, recipe.creatorSource?.sourceUrl ?? null)
+    : null;
+  const videoId = isValidYoutubeVideoId(candidateVideoId) ? candidateVideoId : null;
+
+  const renderStep = (step: RecipeStep): JSX.Element => (
+    <li key={step.stepNumber} className="step-list__item">
+      <span className="step-list__num">{step.stepNumber}</span>
+      <div className="step-list__content">
+        <p>{step.way}</p>
+        {videoId !== null && step.startSeconds !== null ? (
+          <button
+            className="step-list__seek"
+            type="button"
+            onClick={() => {
+              setSeek((current) => ({
+                seconds: step.startSeconds as number,
+                nonce: (current?.nonce ?? 0) + 1,
+              }));
+              videoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            aria-label={t("detail.watchFrom", { time: formatTimestamp(step.startSeconds) })}
+          >
+            {formatTimestamp(step.startSeconds)}
+          </button>
+        ) : null}
+        {step.cookingTip !== null && step.cookingTip.length > 0 ? (
+          <small>{step.cookingTip}</small>
+        ) : null}
+        <StepIngredientList
+          ingredients={step.ingredientChips}
+          label={ingredientsLabel}
+          amountFallback={amountFallback}
+        />
+      </div>
+    </li>
+  );
 
   return (
     <div className="detail-backdrop" role="presentation" onClick={onClose}>
@@ -139,29 +196,38 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
             </section>
           ) : null}
 
+          {videoId !== null ? (
+            <section className="detail-section">
+              <h3>{t("detail.videoSection")}</h3>
+              <div className="recipe-video" ref={videoRef}>
+                <iframe
+                  key={seek?.nonce ?? "start"}
+                  src={youtubeEmbedUrl(videoId, seek?.seconds ?? null)}
+                  title={recipe.title}
+                  loading={seek === null ? "lazy" : "eager"}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </section>
+          ) : null}
+
           {recipe.steps.length > 0 ? (
             <section className="detail-section">
               <h3>{t("detail.steps")}</h3>
-              <ol className="step-list">
-                {recipe.steps.map((step) => {
+              {showSectionHeadings ? (
+                stepGroups.map((group, index) => {
+                  const heading = sectionLabel(group.section, group.title, lang);
                   return (
-                    <li key={step.stepNumber} className="step-list__item">
-                      <span className="step-list__num">{step.stepNumber}</span>
-                      <div className="step-list__content">
-                        <p>{step.way}</p>
-                        {step.cookingTip !== null && step.cookingTip.length > 0 ? (
-                          <small>{step.cookingTip}</small>
-                        ) : null}
-                        <StepIngredientList
-                          ingredients={step.ingredientChips}
-                          label={ingredientsLabel}
-                          amountFallback={amountFallback}
-                        />
-                      </div>
-                    </li>
+                    <div className="step-group" key={`${group.section}-${index}`}>
+                      {heading !== null ? <h4 className="step-group__title">{heading}</h4> : null}
+                      <ol className="step-list">{group.steps.map(renderStep)}</ol>
+                    </div>
                   );
-                })}
-              </ol>
+                })
+              ) : (
+                <ol className="step-list">{recipe.steps.map(renderStep)}</ol>
+              )}
               {!hasStepIngredientChips && recipe.ingredients.length > 0 ? (
                 <StepIngredientList
                   ingredients={recipe.ingredients}

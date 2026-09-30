@@ -42,6 +42,10 @@ const baseRecipe: PublicRecipeRecord = {
   requiredTool: "pot",
   ingredients: [],
   steps: [],
+  sections: [],
+  sourcePlatform: "OWNED",
+  sourceMediaType: "PHOTO",
+  timelineCapability: "NONE",
 };
 
 function recipe(patch: Partial<PublicRecipeRecord>): PublicRecipeRecord {

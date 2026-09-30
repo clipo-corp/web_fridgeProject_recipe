@@ -8,13 +8,18 @@ import { toRecipeCreatorSource } from "./recipeCreatorSource";
 import type {
   PublicRecipeRecord,
   RecipeIngredient,
+  RecipeSection,
+  RecipeSourceMediaType,
+  RecipeSourcePlatform,
   RecipeStep,
+  RecipeTimelineCapability,
   RecipeVisibility,
   TranslationStatus,
 } from "./recipeCatalogTypes";
 import type {
   ServerRecipeInfo,
   ServerRecipeIngredient,
+  ServerRecipeSection,
   ServerRecipeStep,
 } from "./recipeServerTypes";
 
@@ -27,6 +32,7 @@ export function toPublicRecipeRecord(
   const recipeId = idValue(recipe.recipeId ?? recipe.id ?? recipe.recipe_id ?? recipe.recipeID);
   const creatorSource = toRecipeCreatorSource(recipe);
   const ingredients = (recipe.ingredients ?? []).map(toPublicIngredient);
+  const timelineCapability = parseTimelineCapability(recipe);
 
   return withCatalogDemoMedia({
     recipeId,
@@ -71,7 +77,15 @@ export function toPublicRecipeRecord(
     servings: stringValue(recipe.servings, "1-2"),
     requiredTool: stringValue(recipe.requiredTool, "basic"),
     ingredients,
-    steps: (recipe.steps ?? []).map((step, index) => toPublicStep(step, index, ingredients)),
+    steps: (recipe.steps ?? []).map((step, index) =>
+      toPublicStep(step, index, ingredients, timelineCapability),
+    ),
+    sections: (recipe.sections ?? []).map((section) =>
+      toPublicSection(section, timelineCapability),
+    ),
+    sourcePlatform: parseSourcePlatform(recipe),
+    sourceMediaType: parseSourceMediaType(recipe),
+    timelineCapability,
   });
 }
 
@@ -108,8 +122,14 @@ function toPublicStep(
   step: ServerRecipeStep,
   index: number,
   ingredients: readonly RecipeIngredient[],
+  timelineCapability: RecipeTimelineCapability,
 ): RecipeStep {
   const ingredientMasterIds = normalizeStepIngredientMasterIds(step.ingredientMasterIds);
+  const { startSeconds, endSeconds } = toTimestamps(
+    step.startSeconds ?? step.start_seconds,
+    step.endSeconds ?? step.end_seconds,
+    timelineCapability,
+  );
 
   return {
     stepNumber: step.stepNumber ?? index + 1,
@@ -118,7 +138,78 @@ function toPublicStep(
     imageUrl: nullableString(step.imageUrl),
     ingredientMasterIds,
     ingredientChips: recipeStepIngredientChips(ingredients, ingredientMasterIds),
+    section: sectionKey(step.section ?? step.step_section),
+    startSeconds,
+    endSeconds,
   };
+}
+
+function toPublicSection(
+  section: ServerRecipeSection,
+  timelineCapability: RecipeTimelineCapability,
+): RecipeSection {
+  const { startSeconds, endSeconds } = toTimestamps(
+    section.startSeconds ?? section.start_seconds,
+    section.endSeconds ?? section.end_seconds,
+    timelineCapability,
+  );
+
+  return {
+    section: sectionKey(section.section ?? section.step_section),
+    title: nullableString(section.title ?? section.sectionTitle ?? section.section_title),
+    startSeconds,
+    endSeconds,
+  };
+}
+
+/** Uppercases and trims a section key. Anything missing collapses to `MAIN`. */
+function sectionKey(value: string | null | undefined): string {
+  const trimmed = typeof value === "string" ? value.trim().toUpperCase() : "";
+  return trimmed.length > 0 ? trimmed : "MAIN";
+}
+
+/**
+ * Timestamps are only meaningful on a SEEKABLE recipe, and only when the pair is
+ * internally consistent. Anything else is dropped rather than rendered as a broken
+ * seek target.
+ */
+function toTimestamps(
+  rawStart: number | string | null | undefined,
+  rawEnd: number | string | null | undefined,
+  timelineCapability: RecipeTimelineCapability,
+): { startSeconds: number | null; endSeconds: number | null } {
+  const empty = { startSeconds: null, endSeconds: null };
+  if (timelineCapability !== "SEEKABLE") return empty;
+
+  const startSeconds = wholeSecondsValue(rawStart);
+  const endSeconds = wholeSecondsValue(rawEnd);
+  if (startSeconds === null) return empty;
+  if (endSeconds !== null && endSeconds < startSeconds) {
+    return { startSeconds, endSeconds: null };
+  }
+
+  return { startSeconds, endSeconds };
+}
+
+function wholeSecondsValue(value: number | string | null | undefined): number | null {
+  const parsed = numberValue(value);
+  if (parsed === null || !Number.isInteger(parsed) || parsed < 0) return null;
+  return parsed;
+}
+
+function parseSourcePlatform(recipe: ServerRecipeInfo): RecipeSourcePlatform {
+  const value = (recipe.sourcePlatform ?? recipe.source_platform ?? "").toUpperCase();
+  return value === "YOUTUBE" || value === "INSTAGRAM" || value === "TIKTOK" ? value : "OWNED";
+}
+
+function parseSourceMediaType(recipe: ServerRecipeInfo): RecipeSourceMediaType {
+  const value = (recipe.sourceMediaType ?? recipe.source_media_type ?? "").toUpperCase();
+  return value === "VIDEO" || value === "CAROUSEL" ? value : "PHOTO";
+}
+
+function parseTimelineCapability(recipe: ServerRecipeInfo): RecipeTimelineCapability {
+  const value = (recipe.timelineCapability ?? recipe.timeline_capability ?? "").toUpperCase();
+  return value === "SEEKABLE" || value === "PLAYABLE_ONLY" ? value : "NONE";
 }
 
 function parseWrittenLang(value: string | null | undefined): PublicRecipeRecord["writtenLang"] {
