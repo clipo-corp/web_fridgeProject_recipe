@@ -11,7 +11,7 @@ type IngredientAmountProps = {
 };
 
 /**
- * The recipe's own amount ("1 공기") with the converted weight ("약 210g") as a
+ * The recipe's own amount ("1 공기") with the converted weight ("(약 210g)") as a
  * quieter second line when it adds information.
  */
 export function IngredientAmount({
