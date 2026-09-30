@@ -47,7 +47,7 @@ const records: readonly PublicRecipeRecord[] = [
     cuisineRegion: "korean",
     servings: "2-3",
     requiredTool: "pot",
-    ingredients: [{ masterId: null, name: "김치", quantity: 200, unit: "g", description: "묵은지" }],
+    ingredients: [{ masterId: null, name: "김치", quantity: 200, unit: "g", description: "묵은지", processingForm: null, isMasterName: false }],
     steps: [{
       stepNumber: 1,
       way: "김치를 볶고 끓입니다.",
@@ -102,7 +102,7 @@ const records: readonly PublicRecipeRecord[] = [
     cuisineRegion: "japanese",
     servings: "1",
     requiredTool: "bowl",
-    ingredients: [{ masterId: null, name: "lettuce", quantity: null, unit: null, description: "greens" }],
+    ingredients: [{ masterId: null, name: "lettuce", quantity: null, unit: null, description: "greens", processingForm: null, isMasterName: false }],
     steps: [{
       stepNumber: 1,
       way: "Mix vegetables.",

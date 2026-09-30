@@ -1,5 +1,6 @@
 import { ArrowLeft, Clock, Download, Flame, Globe, Heart, Languages, MapPin, Play, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { IngredientFormHint } from "./IngredientFormHint";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeVisual } from "./RecipeVisual";
 import { SkeletonDetailPage } from "./SkeletonDetailPage";
@@ -345,7 +346,10 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps): JSX.Eleme
                   {recipeIngredientEmoji(ingredient)}
                 </span>
                 <span className="ingredient-list__copy">
-                  <span className="ingredient-list__name">{ingredient.name}</span>
+                  <span className="ingredient-list__name">
+                    <IngredientFormHint ingredient={ingredient} />
+                    {ingredient.name}
+                  </span>
                   {ingredient.description.length > 0 ? (
                     <small>{ingredient.description}</small>
                   ) : null}

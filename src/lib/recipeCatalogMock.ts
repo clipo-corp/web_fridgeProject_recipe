@@ -1,4 +1,5 @@
 import { seedFileSchema, type SeedEntry } from "./recipeMockSchema";
+import { readIngredientProcessingForm } from "./ingredientProcessingForm";
 import {
   collectRegionOptions,
   countryCodeFor,
@@ -178,12 +179,18 @@ function toPublicRecipeRecord(entry: SeedEntry, index: number): PublicRecipeReco
 function toPublicIngredient(
   ingredient: SeedEntry["recipe"]["ingredients"][number],
 ): RecipeIngredient {
+  const isMasterName =
+    (ingredient.name === null || ingredient.name === undefined) &&
+    (ingredient.masterName ?? ingredient.master_name ?? null) !== null;
+
   return {
     masterId: ingredient.masterId ?? null,
     name: ingredient.name ?? ingredient.masterName ?? ingredient.master_name ?? "ingredient",
     quantity: ingredient.quantity ?? null,
     unit: ingredient.unit ?? null,
     description: ingredient.description ?? "",
+    processingForm: readIngredientProcessingForm(ingredient),
+    isMasterName,
   };
 }
 

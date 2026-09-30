@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock, Download, Flag, Flame, Heart, Languages, MapPin, Users, X } from "lucide-react";
+import { IngredientFormHint } from "./IngredientFormHint";
 import { RecipeCreatorSource } from "./RecipeCreatorSource";
 import { RecipeReportDialog } from "./RecipeReportDialog";
 import { RecipeVisual } from "./RecipeVisual";
@@ -182,7 +183,10 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps): JSX.Elemen
                     <span className="ingredient-list__emoji" aria-hidden="true">
                       {recipeIngredientEmoji(ingredient)}
                     </span>
-                    <span className="ingredient-list__name">{ingredient.name}</span>
+                    <span className="ingredient-list__name">
+                      <IngredientFormHint ingredient={ingredient} />
+                      {ingredient.name}
+                    </span>
                     <span className="ingredient-list__amount">
                       {formatAmount(ingredient.quantity, ingredient.unit, amountFallback)}
                     </span>

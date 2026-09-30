@@ -1,4 +1,5 @@
 import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
+import { readIngredientProcessingForm } from "./ingredientProcessingForm";
 import {
   normalizeStepIngredientMasterIds,
   recipeStepIngredientChips,
@@ -99,6 +100,9 @@ export function stringValue(value: unknown, fallback: string): string {
 function toPublicIngredient(ingredient: ServerRecipeIngredient, index: number): RecipeIngredient {
   const masterId = numberValue(ingredient.masterId ?? ingredient.master_id ?? ingredient.id);
   const fallbackName = `Ingredient ${index + 1}`;
+  const isMasterName =
+    (ingredient.name === null || ingredient.name === undefined) &&
+    nullableString(ingredient.master_name ?? ingredient.masterName) !== null;
 
   return {
     masterId,
@@ -109,6 +113,8 @@ function toPublicIngredient(ingredient: ServerRecipeIngredient, index: number): 
     quantity: numberValue(ingredient.quantity),
     unit: nullableString(ingredient.unit),
     description: stringValue(ingredient.description, ""),
+    processingForm: readIngredientProcessingForm(ingredient),
+    isMasterName,
   };
 }
 
