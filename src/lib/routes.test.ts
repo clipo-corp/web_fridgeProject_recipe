@@ -16,18 +16,26 @@ describe("appRouteForPath", () => {
     expect(appRouteForPath("/anything-else")).toEqual({ kind: "prelaunch" });
   });
 
-  it("opens only the legal pages once the legal publication switch is on", () => {
-    expect(appRouteForPath("/privacy", true)).toEqual({ kind: "privacy" });
-    expect(appRouteForPath("/privacy-policy/", true)).toEqual({ kind: "privacy" });
-    expect(appRouteForPath("/terms", true)).toEqual({ kind: "terms" });
-    expect(appRouteForPath("/", true)).toEqual({ kind: "prelaunch" });
-    expect(appRouteForPath("/recipe-catalog", true)).toEqual({ kind: "prelaunch" });
-    expect(appRouteForPath("/support", true)).toEqual({ kind: "prelaunch" });
+  it("opens only the legal pages whose switch is on", () => {
+    const both = { privacy: true, terms: true };
+    expect(appRouteForPath("/privacy", both)).toEqual({ kind: "privacy" });
+    expect(appRouteForPath("/privacy-policy/", both)).toEqual({ kind: "privacy" });
+    expect(appRouteForPath("/terms", both)).toEqual({ kind: "terms" });
+    expect(appRouteForPath("/", both)).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/recipe-catalog", both)).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/support", both)).toEqual({ kind: "prelaunch" });
   });
 
-  it("keeps the legal pages in the pre-launch state while the switch is off", () => {
-    expect(appRouteForPath("/privacy", false)).toEqual({ kind: "prelaunch" });
-    expect(appRouteForPath("/terms", false)).toEqual({ kind: "prelaunch" });
+  it("can open the privacy policy before the terms", () => {
+    const privacyOnly = { privacy: true, terms: false };
+    expect(appRouteForPath("/privacy", privacyOnly)).toEqual({ kind: "privacy" });
+    expect(appRouteForPath("/terms", privacyOnly)).toEqual({ kind: "prelaunch" });
+  });
+
+  it("keeps the legal pages in the pre-launch state while the switches are off", () => {
+    const off = { privacy: false, terms: false };
+    expect(appRouteForPath("/privacy", off)).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/terms", off)).toEqual({ kind: "prelaunch" });
   });
 });
 

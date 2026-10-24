@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { LEGAL_LAUNCH_CLAUSES } from "../lib/legalPublication";
-import { LaunchOnly, Pending } from "./legal/LegalMarks";
+import { LEGAL_AI_SANCTION_CLAUSES, LEGAL_LAUNCH_CLAUSES } from "../lib/legalPublication";
+import { Pending } from "./legal/LegalMarks";
 
 type PolicySection = {
   readonly id: string;
@@ -56,7 +56,10 @@ const requiredItems = [
   "결제 및 구독 상태",
 ];
 
-// 〔출시 때〕 AI 이용 제한(이용약관 AI 기능 장)과 함께 생기는 조. 목차에도 그때만 넣는다.
+// 〔출시 때〕·AI 이용 제한 문구는 `{스위치 && …}` 로 감싼다. 스위치가 빌드 때 상수로 접혀, 꺼진
+// 문구는 결과물에 남지 않는다(결과물 [확인 필요] 검사도 실제로 보이는 것에만 걸린다).
+
+// AI 이용 제한(이용약관 AI 기능 장)과 짝인 조. 목차에도 그때만 넣는다.
 const automatedDecisionSection: PolicySection = {
   id: "automated-decision",
   title: "제7조의5 자동화된 결정",
@@ -64,7 +67,7 @@ const automatedDecisionSection: PolicySection = {
 
 export function PrivacyPolicyPage(): JSX.Element {
   const tocSections = policySections.flatMap((section) =>
-    section.id === "payments" && LEGAL_LAUNCH_CLAUSES ? [section, automatedDecisionSection] : [section],
+    section.id === "payments" && LEGAL_AI_SANCTION_CLAUSES ? [section, automatedDecisionSection] : [section],
   );
 
   return (
@@ -146,17 +149,21 @@ export function PrivacyPolicyPage(): JSX.Element {
               AI 기능 이용 시: 이용자가 입력한 요청 글(AI 레시피 만들기, 레시피 고쳐 만들기), 사진
               인식에 사용한 사진
             </li>
-            <LaunchOnly>
-              <li>AI 대화 이용 시: 이용자가 입력한 질문과 AI 대화 내용</li>
-              <li>
-                음성 명령 이용 시: 받아쓴 명령 문장, 명령 처리 결과. 음성은 휴대폰 안에서 글자로
-                바꾸며, 휴대폰 밖으로 보내거나 저장하지 않습니다.
-              </li>
+            {LEGAL_LAUNCH_CLAUSES && (
+              <>
+                <li>AI 대화 이용 시: 이용자가 입력한 질문과 AI 대화 내용</li>
+                <li>
+                  음성 명령 이용 시: 받아쓴 명령 문장, 명령 처리 결과. 음성은 휴대폰 안에서 글자로
+                  바꾸며, 휴대폰 밖으로 보내거나 저장하지 않습니다.
+                </li>
+              </>
+            )}
+            {LEGAL_AI_SANCTION_CLAUSES && (
               <li>
                 AI 기능 이용 제한·이의 처리 시: 판정 결과, 가린 요청 글 일부(음성 명령은 받아쓴
                 글자. 음성은 보관하지 않음), 제한 단계와 기간, 이의 신청 내용과 처리 결과
               </li>
-            </LaunchOnly>
+            )}
             {/*
               〔베타 정식 때〕 태국어·이탈리아어 음성을 일반 이용자에게 열 때만 넣는다(출시 범위 아님).
               <li>
@@ -181,7 +188,7 @@ export function PrivacyPolicyPage(): JSX.Element {
               6개월
             </li>
           </ul>
-          <LaunchOnly>
+          {LEGAL_LAUNCH_CLAUSES && (
             <ul>
               <li>AI 대화 내용: 마지막 대화 후 30일. 이용자가 대화를 지우면 바로 삭제합니다.</li>
               <li>
@@ -189,15 +196,19 @@ export function PrivacyPolicyPage(): JSX.Element {
                 글 내용을 지우고, 이용자를 알아볼 수 없는 분류·비용 통계만 1년 보관합니다.
               </li>
               <li>받아쓴 음성 명령 문장: 30일. 그 뒤에는 이용자를 알아볼 수 없는 통계만 보관합니다.</li>
-              <li>
-                AI 기능 이용 제한 기록: 마지막 기록 뒤 1년. 가린 요청 글은 제한 단계가 처음으로
-                돌아간 날부터 30일(3차 이상 제한은 이의 신청 기간이 끝날 때까지)
-              </li>
-              <li>
-                이의 신청과 처리 결과: <Pending>3년</Pending>
-              </li>
+              {LEGAL_AI_SANCTION_CLAUSES && (
+                <>
+                  <li>
+                    AI 기능 이용 제한 기록: 마지막 기록 뒤 1년. 가린 요청 글은 제한 단계가 처음으로
+                    돌아간 날부터 30일(3차 이상 제한은 이의 신청 기간이 끝날 때까지)
+                  </li>
+                  <li>
+                    이의 신청과 처리 결과: <Pending>3년</Pending>
+                  </li>
+                </>
+              )}
             </ul>
-          </LaunchOnly>
+          )}
           {/*
             설계 결정 9 의 '평가 사례 보관'을 쓰기로 하면 넣는다.
             <li>
@@ -228,11 +239,8 @@ export function PrivacyPolicyPage(): JSX.Element {
                   </th>
                   <td>
                     AI 레시피 만들기, 레시피 고쳐 만들기, 사진 속 식재료 인식.
-                    <LaunchOnly>
-                      {" "}
-                      AI 대화 답변, 받아쓴 음성 명령 문장의 판단, 서비스 목적과 맞지 않는 요청의
-                      판정, 재료 이름 판정, 영상 레시피 분석
-                    </LaunchOnly>
+                    {LEGAL_LAUNCH_CLAUSES &&
+                      " AI 대화 답변, 받아쓴 음성 명령 문장의 판단, 서비스 목적과 맞지 않는 요청의 판정, 재료 이름 판정, 영상 레시피 분석"}
                     {/* 〔베타 정식 때〕 더함: 음성 인식(태국어·이탈리아어) */}
                   </td>
                 </tr>
@@ -312,10 +320,8 @@ export function PrivacyPolicyPage(): JSX.Element {
                   <td>
                     AI 기능에 입력한 글, 고쳐 만들 레시피 내용, 선택한 경우 냉장고 재료 이름, 사진
                     인식에 쓴 사진, 앱 언어.
-                    <LaunchOnly>
-                      {" "}
-                      AI 대화 내용, 음성 명령의 받아쓴 글자(음성 자체는 휴대폰 밖으로 보내지 않음).
-                    </LaunchOnly>
+                    {LEGAL_LAUNCH_CLAUSES &&
+                      " AI 대화 내용, 음성 명령의 받아쓴 글자(음성 자체는 휴대폰 밖으로 보내지 않음)."}
                     {/*
                       〔베타 정식 때〕 더함: 태국어·이탈리아어 음성 명령의 음성(글자로 바꾼 뒤 바로
                       폐기하며 OpenAI 도 앱 상태로 저장하지 않음)
@@ -441,7 +447,7 @@ export function PrivacyPolicyPage(): JSX.Element {
             앱 서비스 이용 시 특정 기기 접근권한을 요청할 수 있습니다. 접근권한은 서비스 제공에
             필요한 최소한으로 요청하며, 이용자는 언제든지 기기 설정에서 철회할 수 있습니다.
           </p>
-          <LaunchOnly>
+          {LEGAL_LAUNCH_CLAUSES && (
             <ul>
               <li>
                 마이크(선택): 음성 명령 버튼을 누르고 있는 동안에만 씁니다. 음성은 휴대폰 안에서
@@ -449,7 +455,7 @@ export function PrivacyPolicyPage(): JSX.Element {
                 있습니다.
               </li>
             </ul>
-          </LaunchOnly>
+          )}
         </PolicySection>
 
         <PolicySection id="payments" title="제7조의4 (유료결제 정보 처리)">
@@ -459,7 +465,7 @@ export function PrivacyPolicyPage(): JSX.Element {
           </p>
         </PolicySection>
 
-        <LaunchOnly>
+        {LEGAL_AI_SANCTION_CLAUSES && (
           <PolicySection id={automatedDecisionSection.id} title="제7조의5 (자동화된 결정)">
             <p>
               <Pending>
@@ -474,7 +480,7 @@ export function PrivacyPolicyPage(): JSX.Element {
               설명을 요구하거나 이의를 신청할 수 있습니다(이용약관 제A6조).
             </p>
           </PolicySection>
-        </LaunchOnly>
+        )}
 
         <PolicySection id="contact" title="제8조 (개인정보 보호책임자)">
           <TableWrap>
