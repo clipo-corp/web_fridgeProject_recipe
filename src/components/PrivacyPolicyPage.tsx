@@ -240,7 +240,8 @@ export function PrivacyPolicyPage(): JSX.Element {
                   <td>
                     AI 레시피 만들기, 레시피 고쳐 만들기, 사진 속 식재료 인식.
                     {LEGAL_LAUNCH_CLAUSES &&
-                      " AI 대화 답변, 받아쓴 음성 명령 문장의 판단, 서비스 목적과 맞지 않는 요청의 판정, 재료 이름 판정, 영상 레시피 분석"}
+                      " AI 대화 답변, 받아쓴 음성 명령 문장의 판단, 서비스 목적과 맞지 않는 요청의 판정, 재료 이름 판정."}
+                    {/* 〔v3 를 켤 때〕 더함(출시 범위 아님): 영상 레시피 분석 */}
                     {/* 〔베타 정식 때〕 더함: 음성 인식(태국어·이탈리아어) */}
                   </td>
                 </tr>
@@ -263,8 +264,9 @@ export function PrivacyPolicyPage(): JSX.Element {
                 <tr>
                   <th scope="row">Google LLC</th>
                   <td>
-                    푸시 알림 발송(Firebase), 위치의 행정구역 확인(Google Maps), 레시피 번역·영상 레시피
-                    분석(Vertex AI), Android 결제 확인(Google Play)
+                    푸시 알림 발송(Firebase), 위치의 행정구역 확인(Google Maps), 레시피 번역(Vertex AI),
+                    {LEGAL_LAUNCH_CLAUSES && " 영상 레시피 분석(Vertex AI),"} Android 결제 확인(Google
+                    Play)
                   </td>
                 </tr>
                 <tr>
@@ -321,7 +323,11 @@ export function PrivacyPolicyPage(): JSX.Element {
                     AI 기능에 입력한 글, 고쳐 만들 레시피 내용, 선택한 경우 냉장고 재료 이름, 사진
                     인식에 쓴 사진, 앱 언어.
                     {LEGAL_LAUNCH_CLAUSES &&
-                      " AI 대화 내용, 음성 명령의 받아쓴 글자(음성 자체는 휴대폰 밖으로 보내지 않음)."}
+                      " AI 대화 내용, 음성 명령의 받아쓴 글자(음성 자체는 휴대폰 밖으로 보내지 않음), 목록에 없어 새로 저장된 재료 이름과 그 언어·입력 경로(재료 이름 판정)."}
+                    {/*
+                      〔v3 를 켤 때〕 더함(출시 범위 아님): 영상 레시피로 가져오려는 영상의 주소·설명·자막·화면
+                      설명.
+                    */}
                     {/*
                       〔베타 정식 때〕 더함: 태국어·이탈리아어 음성 명령의 음성(글자로 바꾼 뒤 바로
                       폐기하며 OpenAI 도 앱 상태로 저장하지 않음)
@@ -359,6 +365,7 @@ export function PrivacyPolicyPage(): JSX.Element {
                   <td>
                     푸시 토큰과 알림 내용, 반올림한 위치 좌표(약 110m 단위), 번역할 레시피 내용,
                     Android 구매 정보
+                    {LEGAL_LAUNCH_CLAUSES && ". 영상 레시피로 가져오려는 영상의 주소·설명·자막·화면 설명"}
                   </td>
                   <td>제5조의 Google 업무</td>
                   <td>
@@ -405,8 +412,17 @@ export function PrivacyPolicyPage(): JSX.Element {
           <p>
             국외 이전을 원하지 않으면 해당 기능(AI 기능, 음성 명령, 푸시 알림, 위치 설정 등)을 쓰지
             않거나 설정에서 끌 수 있습니다. 이 경우 그 기능만 쓸 수 없고 나머지 서비스는 그대로
-            이용할 수 있습니다. 앱 서버·데이터베이스 운영을 위한 이전은 서비스 제공에 꼭 필요하여,
-            거부하시면 회원 서비스를 이용할 수 없습니다.
+            이용할 수 있습니다.
+            {LEGAL_LAUNCH_CLAUSES && (
+              <>
+                {" "}
+                재료 이름 판정을 원하지 않으면 제8조의 개인정보 보호책임자에게 요청할 수 있으며, 그
+                이용자가 적은 재료 이름은 판정에서 뺍니다.{" "}
+                <Pending>제외 처리 구현 — AI 매칭 처리방침 초안 4-3</Pending>
+              </>
+            )}{" "}
+            앱 서버·데이터베이스 운영을 위한 이전은 서비스 제공에 꼭 필요하여, 거부하시면 회원
+            서비스를 이용할 수 없습니다.
           </p>
           {/*
             〔베타 정식 때〕 더함: 태국어·이탈리아어 음성 명령을 쓰지 않으면 음성이 국외로 가지

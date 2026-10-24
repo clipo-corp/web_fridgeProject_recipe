@@ -1,4 +1,5 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -16,17 +17,22 @@ afterEach(() => {
 
 // cwd 와 다른 임시 root 에 작은 프로젝트를 만들어 실제 vite build 를 돌린다.
 async function buildFixture(files: Record<string, string>): Promise<void> {
-  const root = mkdtempSync(join(tmpdir(), "legal-guard-"));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "legal-guard-")));
   roots.push(root);
   for (const [name, content] of Object.entries(files)) {
+    mkdirSync(dirname(join(root, name)), { recursive: true });
     writeFileSync(join(root, name), content);
   }
+  const html = "index.html" in files;
   await build({
     root,
     configFile: false,
     logLevel: "silent",
     plugins: [legalPublishGuard()],
-    build: { write: false, rollupOptions: { input: join(root, "main.ts") } },
+    build: {
+      write: false,
+      ...(html ? {} : { rollupOptions: { input: join(root, "main.ts") } }),
+    },
   });
 }
 
@@ -52,6 +58,38 @@ describe("legalPublishGuard", () => {
     await expect(buildFixture({ "main.ts": 'console.log("〔확인필요〕");' })).rejects.toThrow(
       pendingFailure,
     );
+  });
+
+  it("fails when the marker is spaced with nbsp or split into JSX pieces", async () => {
+    await expect(buildFixture({ "main.ts": 'console.log("[확인\\u00a0필요: 지역]");' })).rejects.toThrow(
+      pendingFailure,
+    );
+    await expect(buildFixture({ "main.ts": 'console.log(["확인", " ", "필요"]);' })).rejects.toThrow(
+      pendingFailure,
+    );
+    await expect(
+      buildFixture({ "main.ts": 'console.log(["확인", `\\u00a0`, "필요"].join(""));' }),
+    ).rejects.toThrow(pendingFailure);
+  });
+
+  it("fails when the marker is in index.html or public/", async () => {
+    const main = 'console.log("ok");';
+    await expect(
+      buildFixture({
+        "index.html": '<!doctype html><p>[확인&nbsp;필요: 시행일]</p><script type="module" src="./main.ts"></script>',
+        "main.ts": main,
+      }),
+    ).rejects.toThrow(pendingFailure);
+    await expect(
+      buildFixture({ "public/robots.txt": "# 확인 필요\n", "main.ts": main }),
+    ).rejects.toThrow(pendingFailure);
+    await expect(
+      buildFixture({
+        "index.html": '<!doctype html><p>ok</p><script type="module" src="./main.ts"></script>',
+        "public/robots.txt": "User-agent: *\n",
+        "main.ts": main,
+      }),
+    ).resolves.toBeUndefined();
   });
 
   it("fails when the marker lives in a separate file", async () => {
