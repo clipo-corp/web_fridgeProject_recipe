@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { LEGAL_LAUNCH_CLAUSES } from "../lib/legalPublication";
+import { LaunchOnly, Pending } from "./legal/LegalMarks";
 
 type PolicySection = {
   readonly id: string;
@@ -11,6 +13,7 @@ const policySections: readonly PolicySection[] = [
   { id: "retention", title: "제3조 개인정보의 처리 및 보유 기간" },
   { id: "third-party", title: "제4조 개인정보의 제3자 제공" },
   { id: "delegation", title: "제5조 개인정보 처리의 위탁" },
+  { id: "overseas-transfer", title: "제5조의2 개인정보의 국외 이전" },
   { id: "rights", title: "제6조 정보주체의 권리·의무 및 행사방법" },
   { id: "destruction", title: "제7조 개인정보의 파기" },
   { id: "location", title: "제7조의2 위치정보의 처리" },
@@ -53,7 +56,17 @@ const requiredItems = [
   "결제 및 구독 상태",
 ];
 
+// 〔출시 때〕 AI 이용 제한(이용약관 AI 기능 장)과 함께 생기는 조. 목차에도 그때만 넣는다.
+const automatedDecisionSection: PolicySection = {
+  id: "automated-decision",
+  title: "제7조의5 자동화된 결정",
+};
+
 export function PrivacyPolicyPage(): JSX.Element {
+  const tocSections = policySections.flatMap((section) =>
+    section.id === "payments" && LEGAL_LAUNCH_CLAUSES ? [section, automatedDecisionSection] : [section],
+  );
+
   return (
     <main className="privacy-page">
       <article className="privacy-document" aria-labelledby="privacy-title">
@@ -68,7 +81,9 @@ export function PrivacyPolicyPage(): JSX.Element {
           <dl className="privacy-meta" aria-label="정책 기본 정보">
             <div>
               <dt>시행일</dt>
-              <dd>2026-06-26</dd>
+              <dd>
+                <Pending>개정 시행일</Pending>
+              </dd>
             </div>
             <div>
               <dt>회사명</dt>
@@ -94,7 +109,7 @@ export function PrivacyPolicyPage(): JSX.Element {
         <nav className="privacy-toc" aria-label="개인정보처리방침 목차">
           <h2>목차</h2>
           <ol>
-            {policySections.map((section) => (
+            {tocSections.map((section) => (
               <li key={section.id}>
                 <a href={`#${section.id}`}>{section.title}</a>
               </li>
@@ -126,6 +141,30 @@ export function PrivacyPolicyPage(): JSX.Element {
           <p>
             <strong>위치정보 수집:</strong> 현재 위치정보(GPS)
           </p>
+          <ul>
+            <li>
+              AI 기능 이용 시: 이용자가 입력한 요청 글(AI 레시피 만들기, 레시피 고쳐 만들기), 사진
+              인식에 사용한 사진
+            </li>
+            <LaunchOnly>
+              <li>AI 대화 이용 시: 이용자가 입력한 질문과 AI 대화 내용</li>
+              <li>
+                음성 명령 이용 시: 받아쓴 명령 문장, 명령 처리 결과. 음성은 휴대폰 안에서 글자로
+                바꾸며, 휴대폰 밖으로 보내거나 저장하지 않습니다.
+              </li>
+              <li>
+                AI 기능 이용 제한·이의 처리 시: 판정 결과, 가린 요청 글 일부(음성 명령은 받아쓴
+                글자. 음성은 보관하지 않음), 제한 단계와 기간, 이의 신청 내용과 처리 결과
+              </li>
+            </LaunchOnly>
+            {/*
+              〔베타 정식 때〕 태국어·이탈리아어 음성을 일반 이용자에게 열 때만 넣는다(출시 범위 아님).
+              <li>
+                태국어·이탈리아어 음성 명령 이용 시: 음성(글자로 바꾸기 위해 서버를 거쳐 OpenAI 로
+                보내며, 바꾼 뒤 바로 폐기하고 저장하지 않음)
+              </li>
+            */}
+          </ul>
         </PolicySection>
 
         <PolicySection id="retention" title="제3조 (개인정보의 처리 및 보유 기간)">
@@ -142,6 +181,29 @@ export function PrivacyPolicyPage(): JSX.Element {
               6개월
             </li>
           </ul>
+          <LaunchOnly>
+            <ul>
+              <li>AI 대화 내용: 마지막 대화 후 30일. 이용자가 대화를 지우면 바로 삭제합니다.</li>
+              <li>
+                AI 요청 판정 기록: 30일. 연락처·카드번호 등은 가린 상태로 보관합니다. 30일이 지나면
+                글 내용을 지우고, 이용자를 알아볼 수 없는 분류·비용 통계만 1년 보관합니다.
+              </li>
+              <li>받아쓴 음성 명령 문장: 30일. 그 뒤에는 이용자를 알아볼 수 없는 통계만 보관합니다.</li>
+              <li>
+                AI 기능 이용 제한 기록: 마지막 기록 뒤 1년. 가린 요청 글은 제한 단계가 처음으로
+                돌아간 날부터 30일(3차 이상 제한은 이의 신청 기간이 끝날 때까지)
+              </li>
+              <li>
+                이의 신청과 처리 결과: <Pending>3년</Pending>
+              </li>
+            </ul>
+          </LaunchOnly>
+          {/*
+            설계 결정 9 의 '평가 사례 보관'을 쓰기로 하면 넣는다.
+            <li>
+              서비스 품질을 높이기 위해 고른 일부 사례는 이용자를 알아볼 수 없게 처리하여 보관합니다.
+            </li>
+          */}
           <p>단, 관계 법령에 의해 보존할 필요가 있는 경우 해당 법령에서 정한 기간 동안 보관합니다.</p>
         </PolicySection>
 
@@ -150,7 +212,206 @@ export function PrivacyPolicyPage(): JSX.Element {
         </PolicySection>
 
         <PolicySection id="delegation" title="제5조 (개인정보 처리의 위탁)">
-          <p>회사는 개인정보 처리를 위탁하지 않습니다.</p>
+          <p>회사는 서비스 제공을 위하여 다음과 같이 개인정보 처리 업무를 위탁합니다.</p>
+          <TableWrap>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">수탁자</th>
+                  <th scope="col">위탁 업무</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">
+                    OpenAI, L.L.C. <Pending>계약 법인명</Pending>
+                  </th>
+                  <td>
+                    AI 레시피 만들기, 레시피 고쳐 만들기, 사진 속 식재료 인식.
+                    <LaunchOnly>
+                      {" "}
+                      AI 대화 답변, 받아쓴 음성 명령 문장의 판단, 서비스 목적과 맞지 않는 요청의
+                      판정, 재료 이름 판정, 영상 레시피 분석
+                    </LaunchOnly>
+                    {/* 〔베타 정식 때〕 더함: 음성 인식(태국어·이탈리아어) */}
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Amazon Web Services, Inc.</th>
+                  <td>AI 처리 서버 운영, 이미지 저장, 실행 기록 보관</td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    Render Services, Inc. <Pending>계약 법인명</Pending>
+                  </th>
+                  <td>앱 서버 운영</td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    Neon, Inc. <Pending>계약 법인명</Pending>
+                  </th>
+                  <td>데이터베이스 운영</td>
+                </tr>
+                <tr>
+                  <th scope="row">Google LLC</th>
+                  <td>
+                    푸시 알림 발송(Firebase), 위치의 행정구역 확인(Google Maps), 레시피 번역·영상 레시피
+                    분석(Vertex AI), Android 결제 확인(Google Play)
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Apple Inc.</th>
+                  <td>iOS 결제 확인</td>
+                </tr>
+                <tr>
+                  <th scope="row">RevenueCat, Inc.</th>
+                  <td>구독 상태 관리</td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    Resend <Pending>계약 법인명</Pending>
+                  </th>
+                  <td>인증 메일 발송</td>
+                </tr>
+                <tr>
+                  <th scope="row">Netlify, Inc.</th>
+                  <td>웹사이트 운영</td>
+                </tr>
+              </tbody>
+            </table>
+          </TableWrap>
+          <p>
+            회사는 위탁 계약을 맺을 때 위탁 업무 목적 밖의 처리 금지, 안전성 확보 조치, 재위탁 제한
+            등을 정하고, 수탁자가 개인정보를 안전하게 처리하는지 감독합니다.{" "}
+            <Pending>업체별 데이터 처리 부속서(DPA) 체결 여부</Pending>
+          </p>
+        </PolicySection>
+
+        <PolicySection id="overseas-transfer" title="제5조의2 (개인정보의 국외 이전)">
+          <p>
+            회사는 제5조의 위탁 업무를 위하여 아래와 같이 개인정보를 국외로 이전합니다. 이용자가
+            해당 기능을 사용할 때 암호화된 통신으로 전송합니다.
+          </p>
+          <TableWrap>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">이전받는 자 (연락처)</th>
+                  <th scope="col">국가</th>
+                  <th scope="col">이전 항목</th>
+                  <th scope="col">목적</th>
+                  <th scope="col">보유 기간</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">
+                    OpenAI, L.L.C. (<Pending>개인정보 문의 연락처</Pending>)
+                  </th>
+                  <td>미국</td>
+                  <td>
+                    AI 기능에 입력한 글, 고쳐 만들 레시피 내용, 선택한 경우 냉장고 재료 이름, 사진
+                    인식에 쓴 사진, 앱 언어.
+                    <LaunchOnly>
+                      {" "}
+                      AI 대화 내용, 음성 명령의 받아쓴 글자(음성 자체는 휴대폰 밖으로 보내지 않음).
+                    </LaunchOnly>
+                    {/*
+                      〔베타 정식 때〕 더함: 태국어·이탈리아어 음성 명령의 음성(글자로 바꾼 뒤 바로
+                      폐기하며 OpenAI 도 앱 상태로 저장하지 않음)
+                    */}{" "}
+                    <strong>
+                      회원 번호·이메일·전화번호는 보내지 않습니다. 입력한 글 속 연락처·카드번호는
+                      가린 뒤 보냅니다.
+                    </strong>
+                  </td>
+                  <td>제5조의 AI 업무</td>
+                  <td>
+                    OpenAI 는 받은 정보를 AI 학습에 쓰지 않으며, 남용 감시 기록을 최대 30일
+                    보관합니다. 회사는 OpenAI 가 요청·응답을 따로 저장하지 않도록 설정합니다.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Render Services, Inc.</th>
+                  <td>싱가포르</td>
+                  <td>앱 서버가 처리하는 회원·서비스 정보, 접속 기록</td>
+                  <td>앱 서버 운영</td>
+                  <td>회원 탈퇴 또는 위탁 계약 종료 시까지</td>
+                </tr>
+                <tr>
+                  <th scope="row">Neon, Inc.</th>
+                  <td>
+                    <Pending>운영 DB 지역</Pending>
+                  </td>
+                  <td>회원·서비스 정보</td>
+                  <td>데이터베이스 운영</td>
+                  <td>회원 탈퇴 또는 위탁 계약 종료 시까지</td>
+                </tr>
+                <tr>
+                  <th scope="row">Google LLC</th>
+                  <td>미국</td>
+                  <td>
+                    푸시 토큰과 알림 내용, 반올림한 위치 좌표(약 110m 단위), 번역할 레시피 내용,
+                    Android 구매 정보
+                  </td>
+                  <td>제5조의 Google 업무</td>
+                  <td>
+                    처리 목적을 이룰 때까지 <Pending>서비스별 보관 기간</Pending>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Apple Inc.</th>
+                  <td>미국</td>
+                  <td>iOS 거래 정보</td>
+                  <td>결제 확인</td>
+                  <td>관계 법령에서 정한 기간</td>
+                </tr>
+                <tr>
+                  <th scope="row">RevenueCat, Inc.</th>
+                  <td>미국</td>
+                  <td>앱 회원 식별값, 구매·구독 정보</td>
+                  <td>구독 관리</td>
+                  <td>회원 탈퇴 시까지</td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    Resend <Pending>계약 법인명</Pending>
+                  </th>
+                  <td>미국</td>
+                  <td>이메일 주소, 인증 메일 내용</td>
+                  <td>인증 메일 발송</td>
+                  <td>
+                    <Pending>업체 보관 기간</Pending>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Netlify, Inc.</th>
+                  <td>미국</td>
+                  <td>웹 접속 기록</td>
+                  <td>웹사이트 운영</td>
+                  <td>
+                    <Pending>업체 보관 기간</Pending>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </TableWrap>
+          <p>
+            국외 이전을 원하지 않으면 해당 기능(AI 기능, 음성 명령, 푸시 알림, 위치 설정 등)을 쓰지
+            않거나 설정에서 끌 수 있습니다. 이 경우 그 기능만 쓸 수 없고 나머지 서비스는 그대로
+            이용할 수 있습니다. 앱 서버·데이터베이스 운영을 위한 이전은 서비스 제공에 꼭 필요하여,
+            거부하시면 회원 서비스를 이용할 수 없습니다.
+          </p>
+          {/*
+            〔베타 정식 때〕 더함: 태국어·이탈리아어 음성 명령을 쓰지 않으면 음성이 국외로 가지
+            않습니다. 다른 언어의 음성은 휴대폰 밖으로 나가지 않습니다.
+          */}
+          <p>
+            <Pending>
+              AWS(서울 리전 저장)를 국외 이전 표에 넣을지, Google·Apple 로그인을 위탁·이전 표에
+              넣을지 — 법무 판단
+            </Pending>
+          </p>
         </PolicySection>
 
         <PolicySection id="rights" title="제6조 (정보주체의 권리·의무 및 그 행사방법)">
@@ -180,6 +441,15 @@ export function PrivacyPolicyPage(): JSX.Element {
             앱 서비스 이용 시 특정 기기 접근권한을 요청할 수 있습니다. 접근권한은 서비스 제공에
             필요한 최소한으로 요청하며, 이용자는 언제든지 기기 설정에서 철회할 수 있습니다.
           </p>
+          <LaunchOnly>
+            <ul>
+              <li>
+                마이크(선택): 음성 명령 버튼을 누르고 있는 동안에만 씁니다. 음성은 휴대폰 안에서
+                글자로 바꾸며 휴대폰 밖으로 보내지 않습니다. 허용하지 않아도 다른 기능은 쓸 수
+                있습니다.
+              </li>
+            </ul>
+          </LaunchOnly>
         </PolicySection>
 
         <PolicySection id="payments" title="제7조의4 (유료결제 정보 처리)">
@@ -188,6 +458,23 @@ export function PrivacyPolicyPage(): JSX.Element {
             보호되며, 결제 대행사에 최소한의 정보만 제공됩니다.
           </p>
         </PolicySection>
+
+        <LaunchOnly>
+          <PolicySection id={automatedDecisionSection.id} title="제7조의5 (자동화된 결정)">
+            <p>
+              <Pending>
+                법무 — 「개인정보 보호법」 제37조의2 &apos;자동화된 결정&apos;에 해당하는지. 해당하면
+                기준·절차 공개와 설명·검토 요구 방법이 필요하다
+              </Pending>
+            </p>
+            <p>
+              회사는 AI 기능의 금지 행위를 막기 위해 요청 글(음성 명령은 받아쓴 글자)을 자동으로
+              판정하고, 그 결과로 AI 기능을 24시간 또는 7일 정지할 수 있습니다. 판정은 요청 글의
+              내용으로만 하며, 더 무거운 제한은 담당자가 확인한 뒤에만 합니다. 이용자는 판정에 대한
+              설명을 요구하거나 이의를 신청할 수 있습니다(이용약관 제A6조).
+            </p>
+          </PolicySection>
+        </LaunchOnly>
 
         <PolicySection id="contact" title="제8조 (개인정보 보호책임자)">
           <TableWrap>
@@ -212,7 +499,10 @@ export function PrivacyPolicyPage(): JSX.Element {
               </tbody>
             </table>
           </TableWrap>
-          <p>이 방침은 2026-06-26부터 시행합니다.</p>
+          <p>
+            이 방침은 <Pending>개정 시행일</Pending>부터 시행합니다. 종전 방침은 2026-06-26부터
+            시행되었습니다.
+          </p>
           <p>
             Clipo
             <br />

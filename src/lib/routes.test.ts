@@ -15,6 +15,20 @@ describe("appRouteForPath", () => {
     expect(appRouteForPath("/help")).toEqual({ kind: "prelaunch" });
     expect(appRouteForPath("/anything-else")).toEqual({ kind: "prelaunch" });
   });
+
+  it("opens only the legal pages once the legal publication switch is on", () => {
+    expect(appRouteForPath("/privacy", true)).toEqual({ kind: "privacy" });
+    expect(appRouteForPath("/privacy-policy/", true)).toEqual({ kind: "privacy" });
+    expect(appRouteForPath("/terms", true)).toEqual({ kind: "terms" });
+    expect(appRouteForPath("/", true)).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/recipe-catalog", true)).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/support", true)).toEqual({ kind: "prelaunch" });
+  });
+
+  it("keeps the legal pages in the pre-launch state while the switch is off", () => {
+    expect(appRouteForPath("/privacy", false)).toEqual({ kind: "prelaunch" });
+    expect(appRouteForPath("/terms", false)).toEqual({ kind: "prelaunch" });
+  });
 });
 
 describe("detailPathForRecipe", () => {

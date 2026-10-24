@@ -149,7 +149,8 @@
   color: var(--green-200);
 }
 
-.privacy-section__body ul {
+.privacy-section__body ul,
+.privacy-section__body ol {
   display: grid;
   gap: var(--space-sm);
   margin: 0;
@@ -158,6 +159,18 @@
 
 .privacy-section__body li {
   padding-left: var(--space-xs);
+}
+
+.legal-pending {
+  padding: 0 4px;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--amber-50) 70%, var(--bg-card));
+  color: var(--text);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .legal-pending {
+  background: color-mix(in srgb, var(--amber-800) 28%, var(--bg-card));
 }
 
 .privacy-note {
