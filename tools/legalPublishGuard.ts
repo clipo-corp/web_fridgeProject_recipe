@@ -3,8 +3,9 @@ import { join, relative } from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
 
 // `[확인 필요: …]`·`〔확인필요〕`·nbsp 로 띄운 것·JSX 조각으로 나뉜 `확인{" "}필요` 까지 잡는다.
+// 법적 판단을 남긴 `[사용자 확인: …]`(UserCheck)도 같이 잡는다.
 // 조각은 결과물에서 `"확인"," ","필요"` 처럼 따옴표·쉼표로 이어지므로 그것도 공백처럼 본다.
-const pendingMarker = /확인[\s"'`,+]*필요/u;
+const pendingMarker = /확인[\s"'`,+]*필요|사용자[\s"'`,+]*확인/u;
 
 function normalize(text: string): string {
   return text

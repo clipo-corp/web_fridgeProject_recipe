@@ -60,6 +60,17 @@ describe("legalPublishGuard", () => {
     );
   });
 
+  it("fails when a user-decision marker is left in the output", async () => {
+    await expect(
+      buildFixture({
+        "main.ts": `import { UserCheck } from ${JSON.stringify(legalMarks)};\nconsole.log(UserCheck({ children: "별도 동의" }));`,
+      }),
+    ).rejects.toThrow(pendingFailure);
+    await expect(buildFixture({ "main.ts": 'console.log(["사용자", " ", "확인"]);' })).rejects.toThrow(
+      pendingFailure,
+    );
+  });
+
   it("fails when the marker is spaced with nbsp or split into JSX pieces", async () => {
     await expect(buildFixture({ "main.ts": 'console.log("[확인\\u00a0필요: 지역]");' })).rejects.toThrow(
       pendingFailure,
