@@ -212,7 +212,7 @@ function localeForCuisineRegion(cuisineRegion: string): string | null {
   const locales: Readonly<Record<string, string>> = {
     korean: "ko-KR",
     japanese: "ja-JP",
-    chinese: "zh-CN",
+    chinese: "zh-HK",
     french: "fr-FR",
     italian: "it-IT",
     indian: "hi-IN",
@@ -228,8 +228,8 @@ function localeForCountryCode(countryCode: string): string | null {
   const locales: Readonly<Record<string, string>> = {
     KR: "ko-KR",
     JP: "ja-JP",
-    CN: "zh-CN",
-    TW: "zh-TW",
+    CN: "zh-HK",
+    TW: "zh-HK",
     HK: "zh-HK",
     FR: "fr-FR",
     IT: "it-IT",
