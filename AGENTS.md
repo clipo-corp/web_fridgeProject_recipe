@@ -1,5 +1,7 @@
 # web_fridgeProject_recipe — Agent Instructions
 
+> **설계 맥락 먼저 (레시피·재료·영양·인분·알레르기·안전·챗봇 답 작업 전 필수)**: 워크스페이스 `.coordinator/README-DESIGN-CONTEXT.md`와 `.coordinator/DECISIONS-INDEX.md`를 읽는다(정한 것 + 버린 대안). core는 origin tip만 읽는다: `git -C core_data_master_db show origin/core/integration-1110:<path>`(먼저 fetch). 조사 보고서는 `.coordinator/REPORT-HEADER-TEMPLATE.md` 머리말을 붙인다.
+
 **Keep Cook** web client (org `clipo-corp`). Vite · React · TypeScript. Deployed to
 Netlify.
 
