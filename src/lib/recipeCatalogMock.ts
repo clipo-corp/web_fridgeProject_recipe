@@ -17,6 +17,7 @@ import { toRecipeCreatorSource } from "./recipeCreatorSource";
 import { seekableDemoRecipe } from "./recipeSeekableDemo";
 import { isSeekableDemoEnabled } from "./runtimeConfig";
 import { recipeFilterKeys } from "./recipeCatalogTypes";
+import { normalizeDietaryRestrictionRequestValue } from "./recipeLabels";
 import { withCatalogDemoMedia } from "./recipeCatalogDemoMedia";
 import type {
   PublicRecipeCatalogFilters,
@@ -32,6 +33,8 @@ export { initialCatalogFilters, toPublicRecipeSearchRequest };
 export type CatalogFilterOptions = Record<RecipeFilterKey, readonly string[]> & {
   readonly region: RecipeRegionOptions;
   readonly writtenLang: readonly string[];
+  /** Server v2 support signal. Mock/static and old servers have no value. */
+  readonly dietDefinitionVersion: number | null;
 };
 
 export async function loadPublicMockRecipes(): Promise<readonly PublicRecipeRecord[]> {
@@ -51,6 +54,9 @@ export function filterPublicRecipes(
   filters: PublicRecipeCatalogFilters,
 ): readonly PublicRecipeRecord[] {
   const query = filters.query.trim().toLocaleLowerCase("ko-KR");
+  // Validate and normalize only the selected filter value. Recipe author tags/evidence stay raw.
+  const selectedDietaryRestriction =
+    normalizeDietaryRestrictionRequestValue(filters.dietaryRestriction) ?? "all";
   const filtered = recipes.filter((recipe) => {
     return (
       recipe.visibility === "public" &&
@@ -58,7 +64,10 @@ export function filterPublicRecipes(
       passesWrittenLang(recipe, filters.writtenLang) &&
       passesLocalMode(recipe, filters.isUseLocalData) &&
       passesRegion(recipe, filters.region) &&
-      recipeFilterKeys.every((key) => passesFilter(filters[key], recipe[key]))
+      recipeFilterKeys.every((key) => passesFilter(
+        key === "dietaryRestriction" ? selectedDietaryRestriction : filters[key],
+        recipe[key],
+      ))
     );
   });
 
@@ -71,6 +80,7 @@ export function collectCatalogOptions(
   return {
     region: collectRegionOptions(recipes),
     writtenLang: collectValues(recipes, "writtenLang"),
+    dietDefinitionVersion: null,
     recipeType: collectValues(recipes, "recipeType"),
     cookingMethod: collectValues(recipes, "cookingMethod"),
     technique: collectValues(recipes, "technique"),

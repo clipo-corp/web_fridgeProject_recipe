@@ -63,8 +63,12 @@ const labelsKo: LabelMap = {
   light: "가벼운 식사",
   standard: "일반",
   "gluten-free": "글루텐프리",
+  "lactose-free": "락토프리",
   none: "제한 없음",
-  vegan: "비건",
+  vegan: "비건(완전 채식)",
+  lacto_ovo: "락토오보",
+  pescatarian: "페스코",
+  halal: "할랄",
 
   blender: "블렌더",
   bowl: "볼",
@@ -157,8 +161,12 @@ const labelsEn: LabelMap = {
   light: "Light",
   standard: "Standard",
   "gluten-free": "Gluten-free",
+  "lactose-free": "Lactose-free",
   none: "None",
   vegan: "Vegan",
+  lacto_ovo: "Vegetarian (lacto-ovo)",
+  pescatarian: "Pescatarian (plant-based + seafood)",
+  halal: "Halal",
 
   blender: "Blender",
   bowl: "Bowl",
@@ -255,16 +263,106 @@ const primaryIngredientValues = [
   "vegetable",
 ] as const;
 
+/*
+ * `dietaryRestriction` is the recipe author/catalog's own restriction, not the server's
+ * verified `dietFilter`. The web has no verified diet filter or diet profile surface.
+ * Only the filter state's legacy `vegetarian` is normalized to `vegan`; a recipe's author
+ * tag/evidence is never promoted to a verified diet. GF/LF and new codes are not selectable.
+ */
+const legacyDietaryRestrictionFilterAliases: Record<string, string> = {
+  vegetarian: "vegan",
+  gluten_free: "gluten-free",
+  lactose_free: "lactose-free",
+};
+
+/** Author-tag values the web may offer. GF/LF and deprecated/new values stay out. */
+const selectableDietaryRestrictionValues = new Set(["vegan", "halal", "none"]);
+
+const deprecatedAuthorDietLabels: Record<Lang, string> = {
+  ko: "채식(작성자 태그·미검증)",
+  en: "Vegetarian (author tag, unverified)",
+};
+
+/** A selected filter value the current web/server cannot execute. Never treated as `all`. */
+export class UnsupportedDietFilterError extends Error {
+  override readonly name = "UnsupportedDietFilterError";
+
+  constructor(readonly value: string) {
+    super(`unsupported dietaryRestriction filter: ${value}`);
+  }
+}
+
+/** Read only own keys; inherited names such as __proto__ must never become a label/filter. */
+function ownLabelValue(map: LabelMap, key: string): string | undefined {
+  return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined;
+}
+
+/** Normalize only the filter/URL legacy value; never a recipe's author tag. */
+export function normalizeDietaryRestrictionFilterValue(value: string): string {
+  return ownLabelValue(legacyDietaryRestrictionFilterAliases, value) ?? value;
+}
+
+/** Whether the selected filter can be executed (legacy `vegetarian` counts as `vegan`). */
+export function isSupportedDietaryRestrictionValue(value: string): boolean {
+  if (value === "all") {
+    return true;
+  }
+  return selectableDietaryRestrictionValues.has(normalizeDietaryRestrictionFilterValue(value));
+}
+
+/**
+ * The value to send as `dietaryRestriction`.
+ * `all`/absent means no filter (`null`); anything else must be executable or this throws,
+ * so HTTP/mock paths never fall back to an unfiltered run.
+ */
+export function normalizeDietaryRestrictionRequestValue(value: string | null): string | null {
+  if (value === null || value.length === 0 || value === "all") {
+    return null;
+  }
+  const normalized = normalizeDietaryRestrictionFilterValue(value);
+  if (selectableDietaryRestrictionValues.has(normalized)) {
+    return normalized;
+  }
+  throw new UnsupportedDietFilterError(value);
+}
+
+/** The chip value to show. Unsupported values are preserved, never rewritten to `all`. */
+export function selectedDietaryRestrictionValue(value: string): string {
+  return value === "all" ? "all" : normalizeDietaryRestrictionFilterValue(value);
+}
+
+/** The selectable options; the selected value never adds a hidden GF/LF/author value back. */
+export function selectableDietaryRestrictionOptions(values: readonly string[]): readonly string[] {
+  const options: string[] = [];
+  for (const value of values) {
+    if (value.length === 0 || options.includes(value)) {
+      continue;
+    }
+    if (selectableDietaryRestrictionValues.has(value)) {
+      options.push(value);
+    }
+  }
+  return options;
+}
+
 export function labelFor(value: string, lang: Lang): string {
-  return labelMaps[lang][value] ?? value;
+  if (value === "vegetarian") {
+    return deprecatedAuthorDietLabels[lang];
+  }
+  const normalized = value === "gluten_free"
+    ? "gluten-free"
+    : value === "lactose_free"
+      ? "lactose-free"
+      : value;
+  return ownLabelValue(labelMaps[lang], normalized) ?? normalized;
 }
 
 export function countryLabel(value: string, lang: Lang): string {
-  return countryMaps[lang][value] ?? value;
+  return ownLabelValue(countryMaps[lang], value) ?? value;
 }
 
 export function timeLabel(value: string, lang: Lang): string {
-  return timeMaps[lang][value] ?? value;
+  return ownLabelValue(timeMaps[lang], value) ?? value;
 }
 
 export function primaryIngredientValueForSearchText(input: string): string | null {

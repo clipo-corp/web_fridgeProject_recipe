@@ -4,6 +4,8 @@ import type { ApiResponse, LoginResponse } from "./recipeServerTypes";
 
 const guestTokenKey = "keepcook.guestAccessToken";
 const guestDeviceKey = "keepcook.guestDeviceId";
+/** Consumer contract header. It is not a server-readiness proof by itself. */
+const dietContractHeaders = { "X-KeepCook-Diet-Contract": "2" } as const;
 let guestAccessTokenRequest: Promise<string> | null = null;
 
 type ApiResponseErrorInput = {
@@ -37,6 +39,7 @@ export async function fetchWithGuestAuth<T>(
       "Accept-Language": currentRequestDisplayLanguage(),
       Authorization: `Bearer ${token}`,
       ...init.headers,
+      ...dietContractHeaders,
     },
   });
 
@@ -66,6 +69,7 @@ export async function fetchRawWithGuestAuth<T>(
       "Accept-Language": currentRequestDisplayLanguage(),
       Authorization: `Bearer ${token}`,
       ...init.headers,
+      ...dietContractHeaders,
     },
   });
 
@@ -105,6 +109,7 @@ function requestGuestAccessToken(): Promise<string> {
     headers: {
       "Content-Type": "application/json",
       "Accept-Language": currentRequestDisplayLanguage(),
+      ...dietContractHeaders,
     },
     body: JSON.stringify({ deviceId: getGuestDeviceId() }),
   })

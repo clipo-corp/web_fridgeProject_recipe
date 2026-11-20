@@ -150,7 +150,7 @@ const screenCopy: Record<Lang, ScreenCopy> = {
       { name: "양파", date: "2024.06.01", visual: "onion" },
     ],
     savedRecipes: [
-      { title: "지중해 샐러드", author: "Healthy Homey Owner", tags: ["채식", "샐러드", "초급"], visual: "salad" },
+      { title: "지중해 샐러드", author: "Healthy Homey Owner", tags: ["비건(완전 채식)", "샐러드", "초급"], visual: "salad" },
       { title: "콘 크림 파스타", author: "KeepCook Kitchen", tags: ["면", "간단", "10분"], visual: "noodles" },
       { title: "토마토 채소볶음", author: "Home Cook", tags: ["볶음", "채소", "초급"], visual: "stir" },
     ],

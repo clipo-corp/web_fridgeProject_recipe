@@ -20,7 +20,10 @@ export type ServerRecipePageResponse = {
 export type ServerRecipeFilterOptionsResponse = Record<
   RecipeFilterKey | "writtenLang",
   readonly string[]
->;
+> & {
+  /** Optional v2 support signal: `2` on supporting servers, absent/1 otherwise. */
+  readonly dietDefinitionVersion?: number | null;
+};
 
 export type ServerRecipeRegionCatalogResponse = {
   readonly regions?: readonly ServerRecipeRegionOption[];

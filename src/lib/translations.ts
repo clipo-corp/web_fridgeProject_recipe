@@ -105,6 +105,10 @@ const ko = {
   "filters.mobileOpen": "상세 필터 열기",
   "filters.mobileClose": "상세 필터 닫기",
   "filters.clearOne": "필터 제거",
+  "filters.unsupportedDiet": "지원하지 않는 식단 필터예요. '전체'를 눌러 해제해 주세요.",
+
+  "results.unsupportedDietTitle": "지원하지 않는 식단 필터예요",
+  "results.unsupportedDietBody": "이 필터는 지금 웹에서 실행할 수 없어요. '전체'를 눌러 해제한 뒤 다시 검색해 주세요.",
 
   "sort.recommended": "추천순",
   "sort.popular": "인기순",
@@ -249,6 +253,10 @@ const en: Record<TranslationKey, string> = {
   "filters.mobileOpen": "Show filters",
   "filters.mobileClose": "Hide filters",
   "filters.clearOne": "Remove filter",
+  "filters.unsupportedDiet": "Unsupported diet filter. Choose \"All\" to clear it.",
+
+  "results.unsupportedDietTitle": "Unsupported diet filter",
+  "results.unsupportedDietBody": "This filter cannot run on the web yet. Choose \"All\" and search again.",
 
   "sort.recommended": "Recommended",
   "sort.popular": "Most popular",

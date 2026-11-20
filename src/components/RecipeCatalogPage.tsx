@@ -14,6 +14,10 @@ import {
   loadCatalogRecipes,
 } from "../lib/recipeApi";
 import {
+  UnsupportedDietFilterError,
+  isSupportedDietaryRestrictionValue,
+} from "../lib/recipeLabels";
+import {
   filtersFromSearchParams,
   filtersToSearchParams,
 } from "../lib/recipeCatalogUrlSync";
@@ -58,6 +62,7 @@ export function RecipeCatalogPage({
   const [searching, setSearching] = useState(() =>
     !isBrowsingFilters(filtersFromSearchParams(window.location.search))
   );
+  const [dietFilterError, setDietFilterError] = useState<UnsupportedDietFilterError | null>(null);
   const initializedSuggestionRecipes = useRef(false);
 
   useEffect(() => {
@@ -88,6 +93,7 @@ export function RecipeCatalogPage({
 
         setRecipes(result.recipes);
         setHasNextResultPage(result.isAfter);
+        setDietFilterError(null);
         if (
           !initializedSuggestionRecipes.current &&
           isHomepageBrowsing
@@ -98,7 +104,7 @@ export function RecipeCatalogPage({
 
         setSearching(false);
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (cancelled) {
           return;
         }
@@ -106,6 +112,7 @@ export function RecipeCatalogPage({
         setRecipes([]);
         setHasNextResultPage(false);
         setSearching(false);
+        setDietFilterError(error instanceof UnsupportedDietFilterError ? error : null);
       });
 
     return () => {
@@ -129,6 +136,11 @@ export function RecipeCatalogPage({
       return;
     }
 
+    if (!isSupportedDietaryRestrictionValue(filters.dietaryRestriction)) {
+      setQuerySuggestionRecipes([]);
+      return;
+    }
+
     const isResultQuery =
       !isBrowsingFilters(filters) &&
       query === filters.query.trim();
@@ -145,6 +157,7 @@ export function RecipeCatalogPage({
           query,
           searchScope: filters.searchScope,
           sort: "popular",
+          dietaryRestriction: filters.dietaryRestriction,
         },
         displayLang,
         20,
@@ -227,6 +240,8 @@ export function RecipeCatalogPage({
   const baseFilters = (): PublicRecipeCatalogFilters => ({
     ...initialCatalogFilters,
     searchScope: filters.searchScope,
+    // Only an explicit All/reset/chip clear may release an opaque diet filter.
+    dietaryRestriction: filters.dietaryRestriction,
   });
   const changeSearchScope = (searchScope: RecipeSearchScope): void => {
     setResultPageNumber(0);
@@ -327,6 +342,7 @@ export function RecipeCatalogPage({
             filters={filters}
             filterOptions={filterOptions}
             activeChips={activeChips}
+            dietFilterError={dietFilterError}
             onResetFilters={resetFilters}
             onFilterChange={patchFilters}
             onClearActiveChip={clearActiveChip}

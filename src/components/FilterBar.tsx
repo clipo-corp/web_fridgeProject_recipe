@@ -3,6 +3,12 @@ import { SlidersHorizontal } from "lucide-react";
 import { makeRegionOptions, parseRegion } from "./FilterRegionOptions";
 import type { Option } from "./FilterOption";
 import { useI18n } from "../lib/i18n";
+import {
+  isSupportedDietaryRestrictionValue,
+  normalizeDietaryRestrictionFilterValue,
+  selectableDietaryRestrictionOptions,
+  selectedDietaryRestrictionValue,
+} from "../lib/recipeLabels";
 import { emojiFor, orderDifficulty, orderTime } from "../lib/recipeFilterMeta";
 import { regionToSelectValue } from "../lib/recipeCatalogRegion";
 import type {
@@ -47,6 +53,10 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
     { value: "original", label: t("filters.originalData"), emoji: "" },
   ];
   const regionOptions = makeRegionOptions(options, countryLabel);
+  const dietaryRestrictionValue = selectedDietaryRestrictionValue(filters.dietaryRestriction);
+  const dietaryRestrictionOptions = selectableDietaryRestrictionOptions(options.dietaryRestriction);
+  const dietaryRestrictionUnsupported = filters.dietaryRestriction !== "all"
+    && !isSupportedDietaryRestrictionValue(filters.dietaryRestriction);
 
   return (
     <div className={mobileOpen ? "filter-panel filter-panel--mobile-open" : "filter-panel"}>
@@ -170,10 +180,10 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
             />
             <ChipGroup
               label={t("filters.dietaryRestriction")}
-              value={filters.dietaryRestriction}
-              options={toOptions(options.dietaryRestriction, labelFor)}
+              value={dietaryRestrictionValue}
+              options={toOptions(dietaryRestrictionOptions, labelFor)}
               allLabel={allLabel}
-              onChange={(value) => onChange({ dietaryRestriction: value })}
+              onChange={(value) => onChange({ dietaryRestriction: normalizeDietaryRestrictionFilterValue(value) })}
             />
             <ChipGroup
               label={t("filters.occasion")}
@@ -204,6 +214,11 @@ export function FilterBar({ filters, options, onChange }: FilterBarProps): JSX.E
               onChange={(value) => onChange({ cuisineRegion: value })}
             />
           </div>
+        ) : null}
+        {dietaryRestrictionUnsupported ? (
+          <p className="filter-panel__subtitle" role="status">
+            {t("filters.unsupportedDiet")}
+          </p>
         ) : null}
       </div>
     </div>

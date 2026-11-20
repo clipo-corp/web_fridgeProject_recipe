@@ -194,6 +194,7 @@ async function fetchCatalogFilterOptions(displayLang: DisplayLanguage): Promise<
 
   return {
     region,
+    dietDefinitionVersion: filters.dietDefinitionVersion ?? null,
     writtenLang: filters.writtenLang,
     recipeType: filters.recipeType,
     cookingMethod: filters.cookingMethod,

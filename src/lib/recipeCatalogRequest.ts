@@ -1,5 +1,8 @@
 import { recipeFilterKeys } from "./recipeCatalogTypes";
-import { primaryIngredientValueForSearchText } from "./recipeLabels";
+import {
+  normalizeDietaryRestrictionRequestValue,
+  primaryIngredientValueForSearchText,
+} from "./recipeLabels";
 import type {
   PublicRecipeCatalogFilters,
   PublicRecipeSearchRequest,
@@ -37,6 +40,8 @@ export function toPublicRecipeSearchRequest(
   const nativeFilters = Object.fromEntries(
     recipeFilterKeys.map((key) => [key, nullableFilter(filters[key])]),
   ) as Record<(typeof recipeFilterKeys)[number], string | null>;
+  // Legacy wire `vegetarian` becomes `vegan`; an unknown/new code is never sent as an enum value.
+  const dietaryRestriction = normalizeDietaryRestrictionRequestValue(nativeFilters.dietaryRestriction);
   const primaryIngredientFromQuery =
     nativeFilters.primaryIngredient === null && filters.searchScope !== "recipe"
       ? primaryIngredientValueForSearchText(filters.query)
@@ -44,6 +49,7 @@ export function toPublicRecipeSearchRequest(
 
   return {
     ...nativeFilters,
+    dietaryRestriction,
     primaryIngredient: nativeFilters.primaryIngredient ?? primaryIngredientFromQuery,
     ingredients: [],
     searchValue: primaryIngredientFromQuery === null ? nullableText(filters.query) : null,

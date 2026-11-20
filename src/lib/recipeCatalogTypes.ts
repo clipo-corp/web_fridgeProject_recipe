@@ -158,6 +158,7 @@ export type PublicRecipeRecord = {
   readonly cookingMethod: string;
   readonly technique: string;
   readonly dietaryGoal: string;
+  /** Author/catalog restriction on the recipe. This is not the server's verified `dietFilter`. */
   readonly dietaryRestriction: string;
   readonly primaryIngredient: string;
   readonly category: string;

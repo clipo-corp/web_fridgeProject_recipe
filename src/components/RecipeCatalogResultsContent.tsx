@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
 import { useI18n } from "../lib/i18n";
+import type { UnsupportedDietFilterError } from "../lib/recipeLabels";
 import type { PublicRecipeCatalogFilters, PublicRecipeRecord } from "../lib/recipeCatalogTypes";
 import { InstallBand } from "./AppInstallCta";
 import { FilterBar, type FilterOptions } from "./FilterBar";
@@ -17,6 +18,7 @@ type RecipeCatalogResultsContentProps = {
   readonly filters: PublicRecipeCatalogFilters;
   readonly filterOptions: FilterOptions;
   readonly activeChips: readonly ActiveChip[];
+  readonly dietFilterError?: UnsupportedDietFilterError | null;
   readonly onResetFilters: () => void;
   readonly onFilterChange: (patch: Partial<PublicRecipeCatalogFilters>) => void;
   readonly onClearActiveChip: (clear: Partial<PublicRecipeCatalogFilters>) => void;
@@ -34,6 +36,7 @@ export function RecipeCatalogResultsContent({
   filters,
   filterOptions,
   activeChips,
+  dietFilterError,
   onResetFilters,
   onFilterChange,
   onClearActiveChip,
@@ -133,7 +136,15 @@ export function RecipeCatalogResultsContent({
             </div>
           ) : null}
 
-          {recipes.length === 0 ? (
+          {dietFilterError ? (
+            <div className="empty-state" role="alert">
+              <strong>{t("results.unsupportedDietTitle")}</strong>
+              <p>{t("results.unsupportedDietBody")}</p>
+              <button type="button" className="btn btn--primary" onClick={onResetFilters}>
+                {t("empty.cta")}
+              </button>
+            </div>
+          ) : recipes.length === 0 ? (
             <div className="empty-state">
               <Sparkles size={28} aria-hidden="true" />
               <strong>{t("empty.title")}</strong>

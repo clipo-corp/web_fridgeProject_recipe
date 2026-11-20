@@ -80,6 +80,9 @@ const timeOrder = ["5min", "10min", "20min", "30min", "45min", "1h+"];
 const difficultyOrder = ["beginner", "easy", "intermediate", "advanced", "master"];
 
 export function emojiFor(value: string): string {
+  if (!Object.prototype.hasOwnProperty.call(filterEmoji, value)) {
+    return "";
+  }
   return filterEmoji[value] ?? "";
 }
 

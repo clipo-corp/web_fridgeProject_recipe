@@ -1,4 +1,5 @@
 import { initialCatalogFilters } from "./recipeCatalogRequest";
+import { normalizeDietaryRestrictionFilterValue } from "./recipeLabels";
 import type {
   LocalDataMode,
   PublicRecipeCatalogFilters,
@@ -90,8 +91,15 @@ export function filtersFromSearchParams(search: string): PublicRecipeCatalogFilt
 
   const recipeKeyOverrides = Object.fromEntries(
     recipeFilterKeys.map((key) => {
-      const val = params.get(key);
-      return [key, val ?? initialCatalogFilters[key]];
+      const raw = params.get(key);
+      const fallback = initialCatalogFilters[key];
+      if (key === "dietaryRestriction") {
+        // Absent and exact empty mean no filter; whitespace remains an opaque unknown value.
+        return [key, raw === null || raw === ""
+          ? fallback
+          : normalizeDietaryRestrictionFilterValue(raw)];
+      }
+      return [key, raw ?? fallback];
     }),
   ) as Record<(typeof recipeFilterKeys)[number], string>;
 
