@@ -12,6 +12,13 @@ const ingredientSchema = z.object({
   processing_form: z.string().nullable().optional(),
   processingFormHint: z.string().nullable().optional(),
   processing_form_hint: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  consumedQuantity: z.number().nullable().optional(),
+  consumed_quantity: z.number().nullable().optional(),
+  alternativeGroup: z.string().nullable().optional(),
+  alternative_group: z.string().nullable().optional(),
+  alternativeOf: z.union([z.string(), z.number()]).nullable().optional(),
+  alternative_of: z.union([z.string(), z.number()]).nullable().optional(),
 });
 
 const stepSchema = z.object({
@@ -73,3 +80,43 @@ export const seedFileSchema = z.object({
 });
 
 export type SeedEntry = z.infer<typeof seedEntrySchema>;
+
+type MockIntakeSource = {
+  readonly role?: string | null;
+  readonly consumedQuantity?: number | null;
+  readonly consumed_quantity?: number | null;
+  readonly alternativeGroup?: string | null;
+  readonly alternative_group?: string | null;
+  readonly alternativeOf?: string | number | null;
+  readonly alternative_of?: string | number | null;
+};
+
+/** Copy optional GET intake keys when a mock seed actually sent them. */
+export function pickMockIntakeFields(ingredient: MockIntakeSource): {
+  readonly role?: string;
+  readonly consumedQuantity?: number;
+  readonly alternativeGroup?: string;
+  readonly alternativeOf?: string;
+} {
+  const role = ingredient.role?.trim();
+  const consumedQuantity = ingredient.consumedQuantity ?? ingredient.consumed_quantity;
+  const alternativeGroup = (
+    ingredient.alternativeGroup ?? ingredient.alternative_group
+  )?.trim();
+  const alternativeOfRaw = ingredient.alternativeOf ?? ingredient.alternative_of;
+  const alternativeOf =
+    typeof alternativeOfRaw === "string"
+      ? alternativeOfRaw.trim() || undefined
+      : typeof alternativeOfRaw === "number" && Number.isFinite(alternativeOfRaw)
+        ? String(alternativeOfRaw)
+        : undefined;
+
+  return {
+    ...(role ? { role } : {}),
+    ...(consumedQuantity !== undefined && consumedQuantity !== null
+      ? { consumedQuantity }
+      : {}),
+    ...(alternativeGroup ? { alternativeGroup } : {}),
+    ...(alternativeOf === undefined ? {} : { alternativeOf }),
+  };
+}

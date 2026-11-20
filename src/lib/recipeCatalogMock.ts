@@ -1,4 +1,4 @@
-import { seedFileSchema, type SeedEntry } from "./recipeMockSchema";
+import { pickMockIntakeFields, seedFileSchema, type SeedEntry } from "./recipeMockSchema";
 import { readIngredientProcessingForm } from "./ingredientProcessingForm";
 import {
   collectRegionOptions,
@@ -191,6 +191,7 @@ function toPublicIngredient(
     description: ingredient.description ?? "",
     processingForm: readIngredientProcessingForm(ingredient),
     isMasterName,
+    ...pickMockIntakeFields(ingredient),
   };
 }
 

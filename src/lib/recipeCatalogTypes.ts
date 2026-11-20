@@ -30,6 +30,15 @@ export type RecipeIngredientDisplayFields = {
   readonly convertedGrams?: number | null;
   readonly conversionMethod?: string | null;
   readonly conversionReviewRequired?: boolean | null;
+  /**
+   * Detail-only intake fields (`IngredientsDTO`). Omitted on legacy GET rows.
+   * `quantity`/`unit` stay the preparation amount. `alternativeOf` is the other
+   * line's `ingredientLineId` UUID.
+   */
+  readonly role?: string | null;
+  readonly consumedQuantity?: number | null;
+  readonly alternativeGroup?: string | null;
+  readonly alternativeOf?: string | null;
 };
 
 export type RecipeIngredient = RecipeIngredientDisplayFields & {

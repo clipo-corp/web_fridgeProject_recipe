@@ -227,6 +227,10 @@ export function formatApproxGrams(grams: number, lang: Lang): string {
 export type IngredientAmountSource = RecipeIngredientDisplayFields & {
   readonly quantity: number | null;
   readonly unit: string | null;
+  readonly role?: string | null;
+  readonly consumedQuantity?: number | string | null;
+  readonly alternativeGroup?: string | null;
+  readonly alternativeOf?: string | number | null;
 };
 
 export type IngredientAmountText = {
@@ -240,6 +244,7 @@ export type IngredientAmountText = {
  * Prefers the recipe's own wording (`displayQuantity` + `displayUnitLabel`) and
  * falls back to the normalized `quantity`/`unit` pair when the server has not sent
  * display fields for this line.
+ * Preparation amount only — never `consumedQuantity` (shopping / FP amountLabel).
  */
 export function formatIngredientAmount(
   ingredient: IngredientAmountSource,
@@ -312,4 +317,169 @@ function approxGramsFor(
   if (typeof grams !== "number" || !Number.isFinite(grams) || grams <= 0) return null;
   if (metricUnit) return null;
   return formatApproxGrams(grams, lang);
+}
+
+export type IngredientAlternativeChoice = "selected" | "unselected" | "candidate";
+
+function readFiniteAmount(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+export function readIngredientIntakeRole(
+  value: unknown,
+): "consumed" | "preparation" | "discarded" | "unknown" | null {
+  if (typeof value !== "string") return null;
+  const role = value.trim().toLowerCase();
+  if (role.length === 0) return null;
+  if (role === "consumed" || role === "preparation" || role === "discarded" || role === "unknown") {
+    return role;
+  }
+  return "unknown";
+}
+
+function formatQuantityUnitPair(
+  quantity: number,
+  unitRaw: string | null | undefined,
+  lang: Lang,
+  toTasteFallback: string,
+): string {
+  const unit = toKnownUnit(unitRaw);
+  if (unit === null && unitRaw !== null && unitRaw !== undefined && unitRaw.trim().length > 0) {
+    return `${formatKitchenQuantity(quantity)} ${unitRaw.trim()}`;
+  }
+  const resolved = unit ?? "count";
+  if (resolved === "preference") return unitLabels[lang].preference ?? toTasteFallback;
+  return formatWithUnit(quantity, resolved, lang);
+}
+
+const excludedIntakeLabel: Record<Lang, string> = {
+  ko: "섭취 제외",
+  en: "not eaten",
+};
+
+const estimatedIntakeLabel: Record<Lang, string> = {
+  ko: "추정 섭취",
+  en: "estimated intake",
+};
+
+const eatenIntakeLabel: Record<Lang, (amount: string) => string> = {
+  ko: (amount) => `섭취 ${amount}`,
+  en: (amount) => `eaten ${amount}`,
+};
+
+export type IngredientIntakeDisplayKind =
+  | "legacy-omit"
+  | "stated-consumed"
+  | "explicit-zero"
+  | "role-only-exclude"
+  | "unknown-undetermined";
+
+type IngredientIntakeSource = {
+  readonly role?: string | null;
+  readonly consumedQuantity?: number | string | null;
+};
+
+function hasStatedConsumedQuantity(ingredient: IngredientIntakeSource): boolean {
+  return (
+    ingredient.consumedQuantity !== undefined &&
+    ingredient.consumedQuantity !== null &&
+    readFiniteAmount(ingredient.consumedQuantity) !== null
+  );
+}
+
+/**
+ * Display kind in this order so role never overwrites a stated consumedQuantity:
+ * stated-consumed → explicit-zero → role-only-exclude → unknown-undetermined →
+ * legacy-omit. `preparation` + CQ 25 is stated-consumed, not 섭취 제외.
+ */
+export function readIngredientIntakeDisplayKind(
+  ingredient: IngredientIntakeSource,
+): IngredientIntakeDisplayKind {
+  const consumed = readFiniteAmount(ingredient.consumedQuantity);
+  if (hasStatedConsumedQuantity(ingredient) && consumed !== null) {
+    return consumed === 0 ? "explicit-zero" : "stated-consumed";
+  }
+  const role = readIngredientIntakeRole(ingredient.role);
+  if (role === "preparation" || role === "discarded") return "role-only-exclude";
+  if (role === "unknown") return "unknown-undetermined";
+  return "legacy-omit";
+}
+
+/**
+ * Separate intake badge. Null when legacy fields are omitted (same as today)
+ * or when stated intake equals the preparation amount. Never a "selection
+ * complete" mark for unresolved alternative groups. Does not change shopping labels.
+ */
+export function formatIngredientIntakeBadge(
+  ingredient: IngredientAmountSource,
+  lang: Lang,
+  toTasteFallback: string,
+): string | null {
+  const kind = readIngredientIntakeDisplayKind(ingredient);
+  if (kind === "legacy-omit") return null;
+  if (kind === "explicit-zero" || kind === "role-only-exclude") return excludedIntakeLabel[lang];
+  if (kind === "unknown-undetermined") return estimatedIntakeLabel[lang];
+
+  const consumed = readFiniteAmount(ingredient.consumedQuantity);
+  const quantity = readFiniteAmount(ingredient.quantity);
+  if (consumed == null) return null;
+  if (quantity != null && consumed === quantity) return null;
+  return eatenIntakeLabel[lang](formatQuantityUnitPair(consumed, ingredient.unit, lang, toTasteFallback));
+}
+
+type AlternativeChoiceLine = {
+  readonly alternativeGroup?: string | null;
+  readonly role?: string | null;
+  readonly consumedQuantity?: number | string | null;
+};
+
+/**
+ * Unresolved XOR groups stay `candidate` on every line, including the first.
+ * A line is `selected` only when the group has exactly one consumed/intake
+ * line and the rest are explicit preparation/discarded.
+ */
+export function resolveAlternativeChoices(
+  lines: readonly AlternativeChoiceLine[],
+): readonly (IngredientAlternativeChoice | null)[] {
+  const byGroup = new Map<string, number[]>();
+  lines.forEach((line, index) => {
+    const group = line.alternativeGroup?.trim() ?? "";
+    if (!group) return;
+    const list = byGroup.get(group) ?? [];
+    list.push(index);
+    byGroup.set(group, list);
+  });
+
+  const out: (IngredientAlternativeChoice | null)[] = lines.map((line) =>
+    line.alternativeGroup?.trim() ? "candidate" : null,
+  );
+
+  for (const indexes of byGroup.values()) {
+    const consumed = indexes.filter((index) => {
+      const line = lines[index];
+      if (!line) return false;
+      return (
+        readIngredientIntakeDisplayKind(line) === "stated-consumed" ||
+        readIngredientIntakeRole(line.role) === "consumed"
+      );
+    });
+    const excluded = indexes.filter((index) => {
+      const line = lines[index];
+      if (!line) return false;
+      const kind = readIngredientIntakeDisplayKind(line);
+      return kind === "role-only-exclude" || kind === "explicit-zero";
+    });
+    if (consumed.length === 1 && excluded.length === indexes.length - 1) {
+      for (const index of indexes) {
+        out[index] = index === consumed[0] ? "selected" : "unselected";
+      }
+    }
+  }
+
+  return out;
 }

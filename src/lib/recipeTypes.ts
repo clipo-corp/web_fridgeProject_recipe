@@ -32,6 +32,10 @@ export type RecipeIngredient = {
   readonly quantity: number | null;
   readonly unit: string | null;
   readonly description: string;
+  readonly role?: string | null;
+  readonly consumedQuantity?: number | null;
+  readonly alternativeGroup?: string | null;
+  readonly alternativeOf?: string | null;
 };
 
 export type RecipeStep = {

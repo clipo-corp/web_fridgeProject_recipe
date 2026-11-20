@@ -66,6 +66,10 @@ const displayFieldKeys = [
   "convertedGrams",
   "conversionMethod",
   "conversionReviewRequired",
+  "role",
+  "consumedQuantity",
+  "alternativeGroup",
+  "alternativeOf",
 ] as const satisfies readonly (keyof RecipeIngredientDisplayFields)[];
 
 /** Copies only the display fields that are present, keeping chips shape-stable. */

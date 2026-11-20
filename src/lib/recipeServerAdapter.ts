@@ -129,18 +129,40 @@ function toPublicIngredient(ingredient: ServerRecipeIngredient, index: number): 
   };
 }
 
+type IngredientIntakeWireFields = {
+  readonly role?: string;
+  readonly consumedQuantity?: number;
+  readonly alternativeGroup?: string;
+  readonly alternativeOf?: string;
+};
+
 /**
  * Only fields the server actually sent are copied, so records built from list
  * responses (which omit them) stay shape-identical to before.
+ * GET/detail mapper only: IngredientsDTO `@JsonInclude(NON_NULL)` omits null
+ * intake keys. A JSON null here is absent, not PATCH
+ * `EXPLICIT_NULL_INGREDIENT_INTAKE_FIELD`.
  */
 function toIngredientDisplayFields(
   ingredient: ServerRecipeIngredient,
-): RecipeIngredientDisplayFields {
+): RecipeIngredientDisplayFields & IngredientIntakeWireFields {
   const displayQuantity = numberValue(ingredient.displayQuantity);
   const displayUnitLabel = nullableString(ingredient.displayUnitLabel?.trim());
   const sourceText = nullableString(ingredient.sourceText?.trim());
   const grams = numberValue(ingredient.convertedGrams);
   const conversionMethod = nullableString(ingredient.conversionMethod?.trim());
+  const role = nullableString(
+    typeof ingredient.role === "string" ? ingredient.role.trim() : undefined,
+  );
+  const consumedQuantity = numberValue(
+    ingredient.consumedQuantity ?? ingredient.consumed_quantity,
+  );
+  const alternativeGroup = nullableString(
+    (ingredient.alternativeGroup ?? ingredient.alternative_group)?.trim(),
+  );
+  const alternativeOf = readAlternativeOf(
+    ingredient.alternativeOf ?? ingredient.alternative_of,
+  );
 
   return {
     ...(displayQuantity === null ? {} : { displayQuantity }),
@@ -151,7 +173,24 @@ function toIngredientDisplayFields(
     ...(typeof ingredient.conversionReviewRequired === "boolean"
       ? { conversionReviewRequired: ingredient.conversionReviewRequired }
       : {}),
+    ...(role === null ? {} : { role }),
+    // Keep 0 and negatives. Do not clamp, and do not drop 0 like convertedGrams.
+    ...(consumedQuantity === null ? {} : { consumedQuantity }),
+    ...(alternativeGroup === null ? {} : { alternativeGroup }),
+    ...(alternativeOf === undefined ? {} : { alternativeOf }),
   };
+}
+
+/** UUID text or seed slot index. Booleans/arrays/floats omit on GET. */
+function readAlternativeOf(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+  if (typeof value === "number" && Number.isFinite(value) && Number.isInteger(value)) {
+    return String(value);
+  }
+  return undefined;
 }
 
 function toPublicTool(tool: ServerRecipeTool): RecipeTool | null {

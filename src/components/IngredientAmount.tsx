@@ -1,6 +1,7 @@
 import { useI18n } from "../lib/i18n";
 import {
   formatIngredientAmount,
+  formatIngredientIntakeBadge,
   type IngredientAmountSource,
 } from "../lib/recipeIngredientAmount";
 
@@ -21,12 +22,16 @@ export function IngredientAmount({
 }: IngredientAmountProps): JSX.Element {
   const { lang } = useI18n();
   const { primary, approxGrams } = formatIngredientAmount(ingredient, lang, amountFallback);
+  const intakeBadge = formatIngredientIntakeBadge(ingredient, lang, amountFallback);
 
   return (
     <span className={className}>
       <span>{primary}</span>
       {approxGrams !== null ? (
         <span className="ingredient-amount__grams">{approxGrams}</span>
+      ) : null}
+      {intakeBadge !== null ? (
+        <span className="ingredient-amount__grams">{intakeBadge}</span>
       ) : null}
     </span>
   );

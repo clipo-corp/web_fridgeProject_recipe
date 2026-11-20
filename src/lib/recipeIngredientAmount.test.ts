@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   formatApproxGrams,
   formatIngredientAmount,
+  formatIngredientIntakeBadge,
   formatKitchenQuantity,
   formatQuantityNumber,
+  resolveAlternativeChoices,
   type IngredientAmountSource,
 } from "./recipeIngredientAmount";
 
@@ -209,5 +211,43 @@ describe("formatIngredientAmount — non-Korean pages", () => {
       "1 움큼",
     );
     expect(en({ displayQuantity: 2, displayUnitLabel: "slices" }).primary).toBe("2 slices");
+  });
+});
+
+describe("ingredient intake and alternatives", () => {
+  it("prints preparation quantity and a separate intake badge", () => {
+    const water = line({ quantity: 3000, unit: "ml", consumedQuantity: 2000 });
+    expect(formatIngredientAmount(water, "ko", toTaste).primary).toBe("3 L");
+    expect(formatIngredientIntakeBadge(water, "ko", toTaste)).toBe("섭취 2 L");
+  });
+
+  it("keeps discarded and preparation amounts as prep, not eaten", () => {
+    const ice = line({ quantity: 150, unit: "g", role: "discarded" });
+    const oil = line({ quantity: 700, unit: "ml", role: "preparation" });
+    expect(formatIngredientAmount(ice, "ko", toTaste).primary).toBe("150 g");
+    expect(formatIngredientIntakeBadge(ice, "ko", toTaste)).toBe("섭취 제외");
+    expect(formatIngredientAmount(oil, "ko", toTaste).primary).toBe("700 ml");
+    expect(formatIngredientIntakeBadge(oil, "ko", toTaste)).toBe("섭취 제외");
+  });
+
+  it("uses consumedQuantity when preparation states a positive intake", () => {
+    const water = line({ quantity: 100, unit: "g", role: "preparation", consumedQuantity: 25 });
+    expect(formatIngredientAmount(water, "ko", toTaste).primary).toBe("100 g");
+    expect(formatIngredientIntakeBadge(water, "ko", toTaste)).toBe("섭취 25 g");
+  });
+
+  it("does not treat jam and custard first row as the chosen default", () => {
+    expect(
+      resolveAlternativeChoices([
+        { alternativeGroup: "filling" },
+        { alternativeGroup: "filling" },
+      ]),
+    ).toEqual(["candidate", "candidate"]);
+  });
+
+  it("omits an intake badge on legacy lines so shopping labels stay quantity", () => {
+    const legacy = line({ quantity: 200, unit: "g" });
+    expect(formatIngredientAmount(legacy, "ko", toTaste).primary).toBe("200 g");
+    expect(formatIngredientIntakeBadge(legacy, "ko", toTaste)).toBeNull();
   });
 });

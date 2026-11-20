@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  formatIngredientAmount,
+  formatIngredientIntakeBadge,
+  readIngredientIntakeDisplayKind,
+  resolveAlternativeChoices,
+} from "./recipeIngredientAmount";
 import { toPublicRecipeRecord } from "./recipeServerAdapter";
 import type { ServerRecipeInfo } from "./recipeServerTypes";
 
@@ -233,5 +239,151 @@ describe("toPublicRecipeRecord — display amounts, tools, stages", () => {
       ["1", "재료 손질"],
       ["2", null],
     ]);
+  });
+});
+
+describe("toPublicRecipeRecord — intake GET wire through toIngredientDisplayFields", () => {
+  const toTaste = "적당량";
+
+  it("preparation + positive consumedQuantity uses intake amount, not 섭취 제외", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        ingredients: [
+          { masterId: 1, name: "물", quantity: 100, unit: "g", role: "preparation", consumedQuantity: 25 },
+        ],
+      }),
+    );
+    const line = record.ingredients[0]!;
+    expect(line).toMatchObject({ quantity: 100, role: "preparation", consumedQuantity: 25 });
+    expect(formatIngredientAmount(line, "ko", toTaste).primary).toBe("100 g");
+    expect(readIngredientIntakeDisplayKind(line)).toBe("stated-consumed");
+    expect(formatIngredientIntakeBadge(line, "ko", toTaste)).toBe("섭취 25 g");
+  });
+
+  it("distinguishes explicit CQ 0, role-only exclude, unknown, and legacy omit", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        ingredients: [
+          { masterId: 1, name: "얼음", quantity: 150, unit: "g", role: "discarded", consumedQuantity: 0 },
+          { masterId: 2, name: "데침물", quantity: 4000, unit: "ml", role: "preparation" },
+          { masterId: 3, name: "육수", quantity: 500, unit: "ml", role: "unknown" },
+          { masterId: 4, name: "소금", quantity: 200, unit: "g" },
+        ],
+      }),
+    );
+    const [zero, roleOnly, unknown, legacy] = record.ingredients;
+    expect(zero).toMatchObject({ consumedQuantity: 0 });
+    expect(readIngredientIntakeDisplayKind(zero!)).toBe("explicit-zero");
+    expect(formatIngredientIntakeBadge(zero!, "ko", toTaste)).toBe("섭취 제외");
+    expect(roleOnly).not.toHaveProperty("consumedQuantity");
+    expect(readIngredientIntakeDisplayKind(roleOnly!)).toBe("role-only-exclude");
+    expect(formatIngredientAmount(roleOnly!, "ko", toTaste).primary).toBe("4 L");
+    expect(formatIngredientIntakeBadge(roleOnly!, "ko", toTaste)).toBe("섭취 제외");
+    expect(readIngredientIntakeDisplayKind(unknown!)).toBe("unknown-undetermined");
+    expect(formatIngredientIntakeBadge(unknown!, "ko", toTaste)).toBe("추정 섭취");
+    expect(legacy).not.toHaveProperty("role");
+    expect(legacy).not.toHaveProperty("consumedQuantity");
+    expect(formatIngredientAmount(legacy!, "ko", toTaste).primary).toBe("200 g");
+    expect(formatIngredientIntakeBadge(legacy!, "ko", toTaste)).toBeNull();
+  });
+
+  it("does not clamp invalid or excessive consumedQuantity to 0", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        ingredients: [
+          { masterId: 1, name: "물", quantity: 100, unit: "g", role: "preparation", consumedQuantity: "nope" },
+          { masterId: 2, name: "물", quantity: 100, unit: "g", consumedQuantity: 999 },
+          { masterId: 3, name: "물", quantity: 100, unit: "g", consumedQuantity: -3 },
+        ],
+      }),
+    );
+    expect(record.ingredients[0]).not.toHaveProperty("consumedQuantity");
+    expect(record.ingredients[1]).toMatchObject({ consumedQuantity: 999 });
+    expect(formatIngredientIntakeBadge(record.ingredients[1]!, "ko", toTaste)).toBe("섭취 999 g");
+    expect(record.ingredients[2]).toMatchObject({ consumedQuantity: -3 });
+  });
+
+  it("GET JSON null is omitted, not a PATCH explicit-null error", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        ingredients: [
+          {
+            masterId: 1,
+            name: "소금",
+            quantity: 1,
+            unit: "g",
+            role: null,
+            consumedQuantity: null,
+            alternativeGroup: null,
+            alternativeOf: null,
+          },
+        ],
+      }),
+    );
+    expect(record.ingredients[0]).not.toHaveProperty("role");
+    expect(record.ingredients[0]).not.toHaveProperty("consumedQuantity");
+    expect(record.ingredients[0]).not.toHaveProperty("alternativeGroup");
+    expect(record.ingredients[0]).not.toHaveProperty("alternativeOf");
+  });
+
+  it("keeps unresolved alternatives as candidates and shopping quantity as prep", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        ingredients: [
+          { masterId: 3, name: "잼", quantity: 200, unit: "g", alternativeGroup: "filling" },
+          {
+            masterId: 4,
+            name: "커스터드",
+            quantity: 200,
+            unit: "g",
+            alternativeGroup: "filling",
+            alternativeOf: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+          },
+          { masterId: 5, name: "튀김유", quantity: 700, unit: "ml", role: "preparation", consumedQuantity: 25 },
+        ],
+      }),
+    );
+    expect(resolveAlternativeChoices(record.ingredients)).toEqual(["candidate", "candidate", null]);
+    expect(record.ingredients[1]).toMatchObject({ alternativeOf: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" });
+    expect(formatIngredientAmount(record.ingredients[2]!, "ko", toTaste).primary).toBe("700 ml");
+    expect(formatIngredientIntakeBadge(record.ingredients[2]!, "ko", toTaste)).toBe("섭취 25 ml");
+  });
+});
+
+describe("app11 step chip projection after GET parse", () => {
+  const toTaste = "적당량";
+
+  it("keeps the four intake fields and alternative UUID on chips", () => {
+    const record = toPublicRecipeRecord(
+      serverRecipe({
+        ingredients: [
+          {
+            masterId: 3,
+            name: "잼",
+            quantity: 200,
+            unit: "g",
+            alternativeGroup: "filling",
+            alternativeOf: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+          },
+          { masterId: 4, name: "커스터드", quantity: 200, unit: "g", alternativeGroup: "filling" },
+          { masterId: 1, name: "물", quantity: 100, unit: "g", role: "preparation", consumedQuantity: 25 },
+        ],
+        steps: [{ stepNumber: 1, way: "채웁니다.", ingredientMasterIds: [3, 4, 1] }],
+      }),
+    );
+    const chips = record.steps[0]?.ingredientChips ?? [];
+    expect(chips).toHaveLength(3);
+    expect(chips[0]).toMatchObject({
+      name: "잼",
+      quantity: 200,
+      alternativeGroup: "filling",
+      alternativeOf: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    });
+    expect(chips[1]).toMatchObject({ name: "커스터드", alternativeGroup: "filling" });
+    expect(chips[1]).not.toHaveProperty("alternativeOf");
+    expect(chips[2]).toMatchObject({ role: "preparation", consumedQuantity: 25, quantity: 100 });
+    expect(formatIngredientAmount(chips[2]!, "ko", toTaste).primary).toBe("100 g");
+    expect(formatIngredientIntakeBadge(chips[2]!, "ko", toTaste)).toBe("섭취 25 g");
+    expect(resolveAlternativeChoices(chips)).toEqual(["candidate", "candidate", null]);
   });
 });

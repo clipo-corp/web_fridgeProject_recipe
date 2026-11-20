@@ -161,6 +161,18 @@ export type ServerRecipeIngredient = {
   readonly convertedGrams?: number | string | null;
   readonly conversionMethod?: string | null;
   readonly conversionReviewRequired?: boolean | null;
+  /**
+   * Detail-only intake fields (`IngredientsDTO`). Omitted on legacy responses.
+   * `quantity`/`unit` stay the preparation amount. `alternativeOf` is the other
+   * line's `ingredientLineId` UUID (seed slots may send an integral index).
+   */
+  readonly role?: string | null;
+  readonly consumedQuantity?: number | string | null;
+  readonly consumed_quantity?: number | string | null;
+  readonly alternativeGroup?: string | null;
+  readonly alternative_group?: string | null;
+  readonly alternativeOf?: string | number | null;
+  readonly alternative_of?: string | number | null;
 };
 
 export type ServerRecipeStep = {

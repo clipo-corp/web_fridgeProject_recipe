@@ -1,4 +1,4 @@
-import { seedFileSchema, type SeedEntry } from "./recipeMockSchema";
+import { pickMockIntakeFields, seedFileSchema, type SeedEntry } from "./recipeMockSchema";
 import type { Recipe, RecipeDifficulty, RecipeFilters, RecipeSort } from "./recipeTypes";
 
 type StringRecipeKey =
@@ -125,6 +125,7 @@ function toRecipe(entry: SeedEntry, index: number): Recipe {
       quantity: ingredient.quantity ?? null,
       unit: ingredient.unit ?? null,
       description: ingredient.description ?? "",
+      ...pickMockIntakeFields(ingredient),
     })),
     steps: recipe.steps.map((step) => ({
       stepNumber: step.stepNumber,
